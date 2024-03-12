@@ -1,1 +1,3 @@
-spring.application.name=SPMS15
+spring:
+  application:
+    name: SPMS
