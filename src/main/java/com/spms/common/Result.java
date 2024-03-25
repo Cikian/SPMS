@@ -3,11 +3,13 @@ package com.spms.common;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import static com.spms.common.ResultCode.SUCCESS;
+
 @Data
 @AllArgsConstructor
 public class Result {
 
-    private ResultCode code;
+    private Integer code;
 
     private String message;
 
@@ -16,18 +18,18 @@ public class Result {
     private Result() {}
 
     public static Result success() {
-        return new Result(ResultCode.SUCCESS, null, null);
+        return new Result(SUCCESS.ordinal(), null, null);
     }
 
     public static Result success(String msg, Object data) {
-        return new Result(ResultCode.SUCCESS, msg, data);
+        return new Result(SUCCESS.ordinal(), msg, data);
     }
 
     public static Result success(Object data) {
-        return new Result(ResultCode.SUCCESS, null, data);
+        return new Result(SUCCESS.ordinal(), null, data);
     }
 
-    public static Result fail(ResultCode code, String msg) {
+    public static Result fail(Integer code, String msg) {
         return new Result(code, msg, null);
     }
 }

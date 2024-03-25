@@ -13,4 +13,8 @@ public enum ResultCode {
     ResultCode(Integer code) {
         this.code = code;
     }
+
+    public Integer getCode() {
+        return code;
+    }
 }
