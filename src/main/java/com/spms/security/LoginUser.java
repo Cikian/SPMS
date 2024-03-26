@@ -1,6 +1,6 @@
-package com.spms.entity;
+package com.spms.security;
 
-import lombok.AllArgsConstructor;
+import com.spms.entity.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

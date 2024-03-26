@@ -1,6 +1,6 @@
 package com.spms.controller;
 
-import com.spms.common.Result;
+import com.spms.dto.Result;
 import com.spms.entity.User;
 import com.spms.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

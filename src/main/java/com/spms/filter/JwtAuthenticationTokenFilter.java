@@ -3,9 +3,8 @@ package com.spms.filter;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.spms.common.Result;
-import com.spms.common.ResultCode;
-import com.spms.entity.LoginUser;
+import com.spms.dto.Result;
+import com.spms.security.LoginUser;
 import com.spms.utils.JwtUtils;
 import com.spms.utils.WebUtils;
 import jakarta.servlet.FilterChain;
@@ -21,8 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.spms.common.ResultCode.SUCCESS;
-import static com.spms.common.ResultCode.UNAUTHORIZED;
+import static com.spms.enums.ResultCode.UNAUTHORIZED;
 import static com.spms.constants.RedisConstants.USER_LOGIN;
 
 @Component

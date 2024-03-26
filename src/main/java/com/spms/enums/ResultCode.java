@@ -1,4 +1,4 @@
-package com.spms.common;
+package com.spms.enums;
 
 public enum ResultCode {
 

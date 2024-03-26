@@ -1,14 +1,12 @@
 package com.spms.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.spms.common.Result;
-import com.spms.entity.LoginUser;
+import com.spms.dto.Result;
+import com.spms.security.LoginUser;
 import com.spms.entity.User;
-import com.spms.mapper.UserMapper;
 import com.spms.service.UserService;
 import com.spms.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

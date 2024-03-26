@@ -1,7 +1,7 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.spms.entity.LoginUser;
+import com.spms.security.LoginUser;
 import com.spms.entity.User;
 import com.spms.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;

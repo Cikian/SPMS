@@ -1,9 +1,9 @@
-package com.spms.common;
+package com.spms.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import static com.spms.common.ResultCode.SUCCESS;
+import static com.spms.enums.ResultCode.SUCCESS;
 
 @Data
 @AllArgsConstructor
