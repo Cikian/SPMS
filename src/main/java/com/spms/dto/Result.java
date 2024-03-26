@@ -18,15 +18,15 @@ public class Result {
     private Result() {}
 
     public static Result success() {
-        return new Result(SUCCESS.ordinal(), null, null);
+        return new Result(SUCCESS.getCode(), null, null);
     }
 
     public static Result success(String msg, Object data) {
-        return new Result(SUCCESS.ordinal(), msg, data);
+        return new Result(SUCCESS.getCode(), msg, data);
     }
 
     public static Result success(Object data) {
-        return new Result(SUCCESS.ordinal(), null, data);
+        return new Result(SUCCESS.getCode(), null, data);
     }
 
     public static Result fail(Integer code, String msg) {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.spms.mapper.RoleMapper">
+
+    <select id="selectUserHasRoles" resultType="java.lang.String">
+        select r.role_name
+        from sys_user u
+                 left join role_user ru on u.user_id = ru.user_id
+                 left join sys_role r on r.role_id = ru.role_id
+        where u.user_id = #{userId}
+    </select>
+</mapper>
