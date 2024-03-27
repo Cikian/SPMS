@@ -6,4 +6,6 @@ import com.spms.entity.User;
 public interface UserService {
 
     Result login(User user);
+
+    Result logout();
 }

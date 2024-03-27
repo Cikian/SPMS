@@ -6,7 +6,6 @@ import lombok.Data;
 import static com.spms.enums.ResultCode.SUCCESS;
 
 @Data
-@AllArgsConstructor
 public class Result {
 
     private Integer code;
@@ -15,21 +14,42 @@ public class Result {
 
     private Object data;
 
-    private Result() {}
+    private Result() {
+    }
+
+    public Result(Integer code) {
+        this.code = code;
+    }
+
+    public Result(Integer code, Object data) {
+        this.code = code;
+        this.data = data;
+    }
+
+    public Result(Integer code, String msg){
+        this.code = code;
+        this.message = msg;
+    }
+
+    public Result(Integer code, String msg, Object data) {
+        this.code = code;
+        this.message = msg;
+        this.data = data;
+    }
 
     public static Result success() {
-        return new Result(SUCCESS.getCode(), null, null);
+        return new Result(SUCCESS.getCode());
+    }
+
+    public static Result success(Object data) {
+        return new Result(SUCCESS.getCode(), data);
     }
 
     public static Result success(String msg, Object data) {
         return new Result(SUCCESS.getCode(), msg, data);
     }
 
-    public static Result success(Object data) {
-        return new Result(SUCCESS.getCode(), null, data);
-    }
-
     public static Result fail(Integer code, String msg) {
-        return new Result(code, msg, null);
+        return new Result(code, msg);
     }
 }

@@ -2,6 +2,7 @@ package com.spms.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.spms.dto.Result;
+import com.spms.enums.ResultCode;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
 import com.spms.service.UserService;
@@ -11,6 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -46,5 +48,12 @@ public class UserServiceImpl implements UserService {
         Map<String, String> map = new HashMap<>();
         map.put("token", jwt);
         return Result.success("登录成功！", map);
+    }
+
+    @Override
+    public Result logout() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Boolean isDelete = redisTemplate.delete(USER_LOGIN + loginUser.getUser().getUserId());
+        return Boolean.TRUE.equals(isDelete) ? Result.success("退出成功") : Result.fail(ResultCode.FAIL.getCode(),"退出失败");
     }
 }
