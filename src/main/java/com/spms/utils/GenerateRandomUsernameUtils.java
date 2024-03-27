@@ -6,7 +6,7 @@ public class GenerateRandomUsernameUtils {
 
     private static final String PREFIX = "spms";
 
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     public static String generateRandomUsername() {
         long seed = System.currentTimeMillis();
