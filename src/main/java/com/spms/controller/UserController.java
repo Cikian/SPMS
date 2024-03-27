@@ -22,4 +22,9 @@ public class UserController {
     public Result logout(){
         return userService.logout();
     }
+
+    @PostMapping("/add")
+    public Result add(@RequestBody User user){
+        return userService.add(user);
+    }
 }
