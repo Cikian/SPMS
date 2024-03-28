@@ -2,7 +2,7 @@ package com.spms.utils;
 
 import java.util.Random;
 
-public class GenerateRandomUsernameUtils {
+public class RandomUsernameGenerator {
 
     private static final String PREFIX = "spms";
 

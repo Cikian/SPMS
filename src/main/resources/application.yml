@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: SPMS
+  mail:
+    host: smtp.qq.com
+    username: 742392696@qq.com
+    password: bxqajsnhbndpbecj
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://140.143.140.103:3306/spms?useSSL=false&serverTimezone=UTC

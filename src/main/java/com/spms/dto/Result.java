@@ -41,6 +41,10 @@ public class Result {
         return new Result(SUCCESS.getCode());
     }
 
+    public static Result success(String msg) {
+        return new Result(SUCCESS.getCode(), msg);
+    }
+
     public static Result success(Object data) {
         return new Result(SUCCESS.getCode(), data);
     }

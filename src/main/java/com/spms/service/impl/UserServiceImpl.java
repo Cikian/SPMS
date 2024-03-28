@@ -2,17 +2,19 @@ package com.spms.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.spms.dto.EmailVerifyDTO;
+import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
 import com.spms.service.UserService;
-import com.spms.utils.GenerateRandomUsernameUtils;
-import com.spms.utils.JwtUtils;
-import com.spms.utils.RegexUtils;
+import com.spms.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,13 +25,14 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
-import static com.spms.constants.RedisConstants.USER_LOGIN;
+import static com.spms.constants.RedisConstants.*;
 import static com.spms.constants.SystemConstants.DEFAULT_AVATAR_URL;
 import static com.spms.constants.SystemConstants.DEFAULT_PASSWORD;
 
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements UserService{
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Autowired
     private AuthenticationManager authentication;
@@ -39,6 +42,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
 
     @Autowired
     private UserMapper userMapper;
@@ -60,7 +66,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
 
         Map<String, String> map = new HashMap<>();
         map.put("token", jwt);
-        return Result.success("登录成功！", map);
+        return Result.success("登录成功", map);
     }
 
     @Override
@@ -76,16 +82,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         String gender = user.getGender();
 
         if (!RegexUtils.isNickNameValid(nickName)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请按照格式输入昵称！");
+            return Result.fail(ResultCode.FAIL.getCode(), "请按照格式输入昵称");
         }
 
         if (!RegexUtils.isGenderValid(gender)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "非法输入！");
+            return Result.fail(ResultCode.FAIL.getCode(), "非法输入");
         }
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        user.setUserName(GenerateRandomUsernameUtils.generateRandomUsername());
+        user.setUserName(RandomUsernameGenerator.generateRandomUsername());
         user.setPassword(bCryptPasswordEncoder.encode(DEFAULT_PASSWORD));
         user.setNickName(nickName);
         user.setGender(gender);
@@ -94,6 +100,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         user.setUpdateBy(loginUser.getUser().getUserId());
 
         boolean isSuccess = this.save(user);
-        return isSuccess ? Result.success("新增成功！") : Result.fail(ResultCode.FAIL.getCode(), "新增失败！");
+        return isSuccess ? Result.success("新增成功") : Result.fail(ResultCode.FAIL.getCode(), "新增失败");
     }
+
+    @Override
+    public Result sendEmailCode(String email) {
+        if (!RegexUtils.isMailValid(email)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
+        }
+
+        String code = VerificationCodeGenerator.generateCode(6);
+        SendMailMessageUtils.sendEmail(javaMailSender, email, code);
+
+        redisTemplate.opsForValue().set(EMAIL_CODE + email, code, EMAIL_CODE_TTL, TimeUnit.MINUTES);
+        return Result.success("发送成功");
+    }
+
+    @Override
+    public Result verifyEmail(EmailVerifyDTO emailVerifyDTO) {
+        return null;
+    }
+
+    @Override
+    public Result updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
+        return null;
+    }
+
 }
