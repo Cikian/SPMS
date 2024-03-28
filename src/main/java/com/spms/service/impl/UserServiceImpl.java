@@ -1,6 +1,8 @@
 package com.spms.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
@@ -118,12 +120,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result verifyEmail(EmailVerifyDTO emailVerifyDTO) {
-        return null;
+        String code = redisTemplate.opsForValue().get(EMAIL_CODE + emailVerifyDTO.getEmail());
+        if (StrUtil.isEmpty(code)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无效验证码");
+        }
+        boolean isSuccess = StrUtil.equals(code, emailVerifyDTO.getCode());
+        return isSuccess ? Result.success("验证通过") : Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
     }
 
     @Override
     public Result updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
-        return null;
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = loginUser.getUser();
+
+        boolean matches = bCryptPasswordEncoder.matches(passwordUpdateDTO.getOldPassword(), user.getPassword());
+        if (!matches) {
+            return Result.fail(ResultCode.FAIL.getCode(), "原密码错误");
+        }
+
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.set(User::getPassword, bCryptPasswordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+        boolean isSuccess = this.update(userLambdaUpdateWrapper);
+
+        if (!isSuccess) {
+            return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        redisTemplate.delete(USER_LOGIN + user.getUserId());
+        return Result.success("修改成功");
     }
 
 }

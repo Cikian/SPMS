@@ -13,9 +13,9 @@ public interface UserService {
 
     Result add(User user);
 
-    Result updatePassword(PasswordUpdateDTO passwordUpdateDTO);
+    Result sendEmailCode(String email);
 
     Result verifyEmail(EmailVerifyDTO emailVerifyDTO);
 
-    Result sendEmailCode(String email);
+    Result updatePassword(PasswordUpdateDTO passwordUpdateDTO);
 }
