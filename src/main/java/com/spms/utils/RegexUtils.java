@@ -6,19 +6,19 @@ import static com.spms.constants.RegexPatterns.*;
 
 public class RegexUtils {
 
-    public static boolean isNickNameValid(String nickName) {
+    public static boolean nickNameCheck(String nickName) {
         return mismatch(nickName, NICK_NAME_REGEX);
     }
 
-    public static boolean isPasswordValid(String password) {
+    public static boolean passwordCheck(String password) {
         return mismatch(password, PASSWORD_REGEX);
     }
 
-    public static boolean isGenderValid(String gender) {
+    public static boolean genderCheck(String gender) {
         return mismatch(gender, GENDER_REGEX);
     }
 
-    public static boolean isMailValid(String email) {
+    public static boolean mailCheck(String email) {
         return mismatch(email, EMAIL_REGEX);
     }
 

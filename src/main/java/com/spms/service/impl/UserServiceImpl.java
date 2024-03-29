@@ -2,6 +2,7 @@ package com.spms.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.EmailVerifyDTO;
@@ -15,6 +16,7 @@ import com.spms.service.UserService;
 import com.spms.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,8 +32,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static com.spms.constants.RedisConstants.*;
-import static com.spms.constants.SystemConstants.DEFAULT_AVATAR_URL;
-import static com.spms.constants.SystemConstants.DEFAULT_PASSWORD;
+import static com.spms.constants.SystemConstants.*;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -80,39 +81,53 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result add(User user) {
-        String nickName = user.getNickName();
-        String gender = user.getGender();
-
-        if (!RegexUtils.isNickNameValid(nickName)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请按照格式输入昵称");
+        String email = user.getEmail();
+        if (!RegexUtils.mailCheck(email)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
         }
 
-        if (!RegexUtils.isGenderValid(gender)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "非法输入");
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getEmail, email);
+        if (this.count(userLambdaQueryWrapper) > 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "邮箱已存在");
         }
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        user.setUserName(RandomUsernameGenerator.generateRandomUsername());
-        user.setPassword(bCryptPasswordEncoder.encode(DEFAULT_PASSWORD));
-        user.setNickName(nickName);
-        user.setGender(gender);
+        String password = RandomStringGenerator.generateNumber(8);
+        String userName = RandomUsernameGenerator.generateRandomUsername();
+        user.setUserName(userName);
+        user.setPassword(bCryptPasswordEncoder.encode(password));
+        user.setNickName(RandomStringGenerator.generateString(10));
+        user.setGender(DEFAULT_GENDER);
         user.setAvatar(DEFAULT_AVATAR_URL);
         user.setCreateBy(loginUser.getUser().getUserId());
         user.setUpdateBy(loginUser.getUser().getUserId());
 
         boolean isSuccess = this.save(user);
-        return isSuccess ? Result.success("新增成功") : Result.fail(ResultCode.FAIL.getCode(), "新增失败");
+
+        if (!isSuccess) {
+            return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
+        }
+
+        try {
+            SendMailMessageUtils.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
+        } catch (MailException e) {
+            return Result.fail(ResultCode.FAIL.getCode(), "邮件发送失败");
+        }
+        return Result.success("新增成功");
     }
 
     @Override
     public Result sendEmailCode(String email) {
-        if (!RegexUtils.isMailValid(email)) {
+        if (!RegexUtils.mailCheck(email)) {
             return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
         }
 
-        String code = VerificationCodeGenerator.generateCode(6);
-        SendMailMessageUtils.sendEmail(javaMailSender, email, code);
+        String code = RandomStringGenerator.generateString(6);
+        SendMailMessageUtils.sendEmail(javaMailSender, email,
+                "SPMS验证码",
+                "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此短信。");
 
         redisTemplate.opsForValue().set(EMAIL_CODE + email, code, EMAIL_CODE_TTL, TimeUnit.MINUTES);
         return Result.success("发送成功");
