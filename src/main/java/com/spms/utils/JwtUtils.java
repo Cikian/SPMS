@@ -49,6 +49,16 @@ public class JwtUtils {
                 .getSubject();
     }
 
+    //查看当前token还有多长时间过期
+    public static Long getRemainingTime(String jwt) {
+        Date expiration = Jwts.parser()
+                .setSigningKey(generalKey())
+                .parseClaimsJws(jwt)
+                .getBody()
+                .getExpiration();
+        return expiration.getTime() - System.currentTimeMillis();
+    }
+
     private static JwtBuilder getJwtBuilder(String subject, Long ttlMillis, String uuid) {
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
         SecretKey secretKey = generalKey();

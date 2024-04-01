@@ -20,7 +20,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
+import static com.spms.constants.RedisConstants.USER_LOGIN_TTL;
 import static com.spms.enums.ResultCode.UNAUTHORIZED;
 import static com.spms.constants.RedisConstants.USER_LOGIN;
 
@@ -45,6 +47,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         String userId = null;
         try {
             userId = JwtUtils.parseJWT(token);
+            //在token过期前15分钟，重新生成token
+            if (JwtUtils.getRemainingTime(token) - 15 * 60 * 1000 < 0) {
+                redisTemplate.expire(USER_LOGIN + userId, USER_LOGIN_TTL, TimeUnit.MINUTES);
+                String newToken = JwtUtils.createJWT(userId);
+                response.setHeader("newToken", newToken);
+            }
         } catch (Exception e) {
             WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录！")));
             return;
