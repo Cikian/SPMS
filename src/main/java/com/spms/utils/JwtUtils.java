@@ -12,9 +12,9 @@ import java.util.UUID;
 
 public class JwtUtils {
 
-    public static final Long JWT_TTL = 60 * 60 * 1000L; //一个小时
+    private static final String JWT_KEY = "hbwespms";
 
-    public static final String JWT_KEY = "hbwespms";
+    private static final Long JWT_TTL = 30 * 60 * 1000L; // 30分钟
 
     public static String getUUID() {
         return UUID.randomUUID().toString().replace("-", "");
@@ -63,7 +63,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .setId(uuid)
                 .setSubject(subject)
-                .setIssuer("hbwespms")
+                .setIssuer(JWT_KEY)
                 .setIssuedAt(now)
                 .signWith(signatureAlgorithm, secretKey)
                 .setExpiration(expDate);

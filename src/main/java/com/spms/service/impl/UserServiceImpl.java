@@ -61,16 +61,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
-        Boolean isFirstLogin = loginUser.getUser().getIsFirstLogin();
         String userId = loginUser.getUser().getUserId().toString();
-        String jwt = JwtUtils.createJWT(userId);
 
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userId))){
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userId))) {
             return Result.fail(ResultCode.FAIL.getCode(), "该账号已在其他地方登录");
         }
 
-        redisTemplate.opsForValue().set(USER_LOGIN + userId, JSONObject.toJSONString(loginUser));
+        String jwt = JwtUtils.createJWT(userId);
+        redisTemplate.opsForValue().set(USER_LOGIN + userId, JSONObject.toJSONString(loginUser), USER_LOGIN_TTL, TimeUnit.MINUTES);
 
+        Boolean isFirstLogin = loginUser.getUser().getIsFirstLogin();
         Map<String, String> map = new HashMap<>();
         map.put("token", jwt);
         if (Boolean.TRUE.equals(isFirstLogin)) {
