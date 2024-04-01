@@ -16,8 +16,6 @@ import com.spms.service.UserService;
 import com.spms.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +49,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private JavaMailSender javaMailSender;
 
     @Autowired
-    private UserMapper userMapper;
+    private SendMailMessageService sendMailMessageService;
 
     @Override
     public Result login(User user) {
@@ -80,6 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public Result add(User user) {
         String email = user.getEmail();
         if (!RegexUtils.mailCheck(email)) {
@@ -110,11 +110,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
         }
 
-        try {
-            SendMailMessageUtils.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
-        } catch (MailException e) {
-            return Result.fail(ResultCode.FAIL.getCode(), "邮件发送失败");
-        }
+        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
+
         return Result.success("新增成功");
     }
 
@@ -125,9 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         String code = RandomStringGenerator.generateString(6);
-        SendMailMessageUtils.sendEmail(javaMailSender, email,
-                "SPMS验证码",
-                "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此短信。");
+        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS验证码", "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此短信。");
 
         redisTemplate.opsForValue().set(EMAIL_CODE + email, code, EMAIL_CODE_TTL, TimeUnit.MINUTES);
         return Result.success("发送成功");

@@ -46,6 +46,18 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <!--        retry-->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+
+        <!--        aop-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!--        jwt-->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
