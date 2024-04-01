@@ -61,13 +61,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
+        Boolean isFirstLogin = loginUser.getUser().getIsFirstLogin();
         String userId = loginUser.getUser().getUserId().toString();
         String jwt = JwtUtils.createJWT(userId);
+
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userId))){
+            return Result.fail(ResultCode.FAIL.getCode(), "该账号已在其他地方登录");
+        }
 
         redisTemplate.opsForValue().set(USER_LOGIN + userId, JSONObject.toJSONString(loginUser));
 
         Map<String, String> map = new HashMap<>();
         map.put("token", jwt);
+        if (Boolean.TRUE.equals(isFirstLogin)) {
+            map.put("isFirstLogin", "true");
+        }
         return Result.success("登录成功", map);
     }
 
@@ -119,6 +127,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public Result sendEmailCode(String email) {
         if (!RegexUtils.mailCheck(email)) {
             return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
+        }
+
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getEmail, email);
+        if (this.count(userLambdaQueryWrapper) == 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "邮箱尚未绑定账号");
         }
 
         String code = RandomStringGenerator.generateString(6);

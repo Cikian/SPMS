@@ -51,6 +51,9 @@ public class User {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    //    第一次登录
+    private Boolean isFirstLogin;
+
     //    删除标记
     private Boolean delFlag;
 }
