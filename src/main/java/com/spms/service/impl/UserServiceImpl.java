@@ -4,16 +4,21 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
+import com.spms.dto.UserDTO;
+import com.spms.entity.RoleUser;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
 import com.spms.service.UserService;
 import com.spms.utils.*;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -26,9 +31,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.spms.constants.RedisConstants.*;
 import static com.spms.constants.SystemConstants.*;
@@ -50,6 +57,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private SendMailMessageService sendMailMessageService;
+
+    @Autowired
+    private RoleUserMapper roleUserMapper;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public Result login(User user) {
@@ -175,9 +187,49 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public Result delete(Long[] ids) {
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.set(User::getDelFlag, DELETE).in(User::getUserId, ids);
+        this.update(userLambdaUpdateWrapper);
 
-        return null;
+        LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        roleUserLambdaUpdateWrapper.set(RoleUser::getDelFlag, DELETE).in(RoleUser::getUserId, ids);
+        roleUserMapper.update(roleUserLambdaUpdateWrapper);
+        return Result.success("删除成功");
+    }
+
+    @Override
+    public Result list(UserDTO userDTO, Integer page, Integer size) {
+        Page<User> userPage = new Page<>(page, size);
+        Page<UserDTO> userDTOPage = new Page<>();
+
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper
+                .like(!Objects.isNull(userDTO.getNickName()), User::getNickName, userDTO.getNickName())
+                .eq(!Objects.isNull(userDTO.getUserName()), User::getUserName, userDTO.getUserName())
+                .eq(!Objects.isNull(userDTO.getGender()), User::getGender, userDTO.getGender())
+                .eq(!Objects.isNull(userDTO.getEmail()), User::getEmail, userDTO.getEmail())
+                .eq(!Objects.isNull(userDTO.getStatus()), User::getStatus, userDTO.getStatus())
+                .eq(!Objects.isNull(userDTO.getPhoneNumber()), User::getPhoneNumber, userDTO.getPhoneNumber())
+                .orderByAsc(User::getCreateTime);
+        this.page(userPage, userLambdaQueryWrapper);
+
+        if (userPage.getRecords().isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        BeanUtils.copyProperties(userPage, userDTOPage, "records");
+
+        List<User> userList = userPage.getRecords();
+        List<UserDTO> userDTOList = userList.stream().map(item -> {
+            UserDTO userDTO1 = new UserDTO();
+            BeanUtils.copyProperties(item, userDTO1);
+            return userDTO1;
+        }).toList();
+        userDTOPage.setRecords(userDTOList);
+
+        return Result.success(userDTOPage);
     }
 
 }

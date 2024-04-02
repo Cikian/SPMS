@@ -1,8 +1,10 @@
 package com.spms.controller;
 
+import com.spms.constants.SystemConstants;
 import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
+import com.spms.dto.UserDTO;
 import com.spms.entity.User;
 import com.spms.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +40,16 @@ public class UserController {
         return userService.delete(ids);
     }
 
+    @PostMapping("/list")
+    @PreAuthorize("hasRole('admin')")
+    public Result list(@RequestBody UserDTO userDTO,
+                       @RequestParam(value = "page", defaultValue = "1") Integer page,
+                       @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        return userService.list(userDTO, page, size);
+    }
+
     @PostMapping("/sendEmailCode")
-    public Result sendEmailCode(@RequestBody User user){
+    public Result sendEmailCode(@RequestBody User user) {
         return userService.sendEmailCode(user.getEmail());
     }
 
