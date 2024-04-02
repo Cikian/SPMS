@@ -32,6 +32,12 @@ public class UserController {
         return userService.add(user);
     }
 
+    @PostMapping("/delete")
+    @PreAuthorize("hasRole('admin')")
+    public Result delete(@RequestBody Long[] ids) {
+        return userService.delete(ids);
+    }
+
     @PostMapping("/sendEmailCode")
     public Result sendEmailCode(@RequestBody User user){
         return userService.sendEmailCode(user.getEmail());

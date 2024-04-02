@@ -34,6 +34,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         List<String> roles = roleMapper.selectUserHasRoles(user.getUserId());
-        return new LoginUser(user,roles);
+        return new LoginUser(user, roles);
     }
 }

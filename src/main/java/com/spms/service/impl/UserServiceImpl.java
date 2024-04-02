@@ -174,4 +174,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return Result.success("修改成功");
     }
 
+    @Override
+    public Result delete(Long[] ids) {
+
+        return null;
+    }
+
 }

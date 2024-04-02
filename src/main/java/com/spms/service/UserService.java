@@ -18,4 +18,6 @@ public interface UserService {
     Result verifyEmail(EmailVerifyDTO emailVerifyDTO);
 
     Result updatePassword(PasswordUpdateDTO passwordUpdateDTO);
+
+    Result delete(Long[] ids);
 }

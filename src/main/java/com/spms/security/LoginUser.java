@@ -58,7 +58,7 @@ public class LoginUser implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return user.getStatus();
     }
 
     @Override
