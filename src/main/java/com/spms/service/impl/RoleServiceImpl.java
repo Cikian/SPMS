@@ -32,6 +32,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
 
         if (rolePage.getRecords().isEmpty()) {
             return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+
         }
 
         BeanUtils.copyProperties(rolePage, roleDTOPage, "records");
