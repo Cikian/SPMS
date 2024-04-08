@@ -251,4 +251,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return Result.success("修改成功");
     }
 
+    @Override
+    public Result assignRole(Long userId, List<Long> roleIds) {
+        return null;
+    }
+
 }

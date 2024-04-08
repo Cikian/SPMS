@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -67,5 +69,11 @@ public class UserController {
     @PostMapping("/updatePassword")
     public Result updatePassword(@RequestBody PasswordUpdateDTO passwordUpdateDTO) {
         return userService.updatePassword(passwordUpdateDTO);
+    }
+
+    @PostMapping("/assignRole")
+    @PreAuthorize("hasRole('admin')")
+    public Result assignRole(@RequestParam("userId") Long userId, @RequestParam("roleIds") List<Long> roleIds) {
+        return userService.assignRole(userId, roleIds);
     }
 }

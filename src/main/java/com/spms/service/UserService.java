@@ -6,6 +6,8 @@ import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
 import com.spms.entity.User;
 
+import java.util.List;
+
 public interface UserService {
 
     Result login(User user);
@@ -25,4 +27,6 @@ public interface UserService {
     Result list(UserDTO userDTO, Integer page, Integer size);
 
     Result updateStatus(UserDTO userDTO);
+
+    Result assignRole(Long userId, List<Long> roleIds);
 }
