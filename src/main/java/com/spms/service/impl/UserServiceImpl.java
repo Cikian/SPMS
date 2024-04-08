@@ -232,4 +232,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return Result.success(userDTOPage);
     }
 
+    @Override
+    @Transactional
+    public Result updateStatus(UserDTO userDTO) {
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.eq(User::getUserId, userDTO.getUserId())
+                .set(User::getStatus, userDTO.getStatus());
+        boolean update = this.update(userLambdaUpdateWrapper);
+
+        if (!update) {
+            return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userDTO.getUserId()))) {
+            redisTemplate.delete(USER_LOGIN + userDTO.getUserId());
+        }
+        return Result.success("修改成功");
+    }
+
 }

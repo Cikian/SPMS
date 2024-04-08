@@ -21,8 +21,8 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         System.out.println(authException);
-        String exceptionName = authException.toString();
 
+        String exceptionName = authException.toString();
         if (exceptionName.contains("Locked")) {
             WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(ResultCode.ACCOUNT_LOCKED.getCode(), "用户已被锁定，请联系管理员！")));
         } else if (exceptionName.contains("BadCredentials")) {

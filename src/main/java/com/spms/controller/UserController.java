@@ -48,6 +48,12 @@ public class UserController {
         return userService.list(userDTO, page, size);
     }
 
+    @GetMapping("/updateStatus")
+    @PreAuthorize("hasRole('admin')")
+    public Result updateStatus(@RequestBody UserDTO userDTO) {
+        return userService.updateStatus(userDTO);
+    }
+
     @PostMapping("/sendEmailCode")
     public Result sendEmailCode(@RequestBody User user) {
         return userService.sendEmailCode(user.getEmail());

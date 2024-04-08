@@ -23,4 +23,6 @@ public interface UserService {
     Result delete(Long[] ids);
 
     Result list(UserDTO userDTO, Integer page, Integer size);
+
+    Result updateStatus(UserDTO userDTO);
 }
