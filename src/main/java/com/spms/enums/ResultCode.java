@@ -1,5 +1,8 @@
 package com.spms.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ResultCode {
 
     SUCCESS(200), // 200: 成功
@@ -18,7 +21,4 @@ public enum ResultCode {
         this.code = code;
     }
 
-    public Integer getCode() {
-        return code;
-    }
 }

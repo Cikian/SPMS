@@ -2,6 +2,8 @@ package com.spms.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 /**
  * @Title: Project
@@ -10,6 +12,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
  * @Date 2024/4/1 14:16
  * @description: 项目信息
  */
+
+@Data
+@TableName("project")
 public class Project {
     @TableId(type = IdType.ASSIGN_ID)
     private Long proId;
@@ -18,7 +23,7 @@ public class Project {
 
     private String proDesc;  //描述
 
-    private String proStatus; //状态
+    private int proStatus; //状态
 
     private String proFlag; // 标识（英文代号），例如SPMS
 
