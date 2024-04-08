@@ -212,6 +212,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(!Objects.isNull(userDTO.getEmail()), User::getEmail, userDTO.getEmail())
                 .eq(!Objects.isNull(userDTO.getStatus()), User::getStatus, userDTO.getStatus())
                 .eq(!Objects.isNull(userDTO.getPhoneNumber()), User::getPhoneNumber, userDTO.getPhoneNumber())
+                .eq(User::getDelFlag, 0)
                 .orderByAsc(User::getCreateTime);
         this.page(userPage, userLambdaQueryWrapper);
 
@@ -248,6 +249,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             redisTemplate.delete(USER_LOGIN + userDTO.getUserId());
         }
         return Result.success("修改成功");
+    }
+
+    @Override
+    public Result assignRole(Long userId, List<Long> roleIds) {
+        return null;
     }
 
 }

@@ -42,31 +42,37 @@ public class LoginUser implements UserDetails {
     }
 
     @Override
+    @JSONField(serialize = false)
     public String getPassword() {
         return user.getPassword();
     }
 
     @Override
+    @JSONField(serialize = false)
     public String getUsername() {
         return user.getUserName();
     }
 
     @Override
+    @JSONField(serialize = false)
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @JSONField(serialize = false)
     public boolean isAccountNonLocked() {
         return user.getStatus();
     }
 
     @Override
+    @JSONField(serialize = false)
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @JSONField(serialize = false)
     public boolean isEnabled() {
         return true;
     }
