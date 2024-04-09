@@ -9,6 +9,7 @@
         from sys_user u
                  left join role_user ru on u.user_id = ru.user_id
                  left join sys_role r on r.role_id = ru.role_id
-        where u.user_id = #{userId}
+        where u.user_id = #{userId} and ru.del_flag = 0
     </select>
+
 </mapper>

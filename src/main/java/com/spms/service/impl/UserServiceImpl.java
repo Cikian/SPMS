@@ -87,6 +87,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         map.put("token", jwt);
         if (Boolean.TRUE.equals(isFirstLogin)) {
             map.put("isFirstLogin", "true");
+            // 如果是第一次登录，则将is_first_login字段更新为false
+            LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            userLambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
+                    .set(User::getIsFirstLogin, false);
+            this.update(userLambdaUpdateWrapper);
         }
         return Result.success("登录成功", map);
     }
@@ -121,9 +126,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setNickName(RandomStringGenerator.generateString(10));
         user.setGender(DEFAULT_GENDER);
         user.setAvatar(DEFAULT_AVATAR_URL);
+        user.setIsFirstLogin(true);
         user.setCreateBy(loginUser.getUser().getUserId());
         user.setUpdateBy(loginUser.getUser().getUserId());
-
         boolean isSuccess = this.save(user);
 
         if (!isSuccess) {
@@ -141,6 +146,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
         }
 
+        Boolean sent = redisTemplate.hasKey(EMAIL_CODE + email);
+        if (Boolean.TRUE.equals(sent)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "验证码已发送，请勿重复发送");
+        }
+
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getEmail, email);
         if (this.count(userLambdaQueryWrapper) == 0) {
@@ -148,7 +158,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         String code = RandomStringGenerator.generateString(6);
-        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS验证码", "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此短信。");
+        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS验证码", "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此邮件。");
 
         redisTemplate.opsForValue().set(EMAIL_CODE + email, code, EMAIL_CODE_TTL, TimeUnit.MINUTES);
         return Result.success("发送成功");
@@ -156,6 +166,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result verifyEmail(EmailVerifyDTO emailVerifyDTO) {
+        if (StrUtil.isEmpty(emailVerifyDTO.getEmail()) || StrUtil.isEmpty(emailVerifyDTO.getCode())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        boolean mailCheck = RegexUtils.mailCheck(emailVerifyDTO.getEmail());
+        if (!mailCheck) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
+        }
+
         String code = redisTemplate.opsForValue().get(EMAIL_CODE + emailVerifyDTO.getEmail());
         if (StrUtil.isEmpty(code)) {
             return Result.fail(ResultCode.FAIL.getCode(), "无效验证码");
@@ -166,6 +185,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
+        if (StrUtil.isEmpty(passwordUpdateDTO.getOldPassword()) || StrUtil.isEmpty(passwordUpdateDTO.getNewPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
+        if (!passwordCheck) {
+            return Result.fail(ResultCode.FAIL.getCode(), "密码格式错误");
+        }
+
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = loginUser.getUser();
 
