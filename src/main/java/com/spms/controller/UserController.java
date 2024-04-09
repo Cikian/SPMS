@@ -73,7 +73,8 @@ public class UserController {
 
     @PostMapping("/assignRole")
     @PreAuthorize("hasRole('admin')")
-    public Result assignRole(@RequestParam("userId") Long userId, @RequestParam("roleIds") List<Long> roleIds) {
+    public Result assignRole(@RequestParam("userId") Long userId,
+                             @RequestParam("roleIds") List<Long> roleIds) {
         return userService.assignRole(userId, roleIds);
     }
 }

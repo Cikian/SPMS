@@ -74,6 +74,6 @@ public class LoginUser implements UserDetails {
     @Override
     @JSONField(serialize = false)
     public boolean isEnabled() {
-        return true;
+        return !user.getDelFlag();
     }
 }

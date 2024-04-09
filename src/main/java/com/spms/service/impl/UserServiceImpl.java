@@ -10,12 +10,14 @@ import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
+import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
+import com.spms.service.RoleUserService;
 import com.spms.service.UserService;
 import com.spms.utils.*;
 import org.springframework.beans.BeanUtils;
@@ -60,8 +62,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private RoleUserMapper roleUserMapper;
-    @Autowired
-    private UserMapper userMapper;
 
     @Override
     public Result login(User user) {
@@ -87,6 +87,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         map.put("token", jwt);
         if (Boolean.TRUE.equals(isFirstLogin)) {
             map.put("isFirstLogin", "true");
+            // 如果是第一次登录，则将is_first_login字段更新为false
+            LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            userLambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
+                    .set(User::getIsFirstLogin, false);
+            this.update(userLambdaUpdateWrapper);
         }
         return Result.success("登录成功", map);
     }
@@ -121,9 +126,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setNickName(RandomStringGenerator.generateString(10));
         user.setGender(DEFAULT_GENDER);
         user.setAvatar(DEFAULT_AVATAR_URL);
+        user.setIsFirstLogin(true);
         user.setCreateBy(loginUser.getUser().getUserId());
         user.setUpdateBy(loginUser.getUser().getUserId());
-
         boolean isSuccess = this.save(user);
 
         if (!isSuccess) {
@@ -141,6 +146,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
         }
 
+        Boolean sent = redisTemplate.hasKey(EMAIL_CODE + email);
+        if (Boolean.TRUE.equals(sent)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "验证码已发送，请勿重复发送");
+        }
+
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getEmail, email);
         if (this.count(userLambdaQueryWrapper) == 0) {
@@ -148,7 +158,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         String code = RandomStringGenerator.generateString(6);
-        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS验证码", "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此短信。");
+        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS验证码", "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此邮件。");
 
         redisTemplate.opsForValue().set(EMAIL_CODE + email, code, EMAIL_CODE_TTL, TimeUnit.MINUTES);
         return Result.success("发送成功");
@@ -156,6 +166,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result verifyEmail(EmailVerifyDTO emailVerifyDTO) {
+        if (StrUtil.isEmpty(emailVerifyDTO.getEmail()) || StrUtil.isEmpty(emailVerifyDTO.getCode())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        boolean mailCheck = RegexUtils.mailCheck(emailVerifyDTO.getEmail());
+        if (!mailCheck) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请检查邮箱格式是否正确");
+        }
+
         String code = redisTemplate.opsForValue().get(EMAIL_CODE + emailVerifyDTO.getEmail());
         if (StrUtil.isEmpty(code)) {
             return Result.fail(ResultCode.FAIL.getCode(), "无效验证码");
@@ -166,6 +185,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
+        if (StrUtil.isEmpty(passwordUpdateDTO.getOldPassword()) || StrUtil.isEmpty(passwordUpdateDTO.getNewPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
+        if (!passwordCheck) {
+            return Result.fail(ResultCode.FAIL.getCode(), "密码格式错误");
+        }
+
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = loginUser.getUser();
 
@@ -193,6 +221,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userLambdaUpdateWrapper.set(User::getDelFlag, DELETE).in(User::getUserId, ids);
         this.update(userLambdaUpdateWrapper);
 
+        // 删除用户时，删除用户与角色的关联
         LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         roleUserLambdaUpdateWrapper.set(RoleUser::getDelFlag, DELETE).in(RoleUser::getUserId, ids);
         roleUserMapper.update(roleUserLambdaUpdateWrapper);
@@ -212,7 +241,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(!Objects.isNull(userDTO.getEmail()), User::getEmail, userDTO.getEmail())
                 .eq(!Objects.isNull(userDTO.getStatus()), User::getStatus, userDTO.getStatus())
                 .eq(!Objects.isNull(userDTO.getPhoneNumber()), User::getPhoneNumber, userDTO.getPhoneNumber())
-                .eq(User::getDelFlag, 0)
+                .eq(User::getDelFlag, NOT_DELETE)
                 .orderByAsc(User::getCreateTime);
         this.page(userPage, userLambdaQueryWrapper);
 
@@ -239,12 +268,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.eq(User::getUserId, userDTO.getUserId())
                 .set(User::getStatus, userDTO.getStatus());
-        boolean update = this.update(userLambdaUpdateWrapper);
+        boolean isUpdate = this.update(userLambdaUpdateWrapper);
 
-        if (!update) {
+        if (!isUpdate) {
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
         }
 
+        //如果redis中存在该用户的登录信息，则删除
         if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userDTO.getUserId()))) {
             redisTemplate.delete(USER_LOGIN + userDTO.getUserId());
         }
@@ -252,8 +282,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public Result assignRole(Long userId, List<Long> roleIds) {
-        return null;
+        if (userId == null || roleIds == null || roleIds.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaUpdateWrapper<RoleUser> deleteWrapper = new LambdaUpdateWrapper<>();
+        deleteWrapper.eq(RoleUser::getUserId, userId)
+                .set(RoleUser::getDelFlag, DELETE);
+        roleUserMapper.update(deleteWrapper);
+
+        for (Long roleId : roleIds) {
+            LambdaQueryWrapper<RoleUser> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(RoleUser::getUserId, userId)
+                    .eq(RoleUser::getRoleId, roleId);
+            RoleUser existingRoleUser = roleUserMapper.selectOne(queryWrapper);
+
+            if (existingRoleUser != null) {
+                // 如果存在相同的role_id和user_id的记录，且del_flag为true，则更新del_flag为false
+                if (existingRoleUser.getDelFlag()) {
+                    existingRoleUser.setDelFlag(NOT_DELETE);
+                    LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                    roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
+                            .eq(RoleUser::getRoleId, roleId)
+                            .set(RoleUser::getDelFlag, NOT_DELETE);
+                    roleUserMapper.update(roleUserLambdaUpdateWrapper);
+                }
+            } else {
+                // 如果不存在相同的role_id和user_id的记录，则插入新记录
+                RoleUser roleUser = new RoleUser();
+                roleUser.setUserId(userId);
+                roleUser.setRoleId(roleId);
+                roleUser.setDelFlag(NOT_DELETE);
+                roleUserMapper.insert(roleUser);
+            }
+        }
+        return Result.success("分配成功");
     }
 
 }
