@@ -254,6 +254,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public Result assignRole(Long userId, List<Long> roleIds) {
         if (userId == null || roleIds == null || roleIds.isEmpty()) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -289,7 +290,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 roleUserMapper.insert(roleUser);
             }
         }
-
         return Result.success("分配成功");
     }
 
