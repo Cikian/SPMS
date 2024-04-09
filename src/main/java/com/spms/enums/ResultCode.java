@@ -12,6 +12,7 @@ public enum ResultCode {
     ACCOUNT_LOCKED(402),// 402: 账号被锁定
     FORBIDDEN(403), // 403: 无权限
     NOT_FOUND(404), // 404: 未找到
+    ACCOUNT_DISABLED(405), // 405: 账号被禁用
 
     INTERNAL_SERVER_ERROR(500); // 500: 服务器内部错误
 

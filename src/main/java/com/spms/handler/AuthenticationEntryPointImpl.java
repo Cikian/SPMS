@@ -27,6 +27,8 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
             WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(ResultCode.ACCOUNT_LOCKED.getCode(), "用户已被锁定，请联系管理员！")));
         } else if (exceptionName.contains("BadCredentials")) {
             WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(ResultCode.FAIL.getCode(), "用户名或密码错误！")));
+        } else if (exceptionName.contains("Disabled")) {
+            WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(ResultCode.ACCOUNT_DISABLED.getCode(), "用户已被禁用，请联系管理员！")));
         } else {
             WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录！")));
         }
