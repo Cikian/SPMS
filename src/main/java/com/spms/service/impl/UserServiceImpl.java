@@ -10,12 +10,14 @@ import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
+import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
+import com.spms.service.RoleUserService;
 import com.spms.service.UserService;
 import com.spms.utils.*;
 import org.springframework.beans.BeanUtils;
@@ -60,8 +62,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private RoleUserMapper roleUserMapper;
-    @Autowired
-    private UserMapper userMapper;
 
     @Override
     public Result login(User user) {
@@ -193,6 +193,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userLambdaUpdateWrapper.set(User::getDelFlag, DELETE).in(User::getUserId, ids);
         this.update(userLambdaUpdateWrapper);
 
+        // 删除用户时，删除用户与角色的关联
         LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         roleUserLambdaUpdateWrapper.set(RoleUser::getDelFlag, DELETE).in(RoleUser::getUserId, ids);
         roleUserMapper.update(roleUserLambdaUpdateWrapper);
@@ -212,7 +213,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(!Objects.isNull(userDTO.getEmail()), User::getEmail, userDTO.getEmail())
                 .eq(!Objects.isNull(userDTO.getStatus()), User::getStatus, userDTO.getStatus())
                 .eq(!Objects.isNull(userDTO.getPhoneNumber()), User::getPhoneNumber, userDTO.getPhoneNumber())
-                .eq(User::getDelFlag, 0)
+                .eq(User::getDelFlag, NOT_DELETE)
                 .orderByAsc(User::getCreateTime);
         this.page(userPage, userLambdaQueryWrapper);
 
@@ -239,12 +240,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.eq(User::getUserId, userDTO.getUserId())
                 .set(User::getStatus, userDTO.getStatus());
-        boolean update = this.update(userLambdaUpdateWrapper);
+        boolean isUpdate = this.update(userLambdaUpdateWrapper);
 
-        if (!update) {
+        if (!isUpdate) {
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
         }
 
+        //如果redis中存在该用户的登录信息，则删除
         if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userDTO.getUserId()))) {
             redisTemplate.delete(USER_LOGIN + userDTO.getUserId());
         }
@@ -253,7 +255,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result assignRole(Long userId, List<Long> roleIds) {
-        return null;
+        if (userId == null || roleIds == null || roleIds.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaUpdateWrapper<RoleUser> deleteWrapper = new LambdaUpdateWrapper<>();
+        deleteWrapper.eq(RoleUser::getUserId, userId)
+                .set(RoleUser::getDelFlag, DELETE);
+        roleUserMapper.update(deleteWrapper);
+
+        for (Long roleId : roleIds) {
+            LambdaQueryWrapper<RoleUser> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(RoleUser::getUserId, userId)
+                    .eq(RoleUser::getRoleId, roleId);
+            RoleUser existingRoleUser = roleUserMapper.selectOne(queryWrapper);
+
+            if (existingRoleUser != null) {
+                // 如果存在相同的role_id和user_id的记录，且del_flag为true，则更新del_flag为false
+                if (existingRoleUser.getDelFlag()) {
+                    existingRoleUser.setDelFlag(NOT_DELETE);
+                    LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                    roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
+                            .eq(RoleUser::getRoleId, roleId)
+                            .set(RoleUser::getDelFlag, NOT_DELETE);
+                    roleUserMapper.update(roleUserLambdaUpdateWrapper);
+                }
+            } else {
+                // 如果不存在相同的role_id和user_id的记录，则插入新记录
+                RoleUser roleUser = new RoleUser();
+                roleUser.setUserId(userId);
+                roleUser.setRoleId(roleId);
+                roleUser.setDelFlag(NOT_DELETE);
+                roleUserMapper.insert(roleUser);
+            }
+        }
+
+        return Result.success("分配成功");
     }
 
 }
