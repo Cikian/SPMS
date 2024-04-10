@@ -262,6 +262,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional
     public Result updateStatus(UserDTO userDTO) {
+        if (userDTO == null || userDTO.getUserId() == null || userDTO.getStatus() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.eq(User::getUserId, userDTO.getUserId())
                 .set(User::getStatus, userDTO.getStatus());

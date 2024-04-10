@@ -2,6 +2,7 @@ package com.spms.controller;
 
 import com.spms.dto.Result;
 import com.spms.dto.RoleDTO;
+import com.spms.dto.UserDTO;
 import com.spms.entity.Role;
 import com.spms.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,5 +45,11 @@ public class RoleController {
     @PreAuthorize("hasRole('system_admin')")
     public Result queryUserListByRoleId(@PathVariable("roleId") Long roleId) {
         return roleService.queryUserListByRoleId(roleId);
+    }
+
+    @GetMapping("/updateStatus")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result updateStatus(@RequestBody RoleDTO roleDTO) {
+        return roleService.updateStatus(roleDTO);
     }
 }

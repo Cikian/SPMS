@@ -1,6 +1,7 @@
 package com.spms.service;
 
 import com.spms.dto.Result;
+import com.spms.dto.RoleDTO;
 import com.spms.entity.Role;
 
 public interface RoleService {
@@ -13,4 +14,6 @@ public interface RoleService {
     Result queryById(Long roleId);
 
     Result queryUserListByRoleId(Long roleId);
+
+    Result updateStatus(RoleDTO roleDTO);
 }

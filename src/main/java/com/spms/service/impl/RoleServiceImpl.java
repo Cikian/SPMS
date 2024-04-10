@@ -172,4 +172,22 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
 
         return Result.success(userDTOList);
     }
+
+    @Override
+    public Result updateStatus(RoleDTO roleDTO) {
+        if (roleDTO == null || roleDTO.getRoleId() == null || roleDTO.getStatus() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaUpdateWrapper<Role> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Role::getRoleId, roleDTO.getRoleId())
+                .set(Role::getStatus, roleDTO.getStatus());
+        this.update(updateWrapper);
+
+        Set<String> keys = redisTemplate.keys(ROLE_LIST + "*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
+        return Result.success("修改成功");
+    }
 }
