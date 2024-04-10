@@ -5,9 +5,22 @@ spring:
   application:
     name: SPMS
   mail:
-    host: smtp.qq.com
-    username: 742392696@qq.com
-    password: bxqajsnhbndpbecj
+    protocol: smtp   # 协议
+    host: smtp.yeah.net   # 服务器地址
+    username: cikian@yeah.net   # 邮箱账号
+    password: MFHLUDPMUPUYCFHX   # 邮箱密码
+    default-encoding: UTF-8   # 默认编码
+    properties:
+      mail:
+        #配置SSL 加密工厂
+        smtp:
+          ssl:
+            #本地测试，先放开ssl
+            enable: false
+            required: false
+          #开启debug模式，这样邮件发送过程的日志会在控制台打印出来，方便排查错误
+        debug: true
+    port: 25   # 端口号
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://140.143.140.103:3306/spms?useSSL=false&serverTimezone=UTC
