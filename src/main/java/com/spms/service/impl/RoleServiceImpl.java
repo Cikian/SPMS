@@ -7,11 +7,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
 import com.spms.dto.RoleDTO;
+import com.spms.dto.UserDTO;
 import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
+import com.spms.entity.User;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.RoleMapper;
 import com.spms.mapper.RoleUserMapper;
+import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.RoleService;
 import org.springframework.beans.BeanUtils;
@@ -22,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static com.spms.constants.RedisConstants.ROLE_LIST;
@@ -37,6 +39,9 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
 
     @Autowired
     private RoleUserMapper roleUserMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     @Transactional
@@ -102,7 +107,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         }
 
         LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        roleUserLambdaQueryWrapper.in(RoleUser::getRoleId, ids)
+        roleUserLambdaQueryWrapper.in(RoleUser::getRoleId, List.of(ids))
                 .eq(RoleUser::getDelFlag, NOT_DELETE);
         List<RoleUser> roleUsers = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
 
@@ -111,7 +116,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         }
 
         LambdaUpdateWrapper<Role> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.in(Role::getRoleId, ids)
+        updateWrapper.in(Role::getRoleId, List.of(ids))
                 .set(Role::getDelFlag, DELETE);
         this.update(updateWrapper);
 
@@ -120,5 +125,51 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             redisTemplate.delete(keys);
         }
         return Result.success("删除成功");
+    }
+
+    @Override
+    public Result queryById(Long roleId) {
+        if (roleId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleLambdaQueryWrapper.eq(Role::getRoleId, roleId)
+                .eq(Role::getDelFlag, NOT_DELETE);
+        Role role = this.getOne(roleLambdaQueryWrapper);
+
+        if (role == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "查询失败");
+        }
+
+        RoleDTO roleDTO = new RoleDTO();
+        BeanUtils.copyProperties(role, roleDTO);
+        return Result.success(roleDTO);
+    }
+
+    @Override
+    public Result queryUserByRoleId(Long roleId) {
+        if (roleId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleUserLambdaQueryWrapper.eq(RoleUser::getRoleId, roleId)
+                .eq(RoleUser::getDelFlag, NOT_DELETE);
+        List<RoleUser> roleUsers = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
+
+        if (roleUsers == null || roleUsers.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        List<UserDTO> userDTOList = roleUsers.stream().map(roleUser -> {
+            Long userId = roleUser.getUserId();
+            User user = userMapper.selectById(userId);
+            UserDTO userDTO = new UserDTO();
+            BeanUtils.copyProperties(user, userDTO);
+            return userDTO;
+        }).toList();
+
+        return Result.success(userDTOList);
     }
 }

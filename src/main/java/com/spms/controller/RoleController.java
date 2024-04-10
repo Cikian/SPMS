@@ -33,4 +33,17 @@ public class RoleController {
     public Result delete(@RequestBody Long[] ids) {
         return roleService.delete(ids);
     }
+
+    @GetMapping("/queryById/{roleId}")
+    @PreAuthorize("hasRole('admin')")
+    public Result queryById(@PathVariable("roleId") Long roleId) {
+        return roleService.queryById(roleId);
+    }
+
+    //查询角色下的用户
+    @GetMapping("/queryUserByRoleId/{roleId}")
+    @PreAuthorize("hasRole('admin')")
+    public Result queryUserByRoleId(@PathVariable("roleId") Long roleId) {
+        return roleService.queryUserByRoleId(roleId);
+    }
 }

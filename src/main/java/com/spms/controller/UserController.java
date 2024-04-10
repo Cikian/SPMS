@@ -50,10 +50,10 @@ public class UserController {
         return userService.list(userDTO, page, size);
     }
 
-    @GetMapping("/queryById")
+    @GetMapping("/queryById/{userId}")
     @PreAuthorize("hasRole('admin')")
-    public Result queryById(@RequestParam("id") Long id) {
-        return userService.queryById(id);
+    public Result queryById(@PathVariable("userId") Long userId) {
+        return userService.queryById(userId);
     }
 
     @GetMapping("/updateStatus")
