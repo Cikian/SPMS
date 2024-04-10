@@ -10,14 +10,12 @@ import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
-import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
-import com.spms.service.RoleUserService;
 import com.spms.service.UserService;
 import com.spms.utils.*;
 import org.springframework.beans.BeanUtils;
@@ -37,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.spms.constants.RedisConstants.*;
 import static com.spms.constants.SystemConstants.*;
@@ -319,6 +316,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
         return Result.success("分配成功");
+    }
+
+    @Override
+    public Result queryById(Long id) {
+
+        return null;
     }
 
 }

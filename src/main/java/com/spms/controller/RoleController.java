@@ -2,6 +2,7 @@ package com.spms.controller;
 
 import com.spms.dto.Result;
 import com.spms.dto.RoleDTO;
+import com.spms.entity.Role;
 import com.spms.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,5 +21,17 @@ public class RoleController {
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
         return roleService.list(roleDTO, page, size);
+    }
+
+    @PostMapping("/add")
+    @PreAuthorize("hasRole('admin')")
+    public Result add(@RequestBody Role role) {
+        return roleService.add(role);
+    }
+
+    @PostMapping("/delete")
+    @PreAuthorize("hasRole('admin')")
+    public Result delete(@RequestBody Long[] ids) {
+        return roleService.delete(ids);
     }
 }

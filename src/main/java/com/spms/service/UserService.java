@@ -29,4 +29,6 @@ public interface UserService {
     Result updateStatus(UserDTO userDTO);
 
     Result assignRole(Long userId, List<Long> roleIds);
+
+    Result queryById(Long id);
 }

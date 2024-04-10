@@ -61,4 +61,14 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         redisTemplate.opsForValue().set(ROLE_LIST + page, JSONObject.toJSONString(roleDTOPage));
         return Result.success(roleDTOPage);
     }
+
+    @Override
+    public Result add(Role role) {
+        return null;
+    }
+
+    @Override
+    public Result delete(Long[] ids) {
+        return null;
+    }
 }
