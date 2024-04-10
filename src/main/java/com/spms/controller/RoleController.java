@@ -17,10 +17,9 @@ public class RoleController {
 
     @GetMapping("/list")
     @PreAuthorize("hasRole('admin')")
-    public Result list(@RequestBody RoleDTO roleDTO,
-                       @RequestParam(value = "page", defaultValue = "1") Integer page,
+    public Result list(@RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
-        return roleService.list(roleDTO, page, size);
+        return roleService.list(page, size);
     }
 
     @PostMapping("/add")

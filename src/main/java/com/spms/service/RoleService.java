@@ -5,7 +5,7 @@ import com.spms.dto.RoleDTO;
 import com.spms.entity.Role;
 
 public interface RoleService {
-    Result list(RoleDTO roleDTO, Integer page, Integer size);
+    Result list(Integer page, Integer size);
 
     Result add(Role role);
 

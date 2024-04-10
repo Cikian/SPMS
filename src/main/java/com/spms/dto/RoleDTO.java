@@ -7,4 +7,5 @@ public class RoleDTO {
     private Long roleId;
     private String roleName;
     private Boolean status;
+    private String remark;
 }
