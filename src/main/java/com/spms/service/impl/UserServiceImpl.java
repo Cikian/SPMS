@@ -320,8 +320,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result queryById(Long id) {
+        if (id == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
 
-        return null;
+        User queryUser = this.getById(id);
+        if (queryUser == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "用户不存在");
+        }
+
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(queryUser, userDTO);
+
+        return Result.success(userDTO);
     }
 
 }
