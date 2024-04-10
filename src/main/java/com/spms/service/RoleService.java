@@ -12,5 +12,5 @@ public interface RoleService {
 
     Result queryById(Long roleId);
 
-    Result queryUserByRoleId(Long roleId);
+    Result queryUserListByRoleId(Long roleId);
 }

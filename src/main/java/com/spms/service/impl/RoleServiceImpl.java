@@ -148,7 +148,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     @Override
-    public Result queryUserByRoleId(Long roleId) {
+    public Result queryUserListByRoleId(Long roleId) {
         if (roleId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }

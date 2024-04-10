@@ -41,9 +41,9 @@ public class RoleController {
     }
 
     //查询角色下的用户
-    @GetMapping("/queryUserByRoleId/{roleId}")
+    @GetMapping("/queryUserListByRoleId/{roleId}")
     @PreAuthorize("hasRole('admin')")
-    public Result queryUserByRoleId(@PathVariable("roleId") Long roleId) {
-        return roleService.queryUserByRoleId(roleId);
+    public Result queryUserListByRoleId(@PathVariable("roleId") Long roleId) {
+        return roleService.queryUserListByRoleId(roleId);
     }
 }
