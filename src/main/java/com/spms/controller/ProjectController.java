@@ -2,6 +2,7 @@ package com.spms.controller;
 
 import com.spms.dto.Result;
 import com.spms.entity.Project;
+import com.spms.entity.VO.ProjectVo;
 import com.spms.enums.ResultCode;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,8 @@ public class ProjectController {
     private ProjectService proService;
 
     @PostMapping
-    public Result addProject(@RequestBody Project project){
-        if (proService.addPro(project)){
+    public Result addProject(@RequestBody ProjectVo projectVo){
+        if (proService.addPro(projectVo)){
             return Result.success("添加成功");
         }
         return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
