@@ -279,46 +279,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    @Transactional
-    public Result assignRole(Long userId, List<Long> roleIds) {
-        if (userId == null || roleIds == null || roleIds.isEmpty()) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        LambdaUpdateWrapper<RoleUser> deleteWrapper = new LambdaUpdateWrapper<>();
-        deleteWrapper.eq(RoleUser::getUserId, userId)
-                .set(RoleUser::getDelFlag, DELETE);
-        roleUserMapper.update(deleteWrapper);
-
-        for (Long roleId : roleIds) {
-            LambdaQueryWrapper<RoleUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(RoleUser::getUserId, userId)
-                    .eq(RoleUser::getRoleId, roleId);
-            RoleUser existingRoleUser = roleUserMapper.selectOne(queryWrapper);
-
-            if (existingRoleUser != null) {
-                // 如果存在相同的role_id和user_id的记录，且del_flag为true，则更新del_flag为false
-                if (existingRoleUser.getDelFlag()) {
-                    existingRoleUser.setDelFlag(NOT_DELETE);
-                    LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                    roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
-                            .eq(RoleUser::getRoleId, roleId)
-                            .set(RoleUser::getDelFlag, NOT_DELETE);
-                    roleUserMapper.update(roleUserLambdaUpdateWrapper);
-                }
-            } else {
-                // 如果不存在相同的role_id和user_id的记录，则插入新记录
-                RoleUser roleUser = new RoleUser();
-                roleUser.setUserId(userId);
-                roleUser.setRoleId(roleId);
-                roleUser.setDelFlag(NOT_DELETE);
-                roleUserMapper.insert(roleUser);
-            }
-        }
-        return Result.success("分配成功");
-    }
-
-    @Override
     public Result queryById(Long id) {
         if (id == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");

@@ -16,33 +16,32 @@ public class RoleController {
     private RoleService roleService;
 
     @GetMapping("/list")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
         return roleService.list(page, size);
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result add(@RequestBody Role role) {
         return roleService.add(role);
     }
 
     @PostMapping("/delete")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result delete(@RequestBody Long[] ids) {
         return roleService.delete(ids);
     }
 
     @GetMapping("/queryById/{roleId}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result queryById(@PathVariable("roleId") Long roleId) {
         return roleService.queryById(roleId);
     }
 
-    //查询角色下的用户
     @GetMapping("/queryUserListByRoleId/{roleId}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result queryUserListByRoleId(@PathVariable("roleId") Long roleId) {
         return roleService.queryUserListByRoleId(roleId);
     }

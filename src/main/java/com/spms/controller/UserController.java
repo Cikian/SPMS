@@ -31,19 +31,19 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result add(@RequestBody User user) {
         return userService.add(user);
     }
 
     @PostMapping("/delete")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result delete(@RequestBody Long[] ids) {
         return userService.delete(ids);
     }
 
     @PostMapping("/list")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody UserDTO userDTO,
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
@@ -51,13 +51,13 @@ public class UserController {
     }
 
     @GetMapping("/queryById/{userId}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result queryById(@PathVariable("userId") Long userId) {
         return userService.queryById(userId);
     }
 
     @GetMapping("/updateStatus")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('system_admin')")
     public Result updateStatus(@RequestBody UserDTO userDTO) {
         return userService.updateStatus(userDTO);
     }
@@ -77,10 +77,5 @@ public class UserController {
         return userService.updatePassword(passwordUpdateDTO);
     }
 
-    @PostMapping("/assignRole")
-    @PreAuthorize("hasRole('admin')")
-    public Result assignRole(@RequestParam("userId") Long userId,
-                             @RequestParam("roleIds") List<Long> roleIds) {
-        return userService.assignRole(userId, roleIds);
-    }
+
 }
