@@ -41,12 +41,6 @@ public class RoleController {
         return roleService.queryById(roleId);
     }
 
-    @GetMapping("/queryUserListByRoleId/{roleId}")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result queryUserListByRoleId(@PathVariable("roleId") Long roleId) {
-        return roleService.queryUserListByRoleId(roleId);
-    }
-
     @GetMapping("/updateStatus")
     @PreAuthorize("hasRole('system_admin')")
     public Result updateStatus(@RequestBody RoleDTO roleDTO) {

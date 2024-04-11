@@ -13,7 +13,5 @@ public interface RoleService {
 
     Result queryById(Long roleId);
 
-    Result queryUserListByRoleId(Long roleId);
-
     Result updateStatus(RoleDTO roleDTO);
 }

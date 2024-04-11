@@ -35,4 +35,10 @@ public class RoleUserController {
         return roleUserService.queryUserHasRole(userId);
     }
 
+    @GetMapping("/queryUserListByRoleId/{roleId}")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result queryUserListByRoleId(@PathVariable("roleId") Long roleId) {
+        return roleUserService.queryUserListByRoleId(roleId);
+    }
+
 }
