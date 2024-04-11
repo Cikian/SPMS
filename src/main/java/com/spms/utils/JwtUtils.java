@@ -14,7 +14,8 @@ public class JwtUtils {
 
     private static final String JWT_KEY = "hbwespms";
 
-    private static final Long JWT_TTL = 30 * 60 * 2 * 24 * 30 * 12 * 10 * 1000L; // 30分钟
+//    private static final Long JWT_TTL = 30 * 60 * 1000L; // 30分钟
+    private static final Long JWT_TTL = 30 * 60 * 2 * 24 * 30 * 12 * 10 * 1000L; // 10年
 
     public static String getUUID() {
         return UUID.randomUUID().toString().replace("-", "");
