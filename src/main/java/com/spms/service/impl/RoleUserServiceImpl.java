@@ -54,15 +54,12 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
             RoleUser existingRoleUser = this.getOne(queryWrapper);
 
             if (existingRoleUser != null) {
-                // 如果存在相同的role_id和user_id的记录，且del_flag为true，则更新del_flag为false
-                if (existingRoleUser.getDelFlag()) {
-                    existingRoleUser.setDelFlag(NOT_DELETE);
-                    LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                    roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
-                            .eq(RoleUser::getRoleId, roleId)
-                            .set(RoleUser::getDelFlag, NOT_DELETE);
-                    this.update(roleUserLambdaUpdateWrapper);
-                }
+                // 如果存在相同的role_id和user_id的记录，则更新del_flag为false
+                LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
+                        .eq(RoleUser::getRoleId, roleId)
+                        .set(RoleUser::getDelFlag, NOT_DELETE);
+                this.update(roleUserLambdaUpdateWrapper);
             } else {
                 // 如果不存在相同的role_id和user_id的记录，则插入新记录
                 RoleUser roleUser = new RoleUser();
@@ -72,7 +69,7 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
                 this.save(roleUser);
             }
         }
-        return Result.success("分配成功");
+        return Result.success("角色分配成功");
     }
 
     @Override
