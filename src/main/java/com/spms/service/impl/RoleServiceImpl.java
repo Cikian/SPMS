@@ -148,32 +148,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     @Override
-    public Result queryUserListByRoleId(Long roleId) {
-        if (roleId == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        roleUserLambdaQueryWrapper.eq(RoleUser::getRoleId, roleId)
-                .eq(RoleUser::getDelFlag, NOT_DELETE);
-        List<RoleUser> roleUsers = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
-
-        if (roleUsers == null || roleUsers.isEmpty()) {
-            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
-        }
-
-        List<UserDTO> userDTOList = roleUsers.stream().map(roleUser -> {
-            Long userId = roleUser.getUserId();
-            User user = userMapper.selectById(userId);
-            UserDTO userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-            return userDTO;
-        }).toList();
-
-        return Result.success(userDTOList);
-    }
-
-    @Override
     public Result updateStatus(RoleDTO roleDTO) {
         if (roleDTO == null || roleDTO.getRoleId() == null || roleDTO.getStatus() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");

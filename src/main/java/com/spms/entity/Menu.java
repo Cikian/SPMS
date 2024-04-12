@@ -15,23 +15,17 @@ public class Menu {
     //权限名称
     private String menuName;
 
-    //路由地址
-    private String path;
-
-    //组件路径
-    private String component;
-
     //是否可见
     private Boolean visible;
 
     //是否启用
     private Boolean status;
 
+    //菜单类型
+    private Integer type;
+
     //权限标识
     private String perms;
-
-    //图标地址
-    private String icon;
 
     //创建人
     private Long createBy;

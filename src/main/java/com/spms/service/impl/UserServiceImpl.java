@@ -10,8 +10,10 @@ import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
+import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.RoleMapper;
 import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
@@ -59,6 +61,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private RoleUserMapper roleUserMapper;
+
+    @Autowired
+    private RoleMapper roleMapper;
 
     @Override
     public Result login(User user) {
@@ -133,8 +138,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
         }
 
-        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
+        // 新增用户时，自动分配只读成员角色
+        LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleLambdaQueryWrapper.eq(Role::getRoleName, "ROLE_read_only");
+        Role role = roleMapper.selectOne(roleLambdaQueryWrapper);
 
+        RoleUser roleUser = new RoleUser();
+        roleUser.setUserId(user.getUserId());
+        roleUser.setRoleId(role.getRoleId());
+        roleUser.setDelFlag(NOT_DELETE);
+
+        if (roleUserMapper.insert(roleUser) <= 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
+        }
+
+        sendMailMessageService.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
         return Result.success("新增成功");
     }
 

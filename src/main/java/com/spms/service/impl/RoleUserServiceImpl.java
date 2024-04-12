@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
 import com.spms.dto.RoleDTO;
+import com.spms.dto.UserDTO;
 import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
+import com.spms.entity.User;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.RoleMapper;
 import com.spms.mapper.RoleUserMapper;
+import com.spms.mapper.UserMapper;
 import com.spms.service.RoleUserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,9 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
 
     @Autowired
     private RoleMapper roleMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     @Transactional
@@ -48,15 +54,12 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
             RoleUser existingRoleUser = this.getOne(queryWrapper);
 
             if (existingRoleUser != null) {
-                // 如果存在相同的role_id和user_id的记录，且del_flag为true，则更新del_flag为false
-                if (existingRoleUser.getDelFlag()) {
-                    existingRoleUser.setDelFlag(NOT_DELETE);
-                    LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                    roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
-                            .eq(RoleUser::getRoleId, roleId)
-                            .set(RoleUser::getDelFlag, NOT_DELETE);
-                    this.update(roleUserLambdaUpdateWrapper);
-                }
+                // 如果存在相同的role_id和user_id的记录，则更新del_flag为false
+                LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                roleUserLambdaUpdateWrapper.eq(RoleUser::getUserId, userId)
+                        .eq(RoleUser::getRoleId, roleId)
+                        .set(RoleUser::getDelFlag, NOT_DELETE);
+                this.update(roleUserLambdaUpdateWrapper);
             } else {
                 // 如果不存在相同的role_id和user_id的记录，则插入新记录
                 RoleUser roleUser = new RoleUser();
@@ -66,7 +69,7 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
                 this.save(roleUser);
             }
         }
-        return Result.success("分配成功");
+        return Result.success("角色分配成功");
     }
 
     @Override
@@ -104,5 +107,30 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
         return Result.success(roleDTOList);
     }
 
+    @Override
+    public Result queryUserListByRoleId(Long roleId) {
+        if (roleId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleUserLambdaQueryWrapper.eq(RoleUser::getRoleId, roleId)
+                .eq(RoleUser::getDelFlag, NOT_DELETE);
+        List<RoleUser> roleUsers = this.list(roleUserLambdaQueryWrapper);
+
+        if (roleUsers == null || roleUsers.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        List<UserDTO> userDTOList = roleUsers.stream().map(roleUser -> {
+            Long userId = roleUser.getUserId();
+            User user = userMapper.selectById(userId);
+            UserDTO userDTO = new UserDTO();
+            BeanUtils.copyProperties(user, userDTO);
+            return userDTO;
+        }).toList();
+
+        return Result.success(userDTOList);
+    }
 
 }

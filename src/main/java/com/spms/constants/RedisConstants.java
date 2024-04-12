@@ -9,5 +9,6 @@ public class RedisConstants {
     public static final Long EMAIL_CODE_TTL = 5L;
 
     public static final String ROLE_LIST = "role:list:";
+    public static final String MENU_LIST = "menu:list:";
 
 }

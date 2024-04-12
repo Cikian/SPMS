@@ -11,4 +11,6 @@ public interface RoleUserService {
     Result assignRole(Long userId, List<Long> roleIds);
 
     Result queryUserHasRole(Long userId);
+
+    Result queryUserListByRoleId(Long roleId);
 }
