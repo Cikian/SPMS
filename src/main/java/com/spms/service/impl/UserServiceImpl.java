@@ -225,7 +225,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         if (user.getIsFirstLogin()){
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-            userLambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
+            lambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
                     .set(User::getIsFirstLogin, false);
             this.update(lambdaUpdateWrapper);
         }
