@@ -90,11 +90,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         map.put("token", jwt);
         if (Boolean.TRUE.equals(isFirstLogin)) {
             map.put("isFirstLogin", "true");
-            // 如果是第一次登录，则将is_first_login字段更新为false
-            LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-            userLambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
-                    .set(User::getIsFirstLogin, false);
-            this.update(userLambdaUpdateWrapper);
         }
         return Result.success("登录成功", map);
     }
@@ -177,7 +172,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         sendMailMessageService.sendEmail(javaMailSender, email, "SPMS验证码", "【SPMS】验证码为：" + code + "，5分钟内有效，请勿泄露和转发，如非本人操作，请忽略此邮件。");
 
         redisTemplate.opsForValue().set(EMAIL_CODE + email, code, EMAIL_CODE_TTL, TimeUnit.MINUTES);
-        return Result.success("发送成功");
+        return Result.success("验证码发送成功，请注意查收");
     }
 
     @Override
@@ -200,6 +195,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public Result updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
         if (StrUtil.isEmpty(passwordUpdateDTO.getOldPassword()) || StrUtil.isEmpty(passwordUpdateDTO.getNewPassword())) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -219,11 +215,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        userLambdaUpdateWrapper.set(User::getPassword, bCryptPasswordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+        userLambdaUpdateWrapper.eq(User::getUserId,user.getUserId())
+                .set(User::getPassword, bCryptPasswordEncoder.encode(passwordUpdateDTO.getNewPassword()));
         boolean isSuccess = this.update(userLambdaUpdateWrapper);
 
         if (!isSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        if (user.getIsFirstLogin()){
+            LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            userLambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
+                    .set(User::getIsFirstLogin, false);
+            this.update(lambdaUpdateWrapper);
         }
 
         redisTemplate.delete(USER_LOGIN + user.getUserId());
