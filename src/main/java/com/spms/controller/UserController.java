@@ -22,7 +22,6 @@ public class UserController {
 
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
-        System.out.println("user = " + user);
         return userService.login(user);
     }
 

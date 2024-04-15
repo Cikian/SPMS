@@ -2,6 +2,8 @@ package com.spms.dto;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class UserDTO {
     private Long userId;
@@ -12,4 +14,5 @@ public class UserDTO {
     private String phoneNumber;
     private String gender;
     private String avatar;
+    private LocalDateTime createTime;
 }
