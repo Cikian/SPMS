@@ -2,6 +2,7 @@ package com.spms.handler;
 
 import com.spms.dto.Result;
 import com.spms.enums.ResultCode;
+import io.lettuce.core.RedisException;
 import org.springframework.mail.MailSendException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -16,7 +17,7 @@ import java.sql.SQLSyntaxErrorException;
 @ResponseBody
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({MailSendException.class, SQLException.class, SQLSyntaxErrorException.class})
+    @ExceptionHandler({MailSendException.class, SQLException.class, SQLSyntaxErrorException.class, RedisException.class})
     public Result handleRuntimeException(Exception e) {
         return Result.fail(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "服务器异常");
     }

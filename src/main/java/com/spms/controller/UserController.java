@@ -56,7 +56,7 @@ public class UserController {
         return userService.queryById(userId);
     }
 
-    @GetMapping("/updateStatus")
+    @PostMapping("/updateStatus")
     @PreAuthorize("hasRole('system_admin')")
     public Result updateStatus(@RequestBody UserDTO userDTO) {
         return userService.updateStatus(userDTO);

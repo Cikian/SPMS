@@ -148,7 +148,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         sendMailMessageService.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
-        return Result.success("新增成功");
+        return Result.success("新增成功，用户名为" + user.getUserName());
     }
 
     @Override
