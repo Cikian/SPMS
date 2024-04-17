@@ -94,6 +94,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(loginUser.getUser(), userDTO, "userId", "mail", "phoneNumber", "status", "gender", "createTime");
         map.put("userInfo", JSONObject.toJSONString(userDTO));
+        map.put("hasRole", JSONObject.toJSONString(loginUser.getAuthorities()));
         return Result.success("登录成功", map);
     }
 
