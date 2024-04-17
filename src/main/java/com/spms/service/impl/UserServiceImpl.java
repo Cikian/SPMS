@@ -83,7 +83,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String jwt = JwtUtils.createJWT(userId);
         redisTemplate.opsForValue().set(USER_LOGIN + userId, JSONObject.toJSONString(loginUser), USER_LOGIN_TTL, TimeUnit.MINUTES);
-//        redisTemplate.opsForValue().set(USER_LOGIN + userId, JSONObject.toJSONString(loginUser));
 
         Boolean isFirstLogin = loginUser.getUser().getIsFirstLogin();
         Map<String, String> map = new HashMap<>();
@@ -91,6 +90,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (Boolean.TRUE.equals(isFirstLogin)) {
             map.put("isFirstLogin", "true");
         }
+
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(loginUser.getUser(), userDTO, "userId", "mail", "phoneNumber", "status", "gender", "createTime");
+        map.put("userInfo", JSONObject.toJSONString(userDTO));
         return Result.success("登录成功", map);
     }
 
@@ -215,7 +218,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        userLambdaUpdateWrapper.eq(User::getUserId,user.getUserId())
+        userLambdaUpdateWrapper.eq(User::getUserId, user.getUserId())
                 .set(User::getPassword, bCryptPasswordEncoder.encode(passwordUpdateDTO.getNewPassword()));
         boolean isSuccess = this.update(userLambdaUpdateWrapper);
 
@@ -223,7 +226,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
         }
 
-        if (user.getIsFirstLogin()){
+        if (user.getIsFirstLogin()) {
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.eq(User::getUserId, loginUser.getUser().getUserId())
                     .set(User::getIsFirstLogin, false);
@@ -319,6 +322,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BeanUtils.copyProperties(queryUser, userDTO);
 
         return Result.success(userDTO);
+    }
+
+    @Override
+    public Result updateUserInfo(UserDTO userDTO) {
+        return null;
     }
 
 }

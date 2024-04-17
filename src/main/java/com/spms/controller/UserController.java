@@ -77,5 +77,9 @@ public class UserController {
         return userService.updatePassword(passwordUpdateDTO);
     }
 
+    @PostMapping("/updateUserInfo")
+    public Result updateUserInfo(@RequestBody UserDTO userDTO) {
+        return userService.updateUserInfo(userDTO);
+    }
 
 }

@@ -29,4 +29,6 @@ public interface UserService {
     Result updateStatus(UserDTO userDTO);
 
     Result queryById(Long id);
+
+    Result updateUserInfo(UserDTO userDTO);
 }
