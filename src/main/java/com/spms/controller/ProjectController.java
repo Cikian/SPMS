@@ -6,10 +6,7 @@ import com.spms.entity.VO.ProjectVo;
 import com.spms.enums.ResultCode;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Title: ProjectController
@@ -26,9 +23,15 @@ public class ProjectController {
 
     @PostMapping
     public Result addProject(@RequestBody ProjectVo projectVo){
+        System.out.println(projectVo);
         if (proService.addPro(projectVo)){
             return Result.success("添加成功");
         }
         return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+    }
+
+    @GetMapping
+    public Result getAllProject(){
+        return Result.success(proService.getAllPro());
     }
 }

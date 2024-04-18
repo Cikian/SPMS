@@ -11,6 +11,9 @@ import com.spms.utils.TimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import java.util.List;
 
 /**
  * @Title: ProjectServiceImpl
@@ -53,6 +56,11 @@ public class ProjectServiceImpl implements ProjectService {
             projectMapper.addCostDevice(device);
         }
         return true;
+    }
+
+    @Override
+    public List<Project> getAllPro(){
+        return projectMapper.selectList(null);
     }
 
 }

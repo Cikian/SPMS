@@ -5,6 +5,8 @@ import com.spms.entity.Project;
 import com.spms.entity.VO.ProjectVo;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @Title: ProjectService
  * @Author Cikian
@@ -16,4 +18,5 @@ import org.springframework.stereotype.Service;
 
 public interface ProjectService {
     boolean addPro(ProjectVo projectVo);
+    List<Project> getAllPro();
 }

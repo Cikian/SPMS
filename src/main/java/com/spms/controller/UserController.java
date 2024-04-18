@@ -1,5 +1,6 @@
 package com.spms.controller;
 
+import com.alibaba.druid.pool.DruidDataSource;
 import com.spms.constants.SystemConstants;
 import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
@@ -7,10 +8,13 @@ import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
 import com.spms.entity.User;
 import com.spms.service.UserService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.List;
 
 @RestController
@@ -19,9 +23,19 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
+    @Autowired
+    private DataSource dataSource;
+    @SneakyThrows
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
+        Connection connection =   dataSource.getConnection();
+        System.out.println(connection);
+        DruidDataSource druidDataSource = (DruidDataSource) dataSource;
+        System.out.println("druidDataSource 数据源最大连接数：" + druidDataSource.getMaxActive());
+        System.out.println("druidDataSource 数据源初始化连接数：" + druidDataSource.getInitialSize());
+        long timeBetweenEvictionRunsMillis = druidDataSource.getTimeBetweenEvictionRunsMillis();
+
+
         return userService.login(user);
     }
 

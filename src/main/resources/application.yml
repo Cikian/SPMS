@@ -23,10 +23,28 @@ spring:
         debug: true
     port: 25   # 端口号
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://140.143.140.103:3306/spms?useSSL=false&serverTimezone=UTC
-    username: root
-    password: chen0809
+    druid:
+      url: jdbc:mysql://140.143.140.103:3306/spms?useSSL=false&serverTimezone=UTC
+      username: root
+      password: chen0809
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: admin
+        login-password: admin
+      initial-size: 5
+      max-active: 20
+
+      min-idle: 3
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 'x'
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
   data:
     redis:
       host: 140.143.140.103
