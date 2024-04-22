@@ -4,10 +4,7 @@ import com.spms.dto.Result;
 import com.spms.service.RoleMenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,5 +20,11 @@ public class RoleMenuController {
     public Result assignMenu(@RequestParam("roleId") Long roleId,
                              @RequestParam("menuIds") List<Long> menuIds) {
         return roleMenuService.assignPermissions(roleId, menuIds);
+    }
+
+    @GetMapping("/queryRoleHasMenu/{roleId}")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result queryRoleHasMenu(@PathVariable("roleId") Long roleId) {
+        return roleMenuService.queryRoleHasMenu(roleId);
     }
 }

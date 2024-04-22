@@ -7,4 +7,5 @@ public class SystemConstants {
     public static final Boolean DELETE = true;
     public static final Boolean NOT_DELETE = false;
 
+    public static final String ROLE_PREFIX = "ROLE_";
 }

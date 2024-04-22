@@ -25,10 +25,11 @@ public class UserController {
     private UserService userService;
     @Autowired
     private DataSource dataSource;
+
     @SneakyThrows
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
-        Connection connection =   dataSource.getConnection();
+        Connection connection = dataSource.getConnection();
         System.out.println(connection);
         DruidDataSource druidDataSource = (DruidDataSource) dataSource;
         System.out.println("druidDataSource 数据源最大连接数：" + druidDataSource.getMaxActive());

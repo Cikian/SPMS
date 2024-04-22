@@ -36,7 +36,7 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
     @Override
     @Transactional
     public Result assignRole(Long userId, List<Long> roleIds) {
-        if (userId == null || roleIds == null || roleIds.isEmpty()) {
+        if (userId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 

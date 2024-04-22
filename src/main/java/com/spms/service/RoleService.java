@@ -14,4 +14,6 @@ public interface RoleService {
     Result queryById(Long roleId);
 
     Result updateStatus(RoleDTO roleDTO);
+
+    Result updateRoleInfo(Role role);
 }

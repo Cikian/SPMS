@@ -28,8 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.spms.constants.RedisConstants.ROLE_LIST;
-import static com.spms.constants.SystemConstants.DELETE;
-import static com.spms.constants.SystemConstants.NOT_DELETE;
+import static com.spms.constants.SystemConstants.*;
 
 @Service
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements RoleService {
@@ -65,9 +64,10 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         BeanUtils.copyProperties(rolePage, roleDTOPage, "records");
 
         List<RoleDTO> roleDTOList = rolePage.getRecords().stream().map(role -> {
-            RoleDTO roleDTO1 = new RoleDTO();
-            BeanUtils.copyProperties(role, roleDTO1);
-            return roleDTO1;
+            role.setRoleName(role.getRoleName().replace(ROLE_PREFIX, ""));
+            RoleDTO roleDTO = new RoleDTO();
+            BeanUtils.copyProperties(role, roleDTO);
+            return roleDTO;
         }).toList();
         roleDTOPage.setRecords(roleDTOList);
 
@@ -77,15 +77,28 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
 
     @Override
     public Result add(Role role) {
-        if (role == null || role.getRoleName() == null) {
+        if (role == null || role.getRoleName() == null || role.getRemark() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleLambdaQueryWrapper.eq(Role::getRoleName, role.getRoleName())
+                .or()
+                .eq(Role::getRemark, role.getRemark())
+                .eq(Role::getDelFlag, NOT_DELETE);
+        Role one = this.getOne(roleLambdaQueryWrapper);
+        if (one != null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "角色标识或角色名称已存在，请重新输入");
+        }
+
+        if (!role.getRoleName().startsWith(ROLE_PREFIX)) {
+            role.setRoleName(ROLE_PREFIX + role.getRoleName());
         }
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         role.setCreateBy(loginUser.getUser().getUserId());
         role.setUpdateBy(loginUser.getUser().getUserId());
         role.setDelFlag(NOT_DELETE);
-        role.setRemark(role.getRemark() == null ? "" : role.getRemark());
 
         boolean isSuccess = this.save(role);
 
@@ -142,6 +155,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             return Result.fail(ResultCode.FAIL.getCode(), "查询失败");
         }
 
+        role.setRoleName(role.getRoleName().replace(ROLE_PREFIX, ""));
+
         RoleDTO roleDTO = new RoleDTO();
         BeanUtils.copyProperties(role, roleDTO);
         return Result.success(roleDTO);
@@ -157,6 +172,35 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         updateWrapper.eq(Role::getRoleId, roleDTO.getRoleId())
                 .set(Role::getStatus, roleDTO.getStatus());
         this.update(updateWrapper);
+
+        Set<String> keys = redisTemplate.keys(ROLE_LIST + "*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
+        return Result.success("修改成功");
+    }
+
+    @Override
+    public Result updateRoleInfo(Role role) {
+        if (role == null || role.getRoleName() == null || role.getRemark() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleLambdaQueryWrapper.eq(Role::getRoleName, role.getRoleName())
+                .or()
+                .eq(Role::getRemark, role.getRemark())
+                .eq(Role::getDelFlag, NOT_DELETE);
+        Role one = this.getOne(roleLambdaQueryWrapper);
+        if (one != null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "角色标识或角色名称已存在，请重新输入");
+        }
+
+        if (!role.getRoleName().startsWith(ROLE_PREFIX)) {
+            role.setRoleName(ROLE_PREFIX + role.getRoleName());
+        }
+
+        this.updateById(role);
 
         Set<String> keys = redisTemplate.keys(ROLE_LIST + "*");
         if (keys != null && !keys.isEmpty()) {

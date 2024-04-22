@@ -3,11 +3,15 @@ package com.spms.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.spms.dto.MenuDTO;
 import com.spms.dto.Result;
+import com.spms.entity.Menu;
 import com.spms.entity.RoleMenu;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.MenuMapper;
 import com.spms.mapper.RoleMenuMapper;
 import com.spms.service.RoleMenuService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +24,13 @@ import static com.spms.constants.SystemConstants.NOT_DELETE;
 @Service
 public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> implements RoleMenuService {
 
+    @Autowired
+    private MenuMapper menuMapper;
+
     @Override
     @Transactional
     public Result assignPermissions(Long roleId, List<Long> menuIds) {
-        if (roleId == null || menuIds == null || menuIds.isEmpty()) {
+        if (roleId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
@@ -55,5 +62,27 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
         }
 
         return Result.success("权限分配成功");
+    }
+
+    @Override
+    public Result queryRoleHasMenu(Long roleId) {
+        if (roleId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<RoleMenu> roleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleMenuLambdaQueryWrapper.eq(RoleMenu::getRoleId, roleId)
+                .eq(RoleMenu::getDelFlag, NOT_DELETE);
+        List<RoleMenu> roleHasMenuList = this.list(roleMenuLambdaQueryWrapper);
+
+        List<MenuDTO> menuDTOList = roleHasMenuList.stream().map(roleMenu -> {
+            Long menuId = roleMenu.getMenuId();
+            Menu menu = menuMapper.selectById(menuId);
+            MenuDTO menuDTO = new MenuDTO();
+            BeanUtils.copyProperties(menu, menuDTO);
+            return menuDTO;
+        }).toList();
+
+        return Result.success(menuDTOList);
     }
 }
