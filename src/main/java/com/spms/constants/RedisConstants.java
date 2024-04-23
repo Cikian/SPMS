@@ -11,4 +11,7 @@ public class RedisConstants {
     public static final String ROLE_LIST = "role:list:";
     public static final String MENU_LIST = "menu:list:";
 
+    public static final String UPDATE_AVATAR = "updateAvatar";
+    public static final Long UPDATEAVATAR_TTL = 60L;
+
 }

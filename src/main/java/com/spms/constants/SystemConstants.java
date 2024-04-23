@@ -8,4 +8,8 @@ public class SystemConstants {
     public static final Boolean NOT_DELETE = false;
 
     public static final String ROLE_PREFIX = "ROLE_";
+
+    public static final String UPLOAD_AVATAR  = "avatar/";
+
+
 }
