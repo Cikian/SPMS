@@ -60,7 +60,6 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        menu.setVisible(true);
         menu.setStatus(true);
         menu.setCreateBy(loginUser.getUser().getUserId());
         menu.setUpdateBy(loginUser.getUser().getUserId());

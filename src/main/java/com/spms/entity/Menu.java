@@ -15,9 +15,6 @@ public class Menu {
     //权限名称
     private String menuName;
 
-    //是否可见
-    private Boolean visible;
-
     //是否启用
     private Boolean status;
 
