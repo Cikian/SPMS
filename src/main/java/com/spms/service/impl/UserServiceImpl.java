@@ -206,6 +206,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        if(!StrUtil.equals(passwordUpdateDTO.getNewPassword(),passwordUpdateDTO.getConfirmPassword())){
+            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
+        }
+
         boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
         if (!passwordCheck) {
             return Result.fail(ResultCode.FAIL.getCode(), "密码格式错误");
