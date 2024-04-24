@@ -30,5 +30,7 @@ public interface UserService {
 
     Result queryById(Long id);
 
-    Result updateUserInfo(UserDTO userDTO);
+    Result updateUserBaseInfo(User user);
+
+    Result queryCurrentUser();
 }

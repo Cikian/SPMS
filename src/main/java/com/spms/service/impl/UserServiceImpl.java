@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.spms.constants.RedisConstants.*;
 import static com.spms.constants.SystemConstants.*;
+import static com.spms.utils.RegexUtils.nickNameCheck;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -92,7 +93,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         UserDTO userDTO = new UserDTO();
-        BeanUtils.copyProperties(loginUser.getUser(), userDTO, "userId", "mail", "phoneNumber", "status", "gender", "createTime");
+        BeanUtils.copyProperties(loginUser.getUser(), userDTO, "userId", "email", "phoneNumber", "status", "gender", "createTime");
         map.put("userInfo", JSONObject.toJSONString(userDTO));
         map.put("hasRole", JSONObject.toJSONString(loginUser.getAuthorities()));
         return Result.success("登录成功", map);
@@ -326,8 +327,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Result updateUserInfo(UserDTO userDTO) {
-        return null;
+    public Result updateUserBaseInfo(User user) {
+        if (user == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = loginUser.getUser();
+
+        if (Objects.equals(user.getNickName(), currentUser.getNickName()) && Objects.equals(user.getGender(), currentUser.getGender())) {
+            return Result.success("信息未发生修改");
+        }
+
+        if (!nickNameCheck(user.getNickName())){
+            return Result.fail(ResultCode.FAIL.getCode(), "昵称格式错误，请重新输入");
+        }
+
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.eq(User::getUserId,currentUser.getUserId())
+                .set(User::getNickName,user.getNickName())
+                .set(User::getGender,user.getGender());
+        this.update(userLambdaUpdateWrapper);
+
+        currentUser.setGender(user.getGender());
+        currentUser.setNickName(user.getNickName());
+
+        redisTemplate.opsForValue().set(USER_LOGIN + currentUser.getUserId(), JSONObject.toJSONString(loginUser), USER_LOGIN_TTL, TimeUnit.MINUTES);
+        return Result.success("修改信息成功");
+    }
+
+    @Override
+    public Result queryCurrentUser() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = loginUser.getUser();
+
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(user, userDTO,"userId", "status", "createTime");
+
+        return Result.success(userDTO);
     }
 
 }

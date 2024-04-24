@@ -92,9 +92,14 @@ public class UserController {
         return userService.updatePassword(passwordUpdateDTO);
     }
 
-    @PostMapping("/updateUserInfo")
-    public Result updateUserInfo(@RequestBody UserDTO userDTO) {
-        return userService.updateUserInfo(userDTO);
+    @PostMapping("/updateUserBaseInfo")
+    public Result updateUserBaseInfo(@RequestBody User user) {
+        return userService.updateUserBaseInfo(user);
+    }
+
+    @GetMapping("/queryCurrentUser")
+    public Result queryCurrentUser() {
+        return userService.queryCurrentUser();
     }
 
 }
