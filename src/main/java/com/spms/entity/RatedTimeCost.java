@@ -10,31 +10,33 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class Device {
+public class RatedTimeCost {
+
     @TableId(type = IdType.ASSIGN_ID)
-    private Long devId;
+    private Long ratedTimeCostId;
 
-    private String devName;
+    private Long resourceId;
 
-    private Integer type;
+    private Integer resourceType;
 
-    private LocalDateTime purchaseDate;
+    private BigDecimal dailyCost;
 
-    private LocalDateTime warrantyExpiryDate;
+    private BigDecimal monthlyCost;
 
-    private BigDecimal purchaseCost;
-
-    private Integer status;
-
+    //创建人
     private Long createBy;
 
+    //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    //更新人
     private Long updateBy;
 
+    //更新时间
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    //删除标记
     private Boolean delFlag;
 }

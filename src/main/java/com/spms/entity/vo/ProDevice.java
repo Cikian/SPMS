@@ -1,8 +1,6 @@
-package com.spms.entity.VO;
+package com.spms.entity.vo;
 
 import lombok.Data;
-
-import java.math.BigDecimal;
 
 /**
  * @Title: ProDevice

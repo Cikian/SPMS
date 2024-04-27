@@ -12,6 +12,6 @@ public class DeviceDTO {
     private Integer type;
     private LocalDateTime purchaseDate;
     private LocalDateTime warrantyExpiryDate;
-    private BigDecimal cost;
+    private BigDecimal purchaseCost;
     private Integer status;
 }

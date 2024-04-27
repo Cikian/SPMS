@@ -1,9 +1,7 @@
 package com.spms.service;
 
-import com.spms.dto.Result;
 import com.spms.entity.Project;
-import com.spms.entity.VO.ProjectVo;
-import org.springframework.stereotype.Service;
+import com.spms.entity.vo.ProjectVo;
 
 import java.util.List;
 

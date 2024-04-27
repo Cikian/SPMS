@@ -1,8 +1,7 @@
 package com.spms.controller;
 
 import com.spms.dto.Result;
-import com.spms.entity.Project;
-import com.spms.entity.VO.ProjectVo;
+import com.spms.entity.vo.ProjectVo;
 import com.spms.enums.ResultCode;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;

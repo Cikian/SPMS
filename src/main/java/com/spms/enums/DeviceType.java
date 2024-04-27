@@ -22,9 +22,9 @@ public enum DeviceType {
     public static boolean contains(Integer type) {
         for (DeviceType deviceType : DeviceType.values()) {
             if (deviceType.getCode().equals(type)) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 }

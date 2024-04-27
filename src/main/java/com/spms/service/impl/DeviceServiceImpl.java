@@ -1,7 +1,6 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.DeviceDTO;
@@ -46,11 +45,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 
-        if (!DeviceType.contains(device.getType())) {
+        if (DeviceType.contains(device.getType())) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型错误");
         }
 
-        if (device.getCost() == null) {
+        if (device.getPurchaseCost() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备价格不能为空");
         }
 
@@ -78,19 +77,14 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     }
 
     @Override
-    public Result delete(Long[] ids) {
-        return null;
-    }
-
-    @Override
     public Result list(Device device, Integer page, Integer size) {
         Page<Device> devicePage = new Page<>(page, size);
         Page<DeviceDTO> deviceDTOPage = new Page<>();
 
         BigDecimal minCost = null;
         BigDecimal maxCost = null;
-        if (device.getCost() != null) {
-            BigDecimal cost = device.getCost();
+        if (device.getPurchaseCost() != null) {
+            BigDecimal cost = device.getPurchaseCost();
             minCost = cost.subtract(new BigDecimal(100));
             maxCost = cost.add(new BigDecimal(100));
         }
@@ -107,8 +101,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
                 .like((!Objects.isNull(device.getDevName())), Device::getDevName, device.getDevName())
                 .eq((!Objects.isNull(device.getStatus())), Device::getStatus, device.getStatus())
                 .eq((!Objects.isNull(device.getType())), Device::getType, device.getType())
-                .ge((!Objects.isNull(device.getCost())), Device::getCost, minCost)
-                .le((!Objects.isNull(device.getCost())), Device::getCost, maxCost)
+                .ge((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, minCost)
+                .le((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, maxCost)
                 .between((!Objects.isNull(device.getPurchaseDate())), Device::getPurchaseDate, minPurchaseDate, maxPurchaseDate)
                 .eq(Device::getDelFlag, NOT_DELETE);
         this.page(devicePage, deviceLambdaQueryWrapper);
@@ -156,7 +150,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         Device device1 = this.getById(device.getDevId());
-        if (device1 == null) {
+        if (device1 == null || device1.getDelFlag() == NOT_DELETE) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
@@ -182,11 +176,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         Device device1 = this.getById(device.getDevId());
-        if (device1 == null) {
+        if (device1 == null || device1.getDelFlag() == NOT_DELETE) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
-        if (!device1.getCost().equals(device.getCost()) || !device1.getPurchaseDate().equals(device.getPurchaseDate())) {
+        if (!device1.getPurchaseCost().equals(device.getPurchaseCost()) || !device1.getPurchaseDate().equals(device.getPurchaseDate())) {
             return Result.fail(ResultCode.FAIL.getCode(), "非法操作");
         }
 
@@ -198,11 +192,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 
-        if (!DeviceType.contains(device.getType())) {
+        if (DeviceType.contains(device.getType())) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型错误");
         }
 
-        //判断设备名称是否重复
         LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
         deviceLambdaQueryWrapper.eq(Device::getDevName, device.getDevName())
                 .ne(Device::getDevId, device.getDevId())
@@ -221,5 +214,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "更新失败");
         }
         return Result.success("更新成功");
+    }
+
+    @Override
+    public Result delete(Long[] ids) {
+        return null;
     }
 }

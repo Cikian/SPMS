@@ -2,8 +2,8 @@ package com.spms.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.spms.entity.Project;
-import com.spms.entity.VO.ProDevice;
-import com.spms.entity.VO.ProPeople;
+import com.spms.entity.vo.ProDevice;
+import com.spms.entity.vo.ProPeople;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

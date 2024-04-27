@@ -1,17 +1,15 @@
 package com.spms.service.impl;
 
-import com.spms.dto.Result;
 import com.spms.entity.Project;
-import com.spms.entity.VO.ProDevice;
-import com.spms.entity.VO.ProPeople;
-import com.spms.entity.VO.ProjectVo;
+import com.spms.entity.vo.ProDevice;
+import com.spms.entity.vo.ProPeople;
+import com.spms.entity.vo.ProjectVo;
 import com.spms.mapper.ProjectMapper;
 import com.spms.service.ProjectService;
 import com.spms.utils.TimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
