@@ -6,7 +6,6 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("sys_role")
 public class Role {
 
     @TableId(type = IdType.ASSIGN_ID)

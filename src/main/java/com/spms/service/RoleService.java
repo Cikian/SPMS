@@ -13,7 +13,7 @@ public interface RoleService {
 
     Result queryById(Long roleId);
 
-    Result updateStatus(RoleDTO roleDTO);
+    Result updateStatus(Role role);
 
     Result updateRoleInfo(Role role);
 }

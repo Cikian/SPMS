@@ -6,7 +6,6 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("sys_menu")
 public class Menu {
 
     @TableId(type = IdType.ASSIGN_ID)

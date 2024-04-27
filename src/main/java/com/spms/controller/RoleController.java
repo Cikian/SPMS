@@ -43,8 +43,8 @@ public class RoleController {
 
     @PostMapping("/updateStatus")
     @PreAuthorize("hasRole('system_admin')")
-    public Result updateStatus(@RequestBody RoleDTO roleDTO) {
-        return roleService.updateStatus(roleDTO);
+    public Result updateStatus(@RequestBody Role role) {
+        return roleService.updateStatus(role);
     }
 
     @PostMapping("/updateRoleInfo")

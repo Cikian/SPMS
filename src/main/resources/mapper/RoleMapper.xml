@@ -6,9 +6,9 @@
 
     <select id="selectUserHasRoles" resultType="java.lang.String">
         select r.role_name
-        from sys_user u
+        from user u
                  left join role_user ru on u.user_id = ru.user_id
-                 left join sys_role r on r.role_id = ru.role_id
+                 left join role r on r.role_id = ru.role_id
         where u.user_id = #{userId}
           and ru.del_flag = 0
           and r.del_flag = 0

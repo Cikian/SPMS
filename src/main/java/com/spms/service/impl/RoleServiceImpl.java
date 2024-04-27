@@ -12,11 +12,14 @@ import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
 import com.spms.entity.User;
 import com.spms.enums.ResultCode;
+import com.spms.handler.MyMetaObjectHandler;
 import com.spms.mapper.RoleMapper;
 import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.RoleService;
+import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.reflection.SystemMetaObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -38,9 +41,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
 
     @Autowired
     private RoleUserMapper roleUserMapper;
-
-    @Autowired
-    private UserMapper userMapper;
 
     @Override
     @Transactional
@@ -152,7 +152,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         Role role = this.getOne(roleLambdaQueryWrapper);
 
         if (role == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "查询失败");
+            return Result.fail(ResultCode.FAIL.getCode(), "角色不存在");
         }
 
         role.setRoleName(role.getRoleName().replace(ROLE_PREFIX, ""));
@@ -163,21 +163,26 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     @Override
-    public Result updateStatus(RoleDTO roleDTO) {
-        if (roleDTO == null || roleDTO.getRoleId() == null || roleDTO.getStatus() == null) {
+    public Result updateStatus(Role role) {
+        if (role == null || role.getRoleId() == null || role.getStatus() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-        LambdaUpdateWrapper<Role> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(Role::getRoleId, roleDTO.getRoleId())
-                .set(Role::getStatus, roleDTO.getStatus());
-        this.update(updateWrapper);
+        if (this.getById(role.getRoleId()) == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "角色不存在");
+        }
+
+        boolean isSuccess = this.updateById(role);
+
+        if (!isSuccess) {
+            return Result.fail(ResultCode.FAIL.getCode(), "更新失败");
+        }
 
         Set<String> keys = redisTemplate.keys(ROLE_LIST + "*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
-        return Result.success("修改成功");
+        return Result.success("更新成功");
     }
 
     @Override
@@ -186,10 +191,16 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        if (this.getById(role.getRoleId()) == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "角色不存在");
+        }
+
         LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        roleLambdaQueryWrapper.eq(Role::getRoleName, role.getRoleName())
-                .or()
-                .eq(Role::getRemark, role.getRemark())
+        roleLambdaQueryWrapper
+                .ne(Role::getRoleId, role.getRoleId())
+                .and(i -> i.eq(Role::getRoleName, role.getRoleName())
+                        .or()
+                        .eq(Role::getRemark, role.getRemark()))
                 .eq(Role::getDelFlag, NOT_DELETE);
         Role one = this.getOne(roleLambdaQueryWrapper);
         if (one != null) {

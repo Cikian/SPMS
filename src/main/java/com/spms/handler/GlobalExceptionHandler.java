@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({MailSendException.class, SQLException.class, SQLSyntaxErrorException.class, RedisException.class})
     public Result handleRuntimeException(Exception e) {
+        System.out.println(e.getMessage());
         return Result.fail(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "服务器异常");
     }
 }
