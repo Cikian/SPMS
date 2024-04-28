@@ -11,6 +11,7 @@ import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.service.ProjectCostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +25,7 @@ public class ProjectCostServiceImpl extends ServiceImpl<ProjectCostMapper, Proje
     private RatedTimeCostMapper ratedTimeCostMapper;
 
     @Override
+    @Transactional
     public Result estimateCost(List<ProjectCost> projectCosts) {
         if (projectCosts == null || projectCosts.isEmpty()) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -61,4 +63,44 @@ public class ProjectCostServiceImpl extends ServiceImpl<ProjectCostMapper, Proje
 
         return Result.success(totalEstimateCost);
     }
+
+    @Override
+    public Result actualCost(List<ProjectCost> projectCosts) {
+        if (projectCosts == null || projectCosts.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        for (ProjectCost projectCost : projectCosts) {
+            if (projectCost.getProjectId() == null || projectCost.getResourceId() == null || projectCost.getActualUseTime() == null) {
+                return Result.fail(ResultCode.FAIL.getCode(), "非法操作");
+            }
+        }
+
+        BigDecimal totalActualCost = BigDecimal.ZERO;
+
+        for (ProjectCost projectCost : projectCosts) {
+            LambdaQueryWrapper<RatedTimeCost> ratedTimeCostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            ratedTimeCostLambdaQueryWrapper.eq(RatedTimeCost::getResourceId, projectCost.getResourceId());
+            RatedTimeCost ratedTimeCost = ratedTimeCostMapper.selectOne(ratedTimeCostLambdaQueryWrapper);
+
+            Integer actualUseTime = projectCost.getActualUseTime();
+            BigDecimal actualCost;
+
+            Integer timeUnit = projectCost.getTimeUnit();
+            if (DAY.getCode().equals(timeUnit)) {
+                BigDecimal dailyCost = ratedTimeCost.getDailyCost();
+                actualCost = BigDecimal.valueOf(actualUseTime).multiply(dailyCost);
+            } else {
+                BigDecimal monthlyCost = ratedTimeCost.getMonthlyCost();
+                actualCost = BigDecimal.valueOf(actualUseTime).multiply(monthlyCost);
+            }
+
+            projectCost.setActualCost(actualCost);
+            totalActualCost = totalActualCost.add(actualCost);
+            this.save(projectCost);
+        }
+
+        return Result.success(totalActualCost);
+    }
+
 }

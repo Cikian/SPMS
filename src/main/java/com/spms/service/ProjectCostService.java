@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ProjectCostService {
     Result estimateCost(List<ProjectCost> projectCosts);
+
+    Result actualCost(List<ProjectCost> projectCosts);
 }

@@ -22,4 +22,9 @@ public class ProjectCostController {
     public Result estimateCost(@RequestBody List<ProjectCost> projectCosts){
         return projectCostService.estimateCost(projectCosts);
     }
+
+    @PostMapping("/actualCost")
+    public Result actualCost(@RequestBody List<ProjectCost> projectCosts){
+        return projectCostService.actualCost(projectCosts);
+    }
 }
