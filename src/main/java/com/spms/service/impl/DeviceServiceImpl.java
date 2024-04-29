@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.DeviceDTO;
 import com.spms.dto.Result;
 import com.spms.entity.Device;
+import com.spms.entity.RatedTimeCost;
 import com.spms.enums.DeviceStatus;
 import com.spms.enums.DeviceType;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.DeviceMapper;
+import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DeviceService;
 import org.springframework.beans.BeanUtils;
@@ -25,12 +27,17 @@ import java.util.Objects;
 
 import static com.spms.constants.SystemConstants.DELETE;
 import static com.spms.constants.SystemConstants.NOT_DELETE;
+import static com.spms.enums.ResourceType.DEVICE;
+import static com.spms.enums.ResourceType.EMPLOYEE;
 
 @Service
 public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> implements DeviceService {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private RatedTimeCostMapper ratedTimeCostMapper;
 
     @Override
     public Result add(Device device) {
@@ -72,6 +79,19 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         if (!isSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+        }
+
+        RatedTimeCost ratedTimeCost = new RatedTimeCost();
+        ratedTimeCost.setResourceId(device.getDevId());
+        ratedTimeCost.setResourceType(DEVICE.getCode());
+        ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
+        ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
+        ratedTimeCost.setCreateBy(loginUser.getUser().getUserId());
+        ratedTimeCost.setUpdateBy(loginUser.getUser().getUserId());
+        ratedTimeCost.setDelFlag(NOT_DELETE);
+
+        if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
         }
 
         return Result.success("添加成功");
@@ -221,6 +241,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
     @Override
     public Result delete(Long[] ids) {
+        //TODO:删除设备，一并删除成本配置
         return null;
     }
 }

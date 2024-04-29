@@ -10,14 +10,17 @@ import com.spms.dto.EmailVerifyDTO;
 import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
+import com.spms.entity.RatedTimeCost;
 import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.mapper.RoleMapper;
 import com.spms.mapper.RoleUserMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
+import com.spms.service.RatedTimeCostService;
 import com.spms.service.UserService;
 import com.spms.utils.*;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +35,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.spms.constants.RedisConstants.*;
 import static com.spms.constants.SystemConstants.*;
+import static com.spms.enums.ResourceType.EMPLOYEE;
 import static com.spms.utils.RegexUtils.nickNameCheck;
 
 @Service
@@ -65,6 +70,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private RoleMapper roleMapper;
+
+    @Autowired
+    private RatedTimeCostMapper ratedTimeCostMapper;
 
     @Override
     public Result login(User user) {
@@ -152,6 +160,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
         }
 
+        RatedTimeCost ratedTimeCost = new RatedTimeCost();
+        ratedTimeCost.setResourceId(user.getUserId());
+        ratedTimeCost.setResourceType(EMPLOYEE.getCode());
+        ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
+        ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
+        ratedTimeCost.setCreateBy(loginUser.getUser().getUserId());
+        ratedTimeCost.setUpdateBy(loginUser.getUser().getUserId());
+        ratedTimeCost.setDelFlag(NOT_DELETE);
+
+        if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
+        }
+
         sendMailMessageService.sendEmail(javaMailSender, email, "SPMS账号密码", "【SPMS】您的用户名为：" + userName + "，初始密码为：" + password);
         return Result.success("新增成功，用户名为" + user.getUserName());
     }
@@ -206,7 +227,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-        if(!StrUtil.equals(passwordUpdateDTO.getNewPassword(),passwordUpdateDTO.getConfirmPassword())){
+        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
             return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
         }
 
@@ -254,6 +275,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaUpdateWrapper<RoleUser> roleUserLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         roleUserLambdaUpdateWrapper.set(RoleUser::getDelFlag, DELETE).in(RoleUser::getUserId, ids);
         roleUserMapper.update(roleUserLambdaUpdateWrapper);
+
+        //删除关联的成本信息
+        
         return Result.success("删除成功");
     }
 
@@ -343,14 +367,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.success("信息未发生修改");
         }
 
-        if (!nickNameCheck(user.getNickName())){
+        if (!nickNameCheck(user.getNickName())) {
             return Result.fail(ResultCode.FAIL.getCode(), "昵称格式错误，请重新输入");
         }
 
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        userLambdaUpdateWrapper.eq(User::getUserId,currentUser.getUserId())
-                .set(User::getNickName,user.getNickName())
-                .set(User::getGender,user.getGender());
+        userLambdaUpdateWrapper.eq(User::getUserId, currentUser.getUserId())
+                .set(User::getNickName, user.getNickName())
+                .set(User::getGender, user.getGender());
         this.update(userLambdaUpdateWrapper);
 
         currentUser.setGender(user.getGender());
@@ -366,7 +390,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = loginUser.getUser();
 
         UserDTO userDTO = new UserDTO();
-        BeanUtils.copyProperties(user, userDTO,"userId", "status", "createTime");
+        BeanUtils.copyProperties(user, userDTO, "userId", "status", "createTime");
 
         return Result.success(userDTO);
     }

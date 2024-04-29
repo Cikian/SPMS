@@ -123,6 +123,7 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
 
         LambdaQueryWrapper<RatedTimeCost> ratedTimeCostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         ratedTimeCostLambdaQueryWrapper
+                .eq(RatedTimeCost::getResourceType, ratedTimeCost.getResourceType())
                 .between(!Objects.isNull(ratedTimeCost.getDailyCost()), RatedTimeCost::getDailyCost, minDailyCost, maxDailyCost)
                 .between(!Objects.isNull(ratedTimeCost.getMonthlyCost()), RatedTimeCost::getMonthlyCost, minMonthlyCost, maxMonthlyCost)
                 .eq(RatedTimeCost::getDelFlag, NOT_DELETE);

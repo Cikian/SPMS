@@ -14,30 +14,18 @@ public class RatedTimeCostController {
     @Autowired
     private RatedTimeCostService ratedTimeCostService;
 
-    @PostMapping("/add")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result add(@RequestBody RatedTimeCost ratedTimeCost) {
-        return ratedTimeCostService.add(ratedTimeCost);
-    }
-
     @PostMapping("/updateCost")
     @PreAuthorize("hasRole('system_admin')")
     public Result updateCost(@RequestBody RatedTimeCost ratedTimeCost) {
         return ratedTimeCostService.updateCost(ratedTimeCost);
     }
 
-    @GetMapping("/list")
+    @PostMapping("/list")
     @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody RatedTimeCost ratedTimeCost,
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
         return ratedTimeCostService.list(ratedTimeCost, page, size);
-    }
-
-    @PostMapping("/delete")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result delete(@RequestBody Long[] ids) {
-        return ratedTimeCostService.delete(ids);
     }
 
     @GetMapping("/queryById/{ratedTimeCostId}")
