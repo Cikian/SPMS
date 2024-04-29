@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static com.spms.constants.SystemConstants.DELETE;
 import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
@@ -150,7 +151,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         Device device1 = this.getById(device.getDevId());
-        if (device1 == null || device1.getDelFlag() == NOT_DELETE) {
+        if (device1 == null || device1.getDelFlag() == DELETE) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
@@ -176,11 +177,13 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         Device device1 = this.getById(device.getDevId());
-        if (device1 == null || device1.getDelFlag() == NOT_DELETE) {
+        if (device1 == null || device1.getDelFlag() == DELETE) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
-        if (!device1.getPurchaseCost().equals(device.getPurchaseCost()) || !device1.getPurchaseDate().equals(device.getPurchaseDate())) {
+        if (!device1.getPurchaseCost().equals(device.getPurchaseCost()) ||
+                !device1.getPurchaseDate().equals(device.getPurchaseDate()) ||
+                !device1.getWarrantyExpiryDate().equals(device.getWarrantyExpiryDate())) {
             return Result.fail(ResultCode.FAIL.getCode(), "非法操作");
         }
 

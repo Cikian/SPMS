@@ -28,7 +28,7 @@ public class DeviceController {
         return deviceService.delete(ids);
     }
 
-    @GetMapping("/list")
+    @PostMapping("/list")
     @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody Device device,
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
