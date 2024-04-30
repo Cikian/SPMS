@@ -5,22 +5,29 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
-public class ProjectCost {
+public class ProjectResource {
 
     @TableId(type = IdType.ASSIGN_ID)
-    private Long proCostId;
+    private Long projectResourceId;
 
     private Long projectId;
 
     private Long resourceId;
 
-    private Integer estimateUseTime;
+    private Integer resourceType;
 
-    private Integer actualUseTime;
+    private LocalDateTime estimateStartTime;
 
-    private Integer timeUnit;
+    private LocalDateTime estimateEndTime;
+
+    private LocalDateTime actualStartTime;
+
+    private LocalDateTime actualEndTime;
+
+    private Integer usage;
 
     private BigDecimal estimateCost;
 

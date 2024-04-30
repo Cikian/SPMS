@@ -9,6 +9,7 @@ import com.spms.entity.Device;
 import com.spms.entity.RatedTimeCost;
 import com.spms.enums.DeviceStatus;
 import com.spms.enums.DeviceType;
+import com.spms.enums.DeviceUsage;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.DeviceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
@@ -73,6 +74,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         device.setCreateBy(loginUser.getUser().getUserId());
         device.setUpdateBy(loginUser.getUser().getUserId());
         device.setStatus(DeviceStatus.NORMAL.getCode());
+        device.setDeviceUsage(DeviceUsage.FREE.getCode());
         device.setDelFlag(NOT_DELETE);
 
         boolean isSuccess = this.save(device);
@@ -121,6 +123,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         deviceLambdaQueryWrapper
                 .like((!Objects.isNull(device.getDevName())), Device::getDevName, device.getDevName())
                 .eq((!Objects.isNull(device.getStatus())), Device::getStatus, device.getStatus())
+                .eq((!Objects.isNull(device.getDeviceUsage())), Device::getStatus, device.getDeviceUsage())
                 .eq((!Objects.isNull(device.getType())), Device::getType, device.getType())
                 .ge((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, minCost)
                 .le((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, maxCost)
@@ -176,7 +179,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         if (device1.getStatus().equals(device.getStatus())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "状态未改变");
+            return Result.fail(ResultCode.FAIL.getCode(), "设备状态未改变");
         }
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

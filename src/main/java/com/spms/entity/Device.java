@@ -29,6 +29,8 @@ public class Device {
 
     private Integer status;
 
+    private Integer deviceUsage;
+
     private Long createBy;
 
     @TableField(fill = FieldFill.INSERT)
