@@ -24,6 +24,7 @@ public class RatedTimeCost {
     private BigDecimal monthlyCost;
 
     //创建人
+    @TableField(fill = FieldFill.INSERT)
     private Long createBy;
 
     //创建时间
@@ -31,6 +32,7 @@ public class RatedTimeCost {
     private LocalDateTime createTime;
 
     //更新人
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateBy;
 
     //更新时间

@@ -37,6 +37,7 @@ public class User {
     private String avatar;
 
     //    创建人
+    @TableField(fill = FieldFill.INSERT)
     private Long createBy;
 
     //    创建时间
@@ -44,6 +45,7 @@ public class User {
     private LocalDateTime createTime;
 
     //    更新人
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateBy;
 
     //    更新时间

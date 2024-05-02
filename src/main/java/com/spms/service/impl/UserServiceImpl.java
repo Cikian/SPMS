@@ -138,8 +138,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setGender(DEFAULT_GENDER);
         user.setAvatar(DEFAULT_AVATAR_URL);
         user.setIsFirstLogin(true);
-        user.setCreateBy(loginUser.getUser().getUserId());
-        user.setUpdateBy(loginUser.getUser().getUserId());
         boolean isSuccess = this.save(user);
 
         if (!isSuccess) {
@@ -165,8 +163,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         ratedTimeCost.setResourceType(EMPLOYEE.getCode());
         ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
         ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
-        ratedTimeCost.setCreateBy(loginUser.getUser().getUserId());
-        ratedTimeCost.setUpdateBy(loginUser.getUser().getUserId());
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
@@ -276,7 +272,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         roleUserLambdaUpdateWrapper.set(RoleUser::getDelFlag, DELETE).in(RoleUser::getUserId, ids);
         roleUserMapper.update(roleUserLambdaUpdateWrapper);
 
-        //删除关联的成本信息
+        //TODO:删除关联的成本信息
         
         return Result.success("删除成功");
     }

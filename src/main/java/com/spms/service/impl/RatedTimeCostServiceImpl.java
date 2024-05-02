@@ -36,41 +36,6 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
     private UserMapper userMapper;
 
     @Override
-    public Result add(RatedTimeCost ratedTimeCost) {
-        if (ratedTimeCost == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        if (ratedTimeCost.getResourceId() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请选择资源");
-        }
-
-        if (ratedTimeCost.getResourceType() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请选择资源类型");
-        }
-
-        if (ratedTimeCost.getDailyCost() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请输入日费用");
-        }
-
-        if (ratedTimeCost.getMonthlyCost() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请输入月费用");
-        }
-
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        ratedTimeCost.setCreateBy(loginUser.getUser().getUserId());
-        ratedTimeCost.setUpdateBy(loginUser.getUser().getUserId());
-        ratedTimeCost.setDelFlag(NOT_DELETE);
-
-        boolean isSuccess = this.save(ratedTimeCost);
-
-        if (!isSuccess) {
-            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
-        }
-        return Result.success("配置成功");
-    }
-
-    @Override
     public Result updateCost(RatedTimeCost ratedTimeCost) {
         if (ratedTimeCost == null || ratedTimeCost.getRatedTimeCostId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -88,9 +53,6 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
         if (ratedTimeCost.getMonthlyCost() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "请输入月费用");
         }
-
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        ratedTimeCost.setUpdateBy(loginUser.getUser().getUserId());
 
         boolean isSuccess = this.updateById(ratedTimeCost);
 

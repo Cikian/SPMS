@@ -4,8 +4,6 @@ import com.spms.dto.Result;
 import com.spms.entity.RatedTimeCost;
 
 public interface RatedTimeCostService{
-    Result add(RatedTimeCost ratedTimeCost);
-
     Result updateCost(RatedTimeCost ratedTimeCost);
 
     Result list(RatedTimeCost ratedTimeCost, Integer page, Integer size);

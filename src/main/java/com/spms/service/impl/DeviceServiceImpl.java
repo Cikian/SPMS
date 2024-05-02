@@ -70,9 +70,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称已存在");
         }
 
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        device.setCreateBy(loginUser.getUser().getUserId());
-        device.setUpdateBy(loginUser.getUser().getUserId());
         device.setStatus(DeviceStatus.NORMAL.getCode());
         device.setDeviceUsage(DeviceUsage.FREE.getCode());
         device.setDelFlag(NOT_DELETE);
@@ -88,8 +85,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         ratedTimeCost.setResourceType(DEVICE.getCode());
         ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
         ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
-        ratedTimeCost.setCreateBy(loginUser.getUser().getUserId());
-        ratedTimeCost.setUpdateBy(loginUser.getUser().getUserId());
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {

@@ -58,11 +58,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         menu.setStatus(true);
-        menu.setCreateBy(loginUser.getUser().getUserId());
-        menu.setUpdateBy(loginUser.getUser().getUserId());
 
         if (!this.save(menu)) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
