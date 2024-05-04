@@ -28,4 +28,10 @@ public class DictionaryTypeController {
         return dictionaryTypeService.list(dictionaryType, page, size);
     }
 
+    @GetMapping("/queryById/{dictionaryTypeId}")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result queryById(@PathVariable("dictionaryTypeId") Long dictionaryTypeId) {
+        return dictionaryTypeService.queryById(dictionaryTypeId);
+    }
+
 }

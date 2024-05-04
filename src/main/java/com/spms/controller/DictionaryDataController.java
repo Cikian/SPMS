@@ -5,10 +5,7 @@ import com.spms.entity.DictionaryData;
 import com.spms.service.DictionaryDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dictionaryData")
@@ -19,19 +16,19 @@ public class DictionaryDataController {
 
     @PostMapping("/add")
     @PreAuthorize("hasRole('system_admin')")
-    public Result add(@RequestBody DictionaryData dictionaryData){
+    public Result add(@RequestBody DictionaryData dictionaryData) {
         return dictionaryDataService.add(dictionaryData);
     }
 
-    @PostMapping("/list")
+    @GetMapping("/delete/{dictionaryDataId}")
     @PreAuthorize("hasRole('system_admin')")
-    public Result list(@RequestBody Long dictionaryTypeId){
-        return dictionaryDataService.list(dictionaryTypeId);
+    public Result delete(@PathVariable("dictionaryDataId") Long dictionaryDataId) {
+        return dictionaryDataService.delete(dictionaryDataId);
     }
 
-    @PostMapping("/delete")
+    @GetMapping("/queryByTypeId/{dictionaryTypeId}")
     @PreAuthorize("hasRole('system_admin')")
-    public Result delete(@RequestBody Long id){
-        return dictionaryDataService.delete(id);
+    public Result queryByTypeId(@PathVariable("dictionaryTypeId") Long dictionaryTypeId) {
+        return dictionaryDataService.queryByTypeId(dictionaryTypeId);
     }
 }
