@@ -32,10 +32,7 @@ public class UserController {
         Connection connection = dataSource.getConnection();
         System.out.println(connection);
         DruidDataSource druidDataSource = (DruidDataSource) dataSource;
-        System.out.println("druidDataSource 数据源最大连接数：" + druidDataSource.getMaxActive());
-        System.out.println("druidDataSource 数据源初始化连接数：" + druidDataSource.getInitialSize());
         long timeBetweenEvictionRunsMillis = druidDataSource.getTimeBetweenEvictionRunsMillis();
-
 
         return userService.login(user);
     }
@@ -100,6 +97,11 @@ public class UserController {
     @GetMapping("/queryCurrentUser")
     public Result queryCurrentUser() {
         return userService.queryCurrentUser();
+    }
+
+    @GetMapping("/queryCanAddToProject")
+    public Result queryCanAddToProject() {
+        return userService.queryCanAddToProject();
     }
 
 }

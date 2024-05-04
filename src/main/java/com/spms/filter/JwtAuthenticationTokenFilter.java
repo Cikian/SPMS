@@ -36,9 +36,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //        获取token
         String token = request.getHeader("token");
-
+        System.out.println("获取header中的token："  + token);
 //        如果token为空放行
         if (StringUtils.isEmpty(token)) {
+            System.out.println("token为空");
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,6 +55,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 response.setHeader("newToken", newToken);
             }
         } catch (Exception e) {
+            System.out.println("token过期，抛异常");
             WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录！")));
             return;
         }

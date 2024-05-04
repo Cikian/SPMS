@@ -3,10 +3,4 @@
 
 <mapper namespace="com.spms.mapper.ProjectMapper">
 
-    <insert id="addCostPeople">
-        insert into pro_cost_people(pro_id, peo_id, days) values(#{proId}, #{peoId}, #{days})
-    </insert>
-    <insert id="addCostDevice">
-        insert into pro_cost_device(pro_id, dev_id, days) values(#{proId}, #{devId}, #{days})
-    </insert>
 </mapper>

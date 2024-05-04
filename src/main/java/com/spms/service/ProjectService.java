@@ -1,7 +1,7 @@
 package com.spms.service;
 
 import com.spms.entity.Project;
-import com.spms.entity.vo.ProjectVo;
+import com.spms.dto.AddProjectDTO;
 
 import java.util.List;
 
@@ -15,6 +15,6 @@ import java.util.List;
 
 
 public interface ProjectService {
-    boolean addPro(ProjectVo projectVo);
+    boolean addPro(AddProjectDTO addProjectDTO);
     List<Project> getAllPro();
 }

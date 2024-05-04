@@ -4,4 +4,7 @@
 
 <mapper namespace="com.spms.mapper.UserMapper">
 
+    <select id="queryCanAddToProject" resultType="com.spms.dto.CreateProjectAddUserDTO">
+        SELECT user_id, user_name, avatar, position FROM create_pro_userdto
+    </select>
 </mapper>

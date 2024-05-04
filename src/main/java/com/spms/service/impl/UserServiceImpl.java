@@ -6,13 +6,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.spms.dto.EmailVerifyDTO;
-import com.spms.dto.PasswordUpdateDTO;
-import com.spms.dto.Result;
-import com.spms.dto.UserDTO;
+import com.spms.dto.*;
 import com.spms.entity.RatedTimeCost;
 import com.spms.entity.Role;
 import com.spms.entity.RoleUser;
+import com.spms.enums.ErrorCode;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.mapper.RoleMapper;
@@ -36,10 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.spms.constants.RedisConstants.*;
@@ -49,6 +44,8 @@ import static com.spms.utils.RegexUtils.nickNameCheck;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     private AuthenticationManager authentication;
@@ -273,7 +270,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         roleUserMapper.update(roleUserLambdaUpdateWrapper);
 
         //TODO:删除关联的成本信息
-        
+
         return Result.success("删除成功");
     }
 
@@ -389,6 +386,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BeanUtils.copyProperties(user, userDTO, "userId", "status", "createTime");
 
         return Result.success(userDTO);
+    }
+
+    @Override
+    public Result queryCanAddToProject() {
+        List<CreateProjectAddUserDTO> createProjectAddUserDTOS = userMapper.queryCanAddToProject();
+        System.out.println(createProjectAddUserDTOS);
+        // 将相同Id的用户的position合并，加顿号
+
+        Map<Long, String> positionMap = new HashMap<>();
+        for (CreateProjectAddUserDTO createProjectAddUserDTO : createProjectAddUserDTOS) {
+            if (positionMap.containsKey(createProjectAddUserDTO.getUserId())) {
+                String s = positionMap.get(createProjectAddUserDTO.getUserId());
+                s = s + "、" + createProjectAddUserDTO.getPosition();
+                positionMap.put(createProjectAddUserDTO.getUserId(), s);
+            } else {
+                positionMap.put(createProjectAddUserDTO.getUserId(), createProjectAddUserDTO.getPosition());
+            }
+        }
+
+        System.out.println(positionMap);
+
+        List<CreateProjectAddUserDTO> resultList = new ArrayList<>();
+        for (Map.Entry<Long, String> entry : positionMap.entrySet()) {
+            CreateProjectAddUserDTO createProjectAddUserDTO = new CreateProjectAddUserDTO();
+            Long userId = entry.getKey();
+            createProjectAddUserDTO.setUserId(userId);
+            createProjectAddUserDTO.setPosition(entry.getValue());
+            for (CreateProjectAddUserDTO dto : createProjectAddUserDTOS){
+                if (userId.equals(dto.getUserId())) {
+                    createProjectAddUserDTO.setUserName(dto.getUserName());
+                    createProjectAddUserDTO.setAvatar(dto.getAvatar());
+                }
+            }
+            resultList.add(createProjectAddUserDTO);
+        }
+
+        Integer code = createProjectAddUserDTOS.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = createProjectAddUserDTOS.isEmpty() ? "获取失败" : "获取成功";
+        return new Result(code, msg, resultList);
     }
 
 }

@@ -1,8 +1,8 @@
 package com.spms.controller;
 
 import com.spms.dto.Result;
-import com.spms.entity.vo.ProjectVo;
-import com.spms.enums.ResultCode;
+import com.spms.dto.AddProjectDTO;
+import com.spms.enums.ErrorCode;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,16 +21,17 @@ public class ProjectController {
     private ProjectService proService;
 
     @PostMapping
-    public Result addProject(@RequestBody ProjectVo projectVo){
-        System.out.println(projectVo);
-        if (proService.addPro(projectVo)){
-            return Result.success("添加成功");
-        }
-        return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+    public Result addProject(@RequestBody AddProjectDTO addProjectDTO) {
+        System.out.println(addProjectDTO);
+        boolean b = proService.addPro(addProjectDTO);
+        Integer code = b ? ErrorCode.ADD_SUCCESS : ErrorCode.ADD_FAIL;
+        String msg = b ? "添加成功" : "添加失败";
+
+        return new Result(code, msg, null);
     }
 
     @GetMapping
-    public Result getAllProject(){
+    public Result getAllProject() {
         return Result.success(proService.getAllPro());
     }
 }

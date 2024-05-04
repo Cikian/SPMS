@@ -1,4 +1,4 @@
-package com.spms.entity.vo;
+package com.spms.dto;
 
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import lombok.Data;
  * @description: SPMS: 人力成本与项目关联
  */
 @Data
-public class ProPeople {
+public class AddProPeopleDTO {
     private Long proId;
     private Long peoId;
     private int days;

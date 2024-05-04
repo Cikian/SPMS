@@ -33,4 +33,7 @@ public interface UserService {
     Result updateUserBaseInfo(User user);
 
     Result queryCurrentUser();
+
+    Result queryCanAddToProject();
+
 }

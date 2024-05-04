@@ -27,7 +27,7 @@ public class ProjectResource {
 
     private LocalDateTime actualEndTime;
 
-    private Integer usage;
+    private Integer useType;
 
     private BigDecimal estimateCost;
 

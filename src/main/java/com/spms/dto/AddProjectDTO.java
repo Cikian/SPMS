@@ -1,6 +1,9 @@
-package com.spms.entity.vo;
+package com.spms.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * @Title: ProjectVo
@@ -10,14 +13,16 @@ import lombok.Data;
  * @description: SPMS: 新建项目视图
  */
 @Data
-public class ProjectVo {
+public class AddProjectDTO {
     private String proName;
     private String proDesc;  //描述
     private int proStatus; //状态
     private String proFlag; // 标识（英文代号），例如SPMS
-    private Long proLeaderId; // 项目负责人
     private int proType; // 项目类型: 0：Scrum项目 1：Knaban项目 2：瀑布项目
     private String proCustomer; // 客户名称
-    private ProPeople[] proMembers; // 项目成员
-    private ProDevice[] proDevices; // 项目设备
+    private Long[] proMembersIds; // 项目成员
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime expectedStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime expectedEndTime;
 }

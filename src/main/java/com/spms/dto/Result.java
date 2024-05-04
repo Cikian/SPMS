@@ -46,7 +46,7 @@ public class Result {
     }
 
     public static Result success(Object data) {
-        return new Result(SUCCESS.getCode(), data);
+        return new Result(SUCCESS.getCode(), data)  ;
     }
 
     public static Result success(String msg, Object data) {

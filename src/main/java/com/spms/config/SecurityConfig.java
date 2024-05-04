@@ -44,12 +44,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers(new AntPathRequestMatcher("/user/login")).permitAll()
+                        authorizeRequests.requestMatchers(new AntPathRequestMatcher("/user/login")).permitAll()
                                 .anyRequest().authenticated()
                 );
 
