@@ -4,10 +4,8 @@ import com.spms.dto.Result;
 import com.spms.entity.DictionaryType;
 import com.spms.service.DictionaryTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dictionaryType")
@@ -17,8 +15,23 @@ public class DictionaryTypeController {
     private DictionaryTypeService dictionaryTypeService;
 
     @PostMapping("/add")
-    public Result add(@RequestBody DictionaryType dictionaryType){
+    @PreAuthorize("hasRole('system_admin')")
+    public Result add(@RequestBody DictionaryType dictionaryType) {
         return dictionaryTypeService.add(dictionaryType);
+    }
+
+    @PostMapping("/list")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result list(@RequestBody DictionaryType dictionaryType,
+                       @RequestParam(defaultValue = "1") Integer page,
+                       @RequestParam(defaultValue = "10") Integer size) {
+        return dictionaryTypeService.list(dictionaryType, page, size);
+    }
+
+    @GetMapping("/queryById/{dictionaryTypeId}")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result queryById(@PathVariable("dictionaryTypeId") Long dictionaryTypeId) {
+        return dictionaryTypeService.queryById(dictionaryTypeId);
     }
 
 }

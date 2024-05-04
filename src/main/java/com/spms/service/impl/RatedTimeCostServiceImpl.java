@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.RatedTimeCostDTO;
 import com.spms.dto.Result;
+import com.spms.entity.Device;
 import com.spms.entity.RatedTimeCost;
+import com.spms.entity.User;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.DeviceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
@@ -63,7 +65,7 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
     }
 
     @Override
-    public Result list(RatedTimeCost ratedTimeCost, Integer page, Integer size) {
+    public Result list(RatedTimeCostDTO ratedTimeCost, Integer page, Integer size) {
         Page<RatedTimeCost> ratedTimeCostPage = new Page<>(page, size);
         Page<RatedTimeCostDTO> ratedTimeCostDTOPage = new Page<>();
 
@@ -83,8 +85,22 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
             maxMonthlyCost = monthlyCost.add(new BigDecimal(100));
         }
 
+        List<Long> ids;
+        if (Objects.equals(ratedTimeCost.getResourceType(), EMPLOYEE.getCode())) {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.like(!Objects.isNull(ratedTimeCost.getResourceName()), User::getUserName, ratedTimeCost.getResourceName());
+            List<User> userList = userMapper.selectList(userLambdaQueryWrapper);
+            ids = userList.stream().map(User::getUserId).toList();
+        } else {
+            LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            deviceLambdaQueryWrapper.like(!Objects.isNull(ratedTimeCost.getResourceName()), Device::getDevName, ratedTimeCost.getResourceName());
+            List<Device> deviceList = deviceMapper.selectList(deviceLambdaQueryWrapper);
+            ids = deviceList.stream().map(Device::getDevId).toList();
+        }
+
         LambdaQueryWrapper<RatedTimeCost> ratedTimeCostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         ratedTimeCostLambdaQueryWrapper
+                .in(RatedTimeCost::getResourceId, ids)
                 .eq(RatedTimeCost::getResourceType, ratedTimeCost.getResourceType())
                 .between(!Objects.isNull(ratedTimeCost.getDailyCost()), RatedTimeCost::getDailyCost, minDailyCost, maxDailyCost)
                 .between(!Objects.isNull(ratedTimeCost.getMonthlyCost()), RatedTimeCost::getMonthlyCost, minMonthlyCost, maxMonthlyCost)
