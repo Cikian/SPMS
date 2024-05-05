@@ -18,13 +18,4 @@ public enum DeviceType {
         this.code = code;
         this.desc = desc;
     }
-
-    public static boolean contains(Integer type) {
-        for (DeviceType deviceType : DeviceType.values()) {
-            if (deviceType.getCode().equals(type)) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

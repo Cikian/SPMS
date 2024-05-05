@@ -54,10 +54,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 
-        if (DeviceType.contains(device.getType())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备类型错误");
-        }
-
         if (device.getPurchaseCost() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备价格不能为空");
         }
@@ -211,10 +207,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         if (device.getType() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
-        }
-
-        if (DeviceType.contains(device.getType())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备类型错误");
         }
 
         LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
