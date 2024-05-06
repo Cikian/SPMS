@@ -21,7 +21,7 @@ public class TestPlan {
     //计划内容
     private String planContent;
 
-    //计划进度
+    //计划进度安排
     private String schedule;
 
     //负责人
