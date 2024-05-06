@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,7 +30,6 @@ import java.util.Objects;
 import static com.spms.constants.SystemConstants.DELETE;
 import static com.spms.constants.SystemConstants.NOT_DELETE;
 import static com.spms.enums.ResourceType.DEVICE;
-import static com.spms.enums.ResourceType.EMPLOYEE;
 
 @Service
 public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> implements DeviceService {
@@ -41,6 +41,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     private RatedTimeCostMapper ratedTimeCostMapper;
 
     @Override
+    @Transactional
     public Result add(Device device) {
         if (device == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -84,7 +85,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
-            return Result.fail(ResultCode.FAIL.getCode(), "新增失败");
+            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
 
         return Result.success("添加成功");

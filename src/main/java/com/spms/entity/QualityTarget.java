@@ -16,7 +16,7 @@ public class QualityTarget {
     private String targetName;
 
     //质量目标特性
-    private String targetAttribute;
+    private Integer qualityAttribute;
 
     //目标值 例：达到xx水平
     private String targetValue;
