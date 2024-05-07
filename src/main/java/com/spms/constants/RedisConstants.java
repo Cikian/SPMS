@@ -14,4 +14,6 @@ public class RedisConstants {
     public static final String UPDATE_AVATAR = "updateAvatar";
     public static final Long UPDATEAVATAR_TTL = 60L;
 
+    public static final String NOTIFICATION_KEY = "notification:";
+
 }

@@ -7,17 +7,12 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.*;
-import com.spms.entity.RatedTimeCost;
-import com.spms.entity.Role;
-import com.spms.entity.RoleUser;
+import com.spms.entity.*;
 import com.spms.enums.ErrorCode;
+import com.spms.enums.ProjectMemberType;
 import com.spms.enums.ResultCode;
-import com.spms.mapper.RatedTimeCostMapper;
-import com.spms.mapper.RoleMapper;
-import com.spms.mapper.RoleUserMapper;
-import com.spms.mapper.UserMapper;
+import com.spms.mapper.*;
 import com.spms.security.LoginUser;
-import com.spms.entity.User;
 import com.spms.service.RatedTimeCostService;
 import com.spms.service.UserService;
 import com.spms.utils.*;
@@ -70,6 +65,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private RatedTimeCostMapper ratedTimeCostMapper;
+
+    @Autowired
+    private ProjectResourceMapper projectResourceMapper;
 
     @Override
     public Result login(User user) {
@@ -269,8 +267,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         roleUserLambdaUpdateWrapper.set(RoleUser::getDelFlag, DELETE).in(RoleUser::getUserId, ids);
         roleUserMapper.update(roleUserLambdaUpdateWrapper);
 
-        //TODO:删除关联的成本信息
-
+        // 删除关联的成本信息
+        LambdaUpdateWrapper<RatedTimeCost> costLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        costLambdaUpdateWrapper.set(RatedTimeCost::getDelFlag, DELETE)
+                .in(RatedTimeCost::getResourceId, ids);
+        ratedTimeCostMapper.update(costLambdaUpdateWrapper);
         return Result.success("删除成功");
     }
 
@@ -405,15 +406,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
 
-        System.out.println(positionMap);
-
         List<CreateProjectAddUserDTO> resultList = new ArrayList<>();
         for (Map.Entry<Long, String> entry : positionMap.entrySet()) {
             CreateProjectAddUserDTO createProjectAddUserDTO = new CreateProjectAddUserDTO();
             Long userId = entry.getKey();
             createProjectAddUserDTO.setUserId(userId);
             createProjectAddUserDTO.setPosition(entry.getValue());
-            for (CreateProjectAddUserDTO dto : createProjectAddUserDTOS){
+            for (CreateProjectAddUserDTO dto : createProjectAddUserDTOS) {
                 if (userId.equals(dto.getUserId())) {
                     createProjectAddUserDTO.setUserName(dto.getUserName());
                     createProjectAddUserDTO.setAvatar(dto.getAvatar());
@@ -425,6 +424,61 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Integer code = createProjectAddUserDTOS.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
         String msg = createProjectAddUserDTOS.isEmpty() ? "获取失败" : "获取成功";
         return new Result(code, msg, resultList);
+    }
+
+    @Override
+    public Result queryProjectMembers(Long projectId, Integer type) {
+        if (projectId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, projectId)
+                .eq(ProjectResource::getResourceType, EMPLOYEE.getCode())
+                .select(ProjectResource::getResourceId);
+        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
+        List<Long> projectMembers = projectResources.stream().map(ProjectResource::getResourceId).toList();
+
+        if (projectMembers.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        List<User> users = new ArrayList<>();
+
+        for (Long projectMember : projectMembers) {
+            LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            roleUserLambdaQueryWrapper.eq(RoleUser::getUserId, projectMember);
+            List<RoleUser> userHasRole = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
+            for (RoleUser roleUser : userHasRole) {
+                LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                roleLambdaQueryWrapper.eq(Role::getRoleId, roleUser.getRoleId());
+                Role role = roleMapper.selectOne(roleLambdaQueryWrapper);
+
+                LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
+                        .eq(User::getUserId, projectMember)
+                        .eq(User::getStatus, true)
+                        .select(User::getUserId,User::getAvatar,User::getUserName,User::getNickName,User::getGender);
+                User user = this.getOne(userLambdaQueryWrapper);
+
+                if (ProjectMemberType.TESTER.getCode().equals(type) && role.getRoleName().contains("test")) {
+                    users.add(user);
+                    break;
+                } else if (ProjectMemberType.DEVELOPER.getCode().equals(type) && role.getRoleName().contains("dev")) {
+                    users.add(user);
+                    break;
+                } else if (ProjectMemberType.MANAGER.getCode().equals(type) && role.getRoleName().contains("manager")) {
+                    users.add(user);
+                    break;
+                }
+            }
+        }
+
+        if (users.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        return Result.success(users);
     }
 
 }

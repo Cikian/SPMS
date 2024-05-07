@@ -15,10 +15,16 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
-        metaObject.setValue("createBy", userId);
-        metaObject.setValue("createTime", LocalDateTime.now());
-        if (metaObject.hasGetter("updateTime") && metaObject.hasSetter("updateTime")) {
+        if (metaObject.hasGetter("createBy") && metaObject.hasSetter("createBy")) {
+            metaObject.setValue("createBy", userId);
+        }
+        if (metaObject.hasGetter("createTime") && metaObject.hasSetter("createTime")) {
+            metaObject.setValue("createTime", LocalDateTime.now());
+        }
+        if (metaObject.hasGetter("updateBy") && metaObject.hasSetter("updateBy")) {
             metaObject.setValue("updateBy", userId);
+        }
+        if (metaObject.hasGetter("updateTime") && metaObject.hasSetter("updateTime")) {
             metaObject.setValue("updateTime", LocalDateTime.now());
         }
     }

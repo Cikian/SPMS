@@ -104,4 +104,10 @@ public class UserController {
         return userService.queryCanAddToProject();
     }
 
+    @GetMapping("/queryProjectMembers/{projectId}/{type}")
+    public Result queryProjectMembers(@PathVariable("projectId") Long projectId,
+                                      @PathVariable("type") Integer type) {
+        return userService.queryProjectMembers(projectId, type);
+    }
+
 }

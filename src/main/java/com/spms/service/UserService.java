@@ -36,4 +36,6 @@ public interface UserService {
 
     Result queryCanAddToProject();
 
+    Result queryProjectMembers(Long projectId, Integer type);
+
 }
