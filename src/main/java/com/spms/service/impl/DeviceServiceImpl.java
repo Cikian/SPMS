@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.DeviceDTO;
 import com.spms.dto.Result;
 import com.spms.entity.Device;
+import com.spms.entity.DictionaryData;
 import com.spms.entity.RatedTimeCost;
 import com.spms.enums.DeviceStatus;
 import com.spms.enums.DeviceType;
 import com.spms.enums.DeviceUsage;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.DeviceMapper;
+import com.spms.mapper.DictionaryDataMapper;
 import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DeviceService;
@@ -39,6 +41,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
     @Autowired
     private RatedTimeCostMapper ratedTimeCostMapper;
+    @Autowired
+    private DictionaryDataMapper dictionaryDataMapper;
 
     @Override
     @Transactional
@@ -129,8 +133,13 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         BeanUtils.copyProperties(devicePage, deviceDTOPage, "records");
 
+
         List<DeviceDTO> deviceDTOList = devicePage.getRecords().stream().map(item -> {
+            LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
+            lqw.eq(DictionaryData::getDictionaryDataId, item.getType()).select(DictionaryData::getLabel);
+            DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
             DeviceDTO deviceDTO = new DeviceDTO();
+            deviceDTO.setTypeName(dictionaryData.getLabel());
             BeanUtils.copyProperties(item, deviceDTO);
             return deviceDTO;
         }).toList();
@@ -232,7 +241,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
     @Override
     public Result delete(Long[] ids) {
-        //TODO:删除设备，一并删除成本配置
+        // TODO:删除设备，一并删除成本配置
         return null;
     }
 }

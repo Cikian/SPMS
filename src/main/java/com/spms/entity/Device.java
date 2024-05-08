@@ -17,7 +17,7 @@ public class Device {
 
     private String devName;
 
-    private Integer type;
+    private Long type;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private LocalDateTime purchaseDate;

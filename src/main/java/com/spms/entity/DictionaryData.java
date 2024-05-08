@@ -18,8 +18,6 @@ public class DictionaryData {
 
     private String label;
 
-    private Integer value;
-
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
 

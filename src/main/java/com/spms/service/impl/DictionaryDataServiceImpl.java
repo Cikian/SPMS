@@ -28,13 +28,6 @@ public class DictionaryDataServiceImpl extends ServiceImpl<DictionaryDataMapper,
             return Result.fail(ResultCode.FAIL.getCode(), "该字典分类下已存在该标签名");
         }
 
-        LambdaQueryWrapper<DictionaryData> dictionaryDataValueLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        dictionaryDataValueLambdaQueryWrapper.eq(DictionaryData::getDictionaryTypeId, dictionaryData.getDictionaryTypeId())
-                .eq(DictionaryData::getValue, dictionaryData.getValue())
-                .eq(DictionaryData::getDelFlag, NOT_DELETE);
-        if (this.getOne(dictionaryDataValueLambdaQueryWrapper) != null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "该字典分类下已存在该值");
-        }
         dictionaryData.setDelFlag(NOT_DELETE);
         this.save(dictionaryData);
         return Result.success("添加成功", dictionaryData);
@@ -66,7 +59,7 @@ public class DictionaryDataServiceImpl extends ServiceImpl<DictionaryDataMapper,
 
         LambdaQueryWrapper<DictionaryData> dictionaryDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
         dictionaryDataLambdaQueryWrapper.eq(DictionaryData::getDictionaryTypeId, dictionaryTypeId)
-                .select(DictionaryData::getDictionaryDataId, DictionaryData::getLabel, DictionaryData::getValue);
+                .select(DictionaryData::getDictionaryDataId, DictionaryData::getLabel);
         List<DictionaryData> dictionaryDataList = this.list(dictionaryDataLambdaQueryWrapper);
 
         return Result.success(dictionaryDataList);
