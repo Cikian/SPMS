@@ -59,7 +59,7 @@ public class DictionaryDataServiceImpl extends ServiceImpl<DictionaryDataMapper,
 
         LambdaQueryWrapper<DictionaryData> dictionaryDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
         dictionaryDataLambdaQueryWrapper.eq(DictionaryData::getDictionaryTypeId, dictionaryTypeId)
-                .select(DictionaryData::getDictionaryDataId, DictionaryData::getLabel);
+                .select(DictionaryData::getDictionaryDataId, DictionaryData::getLabel, DictionaryData::getIsSystem);
         List<DictionaryData> dictionaryDataList = this.list(dictionaryDataLambdaQueryWrapper);
 
         return Result.success(dictionaryDataList);

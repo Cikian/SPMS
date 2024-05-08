@@ -9,7 +9,6 @@ import com.spms.entity.Device;
 import com.spms.entity.DictionaryData;
 import com.spms.entity.RatedTimeCost;
 import com.spms.enums.DeviceStatus;
-import com.spms.enums.DeviceType;
 import com.spms.enums.DeviceUsage;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.DeviceMapper;
@@ -55,7 +54,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称不能为空");
         }
 
-        if (device.getType() == null) {
+        if (device.getTypeId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 
@@ -119,8 +118,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         deviceLambdaQueryWrapper
                 .like((!Objects.isNull(device.getDevName())), Device::getDevName, device.getDevName())
                 .eq((!Objects.isNull(device.getStatus())), Device::getStatus, device.getStatus())
-                .eq((!Objects.isNull(device.getDeviceUsage())), Device::getStatus, device.getDeviceUsage())
-                .eq((!Objects.isNull(device.getType())), Device::getType, device.getType())
+                .eq((!Objects.isNull(device.getDeviceUsage())), Device::getDeviceUsage, device.getDeviceUsage())
+                .eq((!Objects.isNull(device.getTypeId())), Device::getTypeId, device.getTypeId())
                 .ge((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, minCost)
                 .le((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, maxCost)
                 .between((!Objects.isNull(device.getPurchaseDate())), Device::getPurchaseDate, minPurchaseDate, maxPurchaseDate)
@@ -136,7 +135,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         List<DeviceDTO> deviceDTOList = devicePage.getRecords().stream().map(item -> {
             LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
-            lqw.eq(DictionaryData::getDictionaryDataId, item.getType()).select(DictionaryData::getLabel);
+            lqw.eq(DictionaryData::getDictionaryDataId, item.getTypeId()).select(DictionaryData::getLabel);
             DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
             DeviceDTO deviceDTO = new DeviceDTO();
             deviceDTO.setTypeName(dictionaryData.getLabel());
@@ -162,7 +161,13 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
+        LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(DictionaryData::getDictionaryDataId, device.getTypeId())
+                .select(DictionaryData::getLabel);
+        DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
+
         DeviceDTO deviceDTO = new DeviceDTO();
+        deviceDTO.setTypeName(dictionaryData.getLabel());
         BeanUtils.copyProperties(device, deviceDTO);
 
         return Result.success(deviceDTO);
@@ -215,7 +220,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称不能为空");
         }
 
-        if (device.getType() == null) {
+        if (device.getTypeId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 

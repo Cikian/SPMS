@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 public class DeviceDTO {
     private Long devId;
     private String devName;
-    private Integer typeId;
+    private Long typeId;
     private String typeName;
     private LocalDateTime purchaseDate;
     private LocalDateTime warrantyExpiryDate;
     private BigDecimal purchaseCost;
-    private Integer status;
-    private Integer deviceUsage;
+    private Long status;
+    private Long deviceUsage;
 }

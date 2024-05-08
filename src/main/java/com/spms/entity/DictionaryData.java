@@ -18,6 +18,8 @@ public class DictionaryData {
 
     private String label;
 
+    private Boolean isSystem;
+
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
 
