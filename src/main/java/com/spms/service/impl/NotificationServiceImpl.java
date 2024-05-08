@@ -1,8 +1,11 @@
 package com.spms.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
 import com.spms.entity.Notification;
+import com.spms.enums.ResultCode;
 import com.spms.mapper.NotificationMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.NotificationService;
@@ -56,15 +59,49 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             return Result.success("暂无最新通知");
         }
 
-        List<Notification> notificationList = range.stream().map(notificationIdStr -> {
-            Long notificationId = Long.valueOf(notificationIdStr);
-            Notification notification = this.getById(notificationId);
-            notification.setReadFlag(true);
-            this.updateById(notification);
-            return notification;
-        }).toList();
+        List<Notification> notificationList = range.stream().map(notificationIdStr -> this.getById(Long.valueOf(notificationIdStr))).toList();
 
-        redisTemplate.delete(NOTIFICATION_KEY + userId);
         return Result.success(notificationList);
+    }
+
+    @Override
+    public Result getOldNotification() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaQueryWrapper<Notification> notificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        notificationLambdaQueryWrapper.eq(Notification::getReceiverId, userId)
+                .eq(Notification::getReadFlag, true);
+        List<Notification> notificationList = this.list(notificationLambdaQueryWrapper);
+
+        if (notificationList == null || notificationList.isEmpty()) {
+            return Result.success("暂无历史通知");
+        }
+        return Result.success(notificationList);
+    }
+
+    @Override
+    @Transactional
+    public Result readNotification(Long notificationId) {
+        if (notificationId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaUpdateWrapper<Notification> notificationLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        notificationLambdaUpdateWrapper.eq(Notification::getNotificationId, notificationId)
+                .set(Notification::getReadFlag, true);
+        boolean update = this.update(notificationLambdaUpdateWrapper);
+
+        if (!update) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        Long remove = redisTemplate.opsForList().remove(NOTIFICATION_KEY + userId, 1, notificationId.toString());
+        if (remove == null || remove == 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+        return Result.success();
     }
 }

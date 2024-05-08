@@ -9,4 +9,8 @@ public interface NotificationService {
     Result getUnreadNotificationCount();
 
     Result getNotification();
+
+    Result getOldNotification();
+
+    Result readNotification(Long notificationId);
 }
