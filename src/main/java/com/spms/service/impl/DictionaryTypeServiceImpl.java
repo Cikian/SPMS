@@ -39,7 +39,6 @@ public class DictionaryTypeServiceImpl extends ServiceImpl<DictionaryTypeMapper,
     public Result list(DictionaryType dictionaryType, Integer page, Integer size) {
         Page<DictionaryType> dictionaryTypePage = new Page<>(page, size);
 
-        System.out.println(!Objects.isNull(dictionaryType.getDictionaryTypeName()));
         LambdaQueryWrapper<DictionaryType> dictionaryTypeLambdaQueryWrapper = new LambdaQueryWrapper<>();
         dictionaryTypeLambdaQueryWrapper.like((!Objects.isNull(dictionaryType.getDictionaryTypeName())), DictionaryType::getDictionaryTypeName, dictionaryType.getDictionaryTypeName());
         this.page(dictionaryTypePage, dictionaryTypeLambdaQueryWrapper);

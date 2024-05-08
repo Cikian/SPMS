@@ -17,7 +17,7 @@ public class Device {
 
     private String devName;
 
-    private Long type;
+    private Long typeId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private LocalDateTime purchaseDate;
@@ -27,9 +27,9 @@ public class Device {
 
     private BigDecimal purchaseCost;
 
-    private Integer status;
+    private Long status;
 
-    private Integer deviceUsage;
+    private Long deviceUsage;
 
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
