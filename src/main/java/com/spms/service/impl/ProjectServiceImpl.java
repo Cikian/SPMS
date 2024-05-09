@@ -1,12 +1,15 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.spms.dto.Result;
 import com.spms.entity.Project;
 import com.spms.entity.ProjectResource;
 import com.spms.entity.RatedTimeCost;
 import com.spms.entity.User;
 import com.spms.dto.AddProPeopleDTO;
 import com.spms.dto.AddProjectDTO;
+import com.spms.enums.ResultCode;
 import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.ProjectResourceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
@@ -32,7 +35,7 @@ import java.util.List;
  */
 
 @Service
-public class ProjectServiceImpl implements ProjectService {
+public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> implements ProjectService {
     @Autowired
     ProjectMapper projectMapper;
     @Autowired
@@ -71,7 +74,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
             BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
-            System.out.println("预计成本：" +dailyCost);
+            System.out.println("预计成本：" + dailyCost);
             pr.setEstimateCost(estimateCost);
             projectResourceMapper.insert(pr);
         }
@@ -79,7 +82,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Project> getAllPro(){
+    public List<Project> getAllPro() {
         return projectMapper.selectList(null);
     }
 

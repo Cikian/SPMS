@@ -53,4 +53,10 @@ public class DeviceController {
     public Result updateInfo(@RequestBody Device device) {
         return deviceService.updateInfo(device);
     }
+
+    @PostMapping("/releaseAllResource/{proId}")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result releaseAllResource(@PathVariable("proId") Long proId) {
+        return deviceService.releaseAllResource(proId);
+    }
 }

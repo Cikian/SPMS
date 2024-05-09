@@ -1,18 +1,21 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.DeviceDTO;
 import com.spms.dto.Result;
 import com.spms.entity.Device;
 import com.spms.entity.DictionaryData;
+import com.spms.entity.ProjectResource;
 import com.spms.entity.RatedTimeCost;
 import com.spms.enums.DeviceStatus;
 import com.spms.enums.DeviceUsage;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.DeviceMapper;
 import com.spms.mapper.DictionaryDataMapper;
+import com.spms.mapper.ProjectResourceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DeviceService;
@@ -40,8 +43,12 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
     @Autowired
     private RatedTimeCostMapper ratedTimeCostMapper;
+
     @Autowired
     private DictionaryDataMapper dictionaryDataMapper;
+
+    @Autowired
+    private ProjectResourceMapper projectResourceMapper;
 
     @Override
     @Transactional
@@ -200,6 +207,27 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     }
 
     @Override
+    public Result releaseAllResource(Long proId) {
+        if (proId == null) {
+            return new Result(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, proId)
+                .eq(ProjectResource::getResourceType, DEVICE.getCode());
+        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
+
+        List<Long> proUseDeviceIds = projectResources.stream().map(ProjectResource::getResourceId).toList();
+        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.FREE.getCode())
+                .in(Device::getDevId, proUseDeviceIds);
+        if (!this.update(deviceLambdaUpdateWrapper)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "释放失败");
+        }
+        return Result.success("释放成功");
+    }
+
+    @Override
     public Result updateInfo(Device device) {
         if (device == null || device.getDevId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -245,8 +273,29 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     }
 
     @Override
+    @Transactional
     public Result delete(Long[] ids) {
-        // TODO:删除设备，一并删除成本配置
-        return null;
+        LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        deviceLambdaQueryWrapper.in(Device::getDevId, ids)
+                .eq(Device::getDeviceUsage, DeviceUsage.OCCUPIED.getCode());
+        List<Device> devices = this.list(deviceLambdaQueryWrapper);
+        if (!devices.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "设备正在使用中，无法删除");
+        }
+
+        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        deviceLambdaUpdateWrapper.in(Device::getDevId, ids)
+                .set(Device::getDelFlag, DELETE);
+        if (!this.update(deviceLambdaUpdateWrapper)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "删除失败");
+        }
+
+        LambdaUpdateWrapper<RatedTimeCost> ratedTimeCostLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        ratedTimeCostLambdaUpdateWrapper.in(RatedTimeCost::getResourceId, ids)
+                .set(RatedTimeCost::getDelFlag, DELETE);
+        if (ratedTimeCostMapper.update(ratedTimeCostLambdaUpdateWrapper) <= 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "删除失败");
+        }
+        return Result.success("删除成功");
     }
 }

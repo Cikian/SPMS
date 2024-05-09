@@ -3,10 +3,13 @@ package com.spms.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
+import com.spms.entity.Device;
 import com.spms.entity.DictionaryData;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.DeviceMapper;
 import com.spms.mapper.DictionaryDataMapper;
 import com.spms.service.DictionaryDataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,10 @@ import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
 public class DictionaryDataServiceImpl extends ServiceImpl<DictionaryDataMapper, DictionaryData> implements DictionaryDataService {
+
+    @Autowired
+    private DeviceMapper deviceMapper;
+
     @Override
     public Result add(DictionaryData dictionaryData) {
         LambdaQueryWrapper<DictionaryData> dictionaryDataLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();

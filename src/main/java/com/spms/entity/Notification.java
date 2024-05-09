@@ -16,6 +16,8 @@ public class Notification {
 
     private Long receiverId;
 
+    private String title;
+
     private String content;
 
     private Boolean readFlag;

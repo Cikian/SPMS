@@ -118,18 +118,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getEmail, email);
+        userLambdaQueryWrapper.eq(User::getEmail, email)
+                .eq(User::getDelFlag, NOT_DELETE);
         if (this.count(userLambdaQueryWrapper) > 0) {
             return Result.fail(ResultCode.FAIL.getCode(), "邮箱已存在");
         }
-
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         String password = RandomStringGenerator.generateNumber(8);
         String userName = RandomUsernameGenerator.generateRandomUsername();
         user.setUserName(userName);
         user.setPassword(bCryptPasswordEncoder.encode(password));
-        user.setNickName(RandomStringGenerator.generateString(10));
         user.setGender(DEFAULT_GENDER);
         user.setAvatar(DEFAULT_AVATAR_URL);
         user.setIsFirstLogin(true);
@@ -258,6 +256,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional
     public Result delete(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        for (Long id : ids) {
+            LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            projectResourceLambdaQueryWrapper.eq(ProjectResource::getResourceId, id);
+            List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
+
+            for (ProjectResource projectResource : projectResources) {
+                if (projectResource.getActualCost() == null) {
+                    return Result.fail(ResultCode.FAIL.getCode(), "用户正在参与项目，无法删除");
+                }
+            }
+        }
+
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.set(User::getDelFlag, DELETE).in(User::getUserId, ids);
         this.update(userLambdaUpdateWrapper);
@@ -392,8 +406,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Result queryCanAddToProject() {
         List<CreateProjectAddUserDTO> createProjectAddUserDTOS = userMapper.queryCanAddToProject();
-        System.out.println(createProjectAddUserDTOS);
-        // 将相同Id的用户的position合并，加顿号
 
         Map<Long, String> positionMap = new HashMap<>();
         for (CreateProjectAddUserDTO createProjectAddUserDTO : createProjectAddUserDTOS) {
@@ -458,7 +470,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
                         .eq(User::getUserId, projectMember)
                         .eq(User::getStatus, true)
-                        .select(User::getUserId,User::getAvatar,User::getUserName,User::getNickName,User::getGender);
+                        .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getGender);
                 User user = this.getOne(userLambdaQueryWrapper);
 
                 if (ProjectMemberType.TESTER.getCode().equals(type) && role.getRoleName().contains("test")) {

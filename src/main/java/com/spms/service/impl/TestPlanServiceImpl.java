@@ -4,11 +4,13 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
-import com.spms.entity.Requirement;
+import com.spms.entity.Demand;
+import com.spms.entity.Project;
 import com.spms.entity.TestPlan;
 import com.spms.entity.User;
 import com.spms.enums.ResultCode;
-import com.spms.mapper.RequirementMapper;
+import com.spms.mapper.DemandMapper;
+import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.TestPlanMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.service.NotificationService;
@@ -19,19 +21,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> implements TestPlanService {
 
     @Autowired
-    private RequirementMapper requirementMapper;
+    private DemandMapper demandMapper;
 
     @Autowired
     private UserMapper userMapper;
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private ProjectMapper projectMapper;
 
     @Override
     @Transactional
@@ -56,9 +60,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "请填写负责人");
         }
 
-        LambdaQueryWrapper<Requirement> requirementLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        requirementLambdaQueryWrapper.eq(Requirement::getRequirementId, testPlan.getRequirementId());
-        if (!requirementMapper.exists(requirementLambdaQueryWrapper)) {
+        LambdaQueryWrapper<Demand> requirementLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        requirementLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getRequirementId());
+        if (!demandMapper.exists(requirementLambdaQueryWrapper)) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
@@ -74,12 +78,20 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "该需求已存在测试计划");
         }
 
+        LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        demandLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getRequirementId());
+        Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
+
+        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
+        Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
+
         boolean isSuccess = this.save(testPlan);
         if (!isSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
 
-        Boolean addSuccess = notificationService.addNotification(testPlan.getHead(), "您有一个新的测试计划");
+        Boolean addSuccess = notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName() + "(" + project.getProName() + ")", "您有一个新的测试计划");
         if (!addSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }

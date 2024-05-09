@@ -15,4 +15,6 @@ public interface DeviceService {
     Result queryById(Long deviceId);
 
     Result updateStatus(Device device);
+
+    Result releaseAllResource(Long proId);
 }

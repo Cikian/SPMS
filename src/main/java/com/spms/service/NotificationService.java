@@ -4,7 +4,7 @@ import com.spms.dto.Result;
 
 public interface NotificationService {
 
-    Boolean addNotification(Long receiverId, String content);
+    Boolean addNotification(Long receiverId, String title, String content);
 
     Result getUnreadNotificationCount();
 

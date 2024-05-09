@@ -27,7 +27,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Override
     @Transactional
-    public Boolean addNotification(Long receiverId, String content) {
+    public Boolean addNotification(Long receiverId, String title, String content) {
         Notification notification = new Notification();
         notification.setReceiverId(receiverId);
         notification.setContent(content);
