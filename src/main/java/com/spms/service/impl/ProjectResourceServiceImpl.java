@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
 import com.spms.entity.ProjectResource;
 import com.spms.entity.RatedTimeCost;
+import com.spms.entity.User;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.ProjectResourceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
@@ -23,6 +24,11 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
 
     @Autowired
     private RatedTimeCostMapper ratedTimeCostMapper;
+
+    @Override
+    public List<User> getMembersByProId(int projectId) {
+        return List.of();
+    }
 
 //    @Override
 //    @Transactional

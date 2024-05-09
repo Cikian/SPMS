@@ -338,7 +338,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
         }
 
-        //如果redis中存在该用户的登录信息，则删除
+        // 如果redis中存在该用户的登录信息，则删除
         if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userDTO.getUserId()))) {
             redisTemplate.delete(USER_LOGIN + userDTO.getUserId());
         }
@@ -457,6 +457,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         List<User> users = new ArrayList<>();
 
+        if (type == 0){
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
+                    .in(User::getUserId, projectMembers)
+                    .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getEmail, User::getPhoneNumber,User::getGender);
+            users = userMapper.selectList(userLambdaQueryWrapper);
+        }
+
         for (Long projectMember : projectMembers) {
             LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
             roleUserLambdaQueryWrapper.eq(RoleUser::getUserId, projectMember);
@@ -472,7 +480,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         .eq(User::getStatus, true)
                         .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getGender);
                 User user = this.getOne(userLambdaQueryWrapper);
-
                 if (ProjectMemberType.TESTER.getCode().equals(type) && role.getRoleName().contains("test")) {
                     users.add(user);
                     break;
