@@ -2,8 +2,10 @@ package com.spms.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
+import com.spms.dto.TestPlanDTO;
 import com.spms.entity.Demand;
 import com.spms.entity.Project;
 import com.spms.entity.TestPlan;
@@ -13,14 +15,21 @@ import com.spms.mapper.DemandMapper;
 import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.TestPlanMapper;
 import com.spms.mapper.UserMapper;
+import com.spms.security.LoginUser;
 import com.spms.service.NotificationService;
 import com.spms.service.TestPlanService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
 public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> implements TestPlanService {
@@ -50,10 +59,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
         if (StrUtil.isEmpty(testPlan.getPlanContent())) {
             return Result.fail(ResultCode.FAIL.getCode(), "计划内容不能为空");
-        }
-
-        if (StrUtil.isEmpty(testPlan.getSchedule())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "计划进度不能为空");
         }
 
         if (testPlan.getHead() == null) {
@@ -86,6 +91,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
         Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
 
+        testPlan.setProgress(0);
         boolean isSuccess = this.save(testPlan);
         if (!isSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
@@ -101,4 +107,41 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         map.put("planName", testPlan.getPlanName());
         return Result.success(map);
     }
+
+    @Override
+    public Result list(TestPlan testPlan, Integer page, Integer size, Integer type) {
+        Page<TestPlan> testPlanPage = new Page<>(page, size);
+        Page<TestPlanDTO> testPlanDTOPage = new Page<>();
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(!Objects.isNull(testPlan.getPlanName()), TestPlan::getPlanName, testPlan.getPlanName())
+                .eq(TestPlan::getDelFlag, NOT_DELETE)
+                .eq(type == 1, TestPlan::getHead, userId)
+                .orderBy(true, false, TestPlan::getCreateTime)
+                .select(TestPlan::getTestPlanId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
+        this.page(testPlanPage, queryWrapper);
+
+        if (testPlanPage.getRecords().isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        BeanUtils.copyProperties(testPlanPage, testPlanDTOPage, "records");
+
+        List<TestPlanDTO> testPlanDTOList = testPlanPage.getRecords().stream().map(item -> {
+            TestPlanDTO testPlanDTO = new TestPlanDTO();
+            BeanUtils.copyProperties(item, testPlanDTO);
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUserId, userId);
+            User user = userMapper.selectOne(userLambdaQueryWrapper);
+            testPlanDTO.setHeadName(user.getNickName());
+            return testPlanDTO;
+        }).toList();
+
+        testPlanDTOPage.setRecords(testPlanDTOList);
+        return Result.success(testPlanDTOPage);
+    }
+
 }

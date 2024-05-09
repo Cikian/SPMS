@@ -66,6 +66,7 @@ public class DictionaryDataServiceImpl extends ServiceImpl<DictionaryDataMapper,
 
         LambdaQueryWrapper<DictionaryData> dictionaryDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
         dictionaryDataLambdaQueryWrapper.eq(DictionaryData::getDictionaryTypeId, dictionaryTypeId)
+                .eq(DictionaryData::getDelFlag, NOT_DELETE)
                 .select(DictionaryData::getDictionaryDataId, DictionaryData::getLabel, DictionaryData::getIsSystem);
         List<DictionaryData> dictionaryDataList = this.list(dictionaryDataLambdaQueryWrapper);
 
