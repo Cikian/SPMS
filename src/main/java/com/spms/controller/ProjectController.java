@@ -33,8 +33,13 @@ public class ProjectController {
         return new Result(code, msg, null);
     }
 
-    @GetMapping
+    @GetMapping()
     public Result getAllProject() {
         return Result.success(proService.getAllPro());
+    }
+
+    @GetMapping("/getProjectByStatus/{status}")
+    public Result getProjectByStatus(@PathVariable("status") Integer status) {
+        return Result.success(proService.getProjectByStatus(status));
     }
 }

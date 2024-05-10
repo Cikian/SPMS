@@ -14,7 +14,7 @@ public class TestPlan {
     @TableId(type = IdType.ASSIGN_ID)
     private Long testPlanId;
 
-    private Long requirementId;
+    private Long demandId;
 
     private String planName;
 

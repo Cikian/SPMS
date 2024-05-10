@@ -22,8 +22,8 @@ public class Demand {
     private Long proId;
     private Integer demandNo;
     private String title;
-    private String desc;
-    private Integer status;  // 0-打开，1-进行中，2-完成，-1 -关闭
+    private String demandDesc;
+    private Integer demandStatus;  // 0-打开，1-进行中，2-完成，-1 -关闭
     private Long headId;  // 需求负责人
     private Integer priority;  // 优先级 0-最低，1-较低，2-普通，3-较高，4-最高
     private Long fatherDemandId;  // 父需求ID

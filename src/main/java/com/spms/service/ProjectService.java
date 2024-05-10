@@ -17,5 +17,8 @@ import java.util.List;
 
 public interface ProjectService {
     boolean addPro(AddProjectDTO addProjectDTO);
+
     List<Project> getAllPro();
+
+    List<Project> getProjectByStatus(Integer status);
 }

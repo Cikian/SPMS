@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @Title: ProjectServiceImpl
@@ -79,6 +80,13 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             projectResourceMapper.insert(pr);
         }
         return true;
+    }
+
+    @Override
+    public List<Project> getProjectByStatus(Integer status) {
+        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectLambdaQueryWrapper.eq(!Objects.isNull(status), Project::getProFlag, status);
+        return projectMapper.selectList(projectLambdaQueryWrapper);
     }
 
     @Override

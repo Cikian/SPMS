@@ -49,7 +49,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
     @Override
     @Transactional
     public Result add(TestPlan testPlan) {
-        if (testPlan == null || testPlan.getRequirementId() == null) {
+        if (testPlan == null || testPlan.getDemandId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
@@ -57,16 +57,12 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "计划名称不能为空");
         }
 
-        if (StrUtil.isEmpty(testPlan.getPlanContent())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "计划内容不能为空");
-        }
-
         if (testPlan.getHead() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "请填写负责人");
         }
 
         LambdaQueryWrapper<Demand> requirementLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        requirementLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getRequirementId());
+        requirementLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
         if (!demandMapper.exists(requirementLambdaQueryWrapper)) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
@@ -78,19 +74,20 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         }
 
         LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(TestPlan::getRequirementId, testPlan.getRequirementId());
+        queryWrapper.eq(TestPlan::getDemandId, testPlan.getDemandId());
         if (this.exists(queryWrapper)) {
             return Result.fail(ResultCode.FAIL.getCode(), "该需求已存在测试计划");
         }
 
         LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        demandLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getRequirementId());
+        demandLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
         Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
 
         LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
         projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
         Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
 
+        testPlan.setPlanContent("");
         testPlan.setProgress(0);
         boolean isSuccess = this.save(testPlan);
         if (!isSuccess) {
@@ -130,13 +127,25 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
         BeanUtils.copyProperties(testPlanPage, testPlanDTOPage, "records");
 
+        User user = null;
+        if (type == 1) {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUserId, userId);
+            user = userMapper.selectOne(userLambdaQueryWrapper);
+        }
+        final User finalUser = user;
+
         List<TestPlanDTO> testPlanDTOList = testPlanPage.getRecords().stream().map(item -> {
             TestPlanDTO testPlanDTO = new TestPlanDTO();
             BeanUtils.copyProperties(item, testPlanDTO);
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getUserId, userId);
-            User user = userMapper.selectOne(userLambdaQueryWrapper);
-            testPlanDTO.setHeadName(user.getNickName());
+            if (finalUser != null) {
+                testPlanDTO.setHeadName(finalUser.getNickName());
+            } else {
+                LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                userLambdaQueryWrapper.eq(User::getUserId, userId);
+                User currentUser = userMapper.selectOne(userLambdaQueryWrapper);
+                testPlanDTO.setHeadName(currentUser.getNickName());
+            }
             return testPlanDTO;
         }).toList();
 

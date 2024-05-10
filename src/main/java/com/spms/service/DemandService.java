@@ -1,5 +1,6 @@
 package com.spms.service;
 
+import com.spms.dto.Result;
 import com.spms.entity.Demand;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
  */
 public interface DemandService {
     Boolean addDemand(Demand demand);
-    List<Demand> getAllDemandsByProId(Long proId);
+    Result getAllDemandsByProId(Long proId);
     List<Demand> getAllDemandsByStatus(Integer status);
     List<Demand> getAllDemandsByType(Long type);
 

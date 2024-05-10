@@ -1,6 +1,7 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.spms.dto.Result;
 import com.spms.entity.Demand;
 import com.spms.mapper.DemandMapper;
 import com.spms.service.DemandService;
@@ -32,12 +33,11 @@ public class DemandServiceImpl implements DemandService {
     }
 
     @Override
-    public List<Demand> getAllDemandsByProId(Long proId) {
+    public Result getAllDemandsByProId(Long proId) {
         LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Demand::getProId, proId);
         List<Demand> demands = demandMapper.selectList(lqw);
-
-        return null;
+        return Result.success(demands);
     }
 
     @Override
