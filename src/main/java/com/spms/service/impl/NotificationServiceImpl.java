@@ -30,6 +30,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public Boolean addNotification(Long receiverId, String title, String content) {
         Notification notification = new Notification();
         notification.setReceiverId(receiverId);
+        notification.setTitle(title);
         notification.setContent(content);
         notification.setReadFlag(false);
 

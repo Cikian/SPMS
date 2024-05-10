@@ -99,10 +99,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("testPlanId", testPlan.getTestPlanId());
-        map.put("planName", testPlan.getPlanName());
-        return Result.success(map);
+        return Result.success("添加成功");
     }
 
     @Override
