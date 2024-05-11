@@ -21,6 +21,7 @@ public class DemandController {
 
     @PostMapping
     public Result addDemand(@RequestBody Demand demand){
+        System.out.println("新需求：" + demand);
         Boolean b = demandService.addDemand(demand);
         Integer code = b ? ErrorCode.ADD_SUCCESS : ErrorCode.ADD_FAIL;
         String msg = b ? "添加成功" : "添加失败";
