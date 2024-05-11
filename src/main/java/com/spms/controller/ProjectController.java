@@ -2,6 +2,7 @@ package com.spms.controller;
 
 import com.spms.dto.Result;
 import com.spms.dto.AddProjectDTO;
+import com.spms.entity.Project;
 import com.spms.enums.ErrorCode;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,5 +42,13 @@ public class ProjectController {
     @GetMapping("/getProjectByStatus/{status}")
     public Result getProjectByStatus(@PathVariable("status") Integer status) {
         return Result.success(proService.getProjectByStatus(status));
+    }
+
+    @GetMapping("/getByProId/{proId}")
+    public Result getProById(@PathVariable("proId") Long proId) {
+        Project proById = proService.getProById(proId);
+        Integer code = proById != null ? ErrorCode.GET_SUCCESS : ErrorCode.GET_FAIL;
+        String msg = proById != null ? "获取成功" : "获取失败";
+        return new Result(code, msg, proById);
     }
 }

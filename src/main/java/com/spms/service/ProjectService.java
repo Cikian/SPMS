@@ -21,4 +21,6 @@ public interface ProjectService {
     List<Project> getAllPro();
 
     List<Project> getProjectByStatus(Integer status);
+
+    Project getProById(Long id);
 }
