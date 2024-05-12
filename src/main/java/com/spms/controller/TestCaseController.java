@@ -18,8 +18,23 @@ public class TestCaseController {
         return testCaseService.add(testCase);
     }
 
+    @PostMapping("/update")
+    public Result update(@RequestBody TestCase testCase) {
+        return testCaseService.update(testCase);
+    }
+
     @GetMapping("/list/{testPlanId}")
     public Result list(@PathVariable("testPlanId") Long testPlanId) {
         return testCaseService.list(testPlanId);
+    }
+
+    @GetMapping("/queryById/{testCaseId}")
+    public Result queryById(@PathVariable("testCaseId") Long testCaseId) {
+        return testCaseService.queryById(testCaseId);
+    }
+
+    @PostMapping("/delete/{testCaseId}")
+    public Result delete(@PathVariable("testCaseId") Long testCaseId) {
+        return testCaseService.delete(testCaseId);
     }
 }

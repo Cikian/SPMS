@@ -91,6 +91,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
 
         testPlan.setProgress(0);
+        testPlan.setDelFlag(NOT_DELETE);
         boolean isSuccess = this.save(testPlan);
         if (!isSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
@@ -197,8 +198,18 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "请选择负责人");
         }
 
+        TestPlan testPlan1 = this.getById(testPlan.getTestPlanId());
+        if (testPlan1 == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
+        }
+
         if (!this.updateById(testPlan)) {
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        if (!Objects.equals(testPlan.getHead(), testPlan1.getHead())) {
+            //通知新负责人
+            notificationService.addNotification(testPlan.getHead(), testPlan1.getPlanName(), "您的测试计划有更新");
         }
 
         return Result.success("修改成功");
