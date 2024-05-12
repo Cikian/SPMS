@@ -8,4 +8,7 @@ public interface TestPlanService {
 
     Result list(TestPlan testPlan, Integer page, Integer size, Integer type);
 
+    Result queryById(Long id);
+
+    Result updateTestPlan(TestPlan testPlan);
 }

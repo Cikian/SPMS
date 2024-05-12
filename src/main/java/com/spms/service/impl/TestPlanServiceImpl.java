@@ -46,6 +46,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
     @Autowired
     private ProjectMapper projectMapper;
 
+    @Autowired
+    private TestPlanMapper testPlanMapper;
+
     @Override
     @Transactional
     public Result add(TestPlan testPlan) {
@@ -58,7 +61,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         }
 
         if (testPlan.getHead() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请填写负责人");
+            return Result.fail(ResultCode.FAIL.getCode(), "请选择负责人");
         }
 
         LambdaQueryWrapper<Demand> requirementLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -87,7 +90,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
         Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
 
-        testPlan.setPlanContent("");
         testPlan.setProgress(0);
         boolean isSuccess = this.save(testPlan);
         if (!isSuccess) {
@@ -115,7 +117,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
                 .eq(TestPlan::getDelFlag, NOT_DELETE)
                 .eq(type == 1, TestPlan::getHead, userId)
                 .orderBy(true, false, TestPlan::getCreateTime)
-                .select(TestPlan::getTestPlanId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
+                .select(TestPlan::getTestPlanId, TestPlan::getDemandId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
         this.page(testPlanPage, queryWrapper);
 
         if (testPlanPage.getRecords().isEmpty()) {
@@ -143,11 +145,63 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
                 User currentUser = userMapper.selectOne(userLambdaQueryWrapper);
                 testPlanDTO.setHeadName(currentUser.getNickName());
             }
+
+            LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            demandLambdaQueryWrapper.eq(Demand::getDemandId, item.getDemandId());
+            Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
+            testPlanDTO.setProjectId(demand.getProId());
             return testPlanDTO;
         }).toList();
 
         testPlanDTOPage.setRecords(testPlanDTOList);
         return Result.success(testPlanDTOPage);
+    }
+
+    @Override
+    public Result queryById(Long id) {
+        if (id == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        TestPlan testPlan = this.getById(id);
+        if (testPlan == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
+        }
+
+        TestPlanDTO testPlanDTO = new TestPlanDTO();
+        BeanUtils.copyProperties(testPlan, testPlanDTO);
+
+        LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        demandLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
+        Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
+        testPlanDTO.setDemandName(demand.getTitle());
+
+        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
+        Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
+        testPlanDTO.setProjectName(project.getProName());
+        return Result.success(testPlanDTO);
+    }
+
+    @Override
+    public Result updateTestPlan(TestPlan testPlan) {
+        if (testPlan == null || testPlan.getTestPlanId() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        if (StrUtil.isEmpty(testPlan.getPlanName())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "计划名称不能为空");
+        }
+
+        if (testPlan.getHead() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请选择负责人");
+        }
+
+        if (!this.updateById(testPlan)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        return Result.success("修改成功");
     }
 
 }

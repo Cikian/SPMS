@@ -18,8 +18,6 @@ public class TestPlan {
 
     private String planName;
 
-    private String planContent;
-
     private Integer progress;
 
     private Long head;

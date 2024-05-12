@@ -30,4 +30,16 @@ public class TestPlanController {
         return testPlanService.list(testPlan, page, size, type);
     }
 
+    @GetMapping("/queryById/{id}")
+    @PreAuthorize("hasAuthority('testPlan:queryById') ||  hasRole('system_admin')")
+    public Result queryById(@PathVariable("id") Long id) {
+        return testPlanService.queryById(id);
+    }
+
+    @PostMapping("/update")
+    @PreAuthorize("hasAuthority('testPlan:update') ||  hasRole('system_admin')")
+    public Result update(@RequestBody TestPlan testPlan) {
+        return testPlanService.updateTestPlan(testPlan);
+    }
+
 }
