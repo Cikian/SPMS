@@ -7,4 +7,10 @@ public interface TestCaseService {
     Result add(TestCase testCase);
 
     Result list(Long testPlanId);
+
+    Result queryById(Long testCaseId);
+
+    Result update(TestCase testCase);
+
+    Result delete(Long testCaseId);
 }
