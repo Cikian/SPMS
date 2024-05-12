@@ -28,7 +28,7 @@ public class Demand {
     private Integer priority;  // 优先级 0-最低，1-较低，2-普通，3-较高，4-最高
     private Long fatherDemandId;  // 父需求ID
     private Long type;  // 需求类型 1-技术需求，2-功能需求，3-安全需求，4-体验优化
-    private Integer dType;  // 需求类型 0-史诗，1-特性，2-用户故事，3-任务
+    private Integer workItemType;  // 需求类型 0-史诗，1-特性，2-用户故事，3-任务
     private Long source;  // 需求来源
     private Integer storyPoint;  // 故事点
 

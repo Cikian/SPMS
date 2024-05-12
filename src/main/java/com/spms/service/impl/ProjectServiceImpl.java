@@ -90,6 +90,11 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
+    public Project getProById(Long id) {
+        return projectMapper.selectById(id);
+    }
+
+    @Override
     public List<Project> getAllPro() {
         return projectMapper.selectList(null);
     }
