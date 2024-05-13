@@ -20,6 +20,11 @@ public class CommonController {
 
     @PostMapping("/upload/avatar")
     public Result uploadFileAvatar(MultipartFile file, HttpServletRequest request) throws IOException {
-        return ossService.uploadFileAvatar(file,request);
+        return ossService.uploadFileAvatar(file, request);
+    }
+
+    @PostMapping("/upload/testReport")
+    public Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException {
+        return ossService.uploadFileTestReport(file,testPlanId, request);
     }
 }

@@ -8,4 +8,6 @@ import java.io.IOException;
 
 public interface OssService {
     Result uploadFileAvatar(MultipartFile file, HttpServletRequest request) throws IOException;
+
+    Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException;
 }

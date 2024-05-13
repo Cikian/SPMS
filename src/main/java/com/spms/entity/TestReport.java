@@ -12,7 +12,11 @@ public class TestReport {
 
     private Long testPlanId;
 
+    private String testReportName;
+
     private String reportFile;
 
     private Integer approvalStatus;
+
+    private Boolean delFlag;
 }

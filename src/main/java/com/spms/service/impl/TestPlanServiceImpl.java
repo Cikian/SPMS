@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.spms.constants.SystemConstants.NOT_DELETE;
+import static com.spms.enums.TestPlanStatus.*;
 
 @Service
 public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> implements TestPlanService {
@@ -45,9 +46,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
     @Autowired
     private ProjectMapper projectMapper;
-
-    @Autowired
-    private TestPlanMapper testPlanMapper;
 
     @Override
     @Transactional
@@ -106,7 +104,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
     }
 
     @Override
-    public Result list(TestPlan testPlan, Integer page, Integer size, Integer type) {
+    public Result list(TestPlan testPlan, Integer page, Integer size, Integer type, Integer status) {
         Page<TestPlan> testPlanPage = new Page<>(page, size);
         Page<TestPlanDTO> testPlanDTOPage = new Page<>();
 
@@ -115,8 +113,11 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
         LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(!Objects.isNull(testPlan.getPlanName()), TestPlan::getPlanName, testPlan.getPlanName())
-                .eq(TestPlan::getDelFlag, NOT_DELETE)
+                .eq(Objects.equals(status, NOT_STARTED.getCode()), TestPlan::getProgress, 0)
+                .between(Objects.equals(status, IN_PROGRESS.getCode()), TestPlan::getProgress, 1, 99)
+                .eq(Objects.equals(status, COMPLETED.getCode()), TestPlan::getProgress, 100)
                 .eq(type == 1, TestPlan::getHead, userId)
+                .eq(TestPlan::getDelFlag, NOT_DELETE)
                 .orderBy(true, false, TestPlan::getCreateTime)
                 .select(TestPlan::getTestPlanId, TestPlan::getDemandId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
         this.page(testPlanPage, queryWrapper);
@@ -185,6 +186,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
     }
 
     @Override
+    @Transactional
     public Result updateTestPlan(TestPlan testPlan) {
         if (testPlan == null || testPlan.getTestPlanId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -201,6 +203,13 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         TestPlan testPlan1 = this.getById(testPlan.getTestPlanId());
         if (testPlan1 == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        if (!Objects.equals(testPlan1.getCreateBy(), userId)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您无权修改");
         }
 
         if (!this.updateById(testPlan)) {

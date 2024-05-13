@@ -6,13 +6,21 @@ import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.PutObjectRequest;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.spms.config.OSSConfig;
 import com.spms.dto.Result;
+import com.spms.entity.TestPlan;
+import com.spms.entity.TestReport;
 import com.spms.entity.User;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.TestPlanMapper;
+import com.spms.mapper.TestReportMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
+import com.spms.service.NotificationService;
 import com.spms.service.OssService;
+import com.spms.service.TestPlanService;
+import com.spms.service.TestReportService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,11 +30,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.spms.constants.RedisConstants.*;
-import static com.spms.constants.SystemConstants.UPLOAD_AVATAR;
+import static com.spms.constants.SystemConstants.*;
+import static com.spms.enums.TestReportApprovalStatus.UNAUDITED;
 
 @Service
 public class OssServiceImpl implements OssService {
@@ -36,6 +46,15 @@ public class OssServiceImpl implements OssService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private TestReportMapper testReportMapper;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private TestPlanMapper testPlanMapper;
 
     @Override
     public Result uploadFileAvatar(MultipartFile file, HttpServletRequest request) throws IOException {
@@ -61,7 +80,51 @@ public class OssServiceImpl implements OssService {
         return Result.success("上传成功", url);
     }
 
-    private static String uploadFileAndReturnUrl(MultipartFile file, String type, String originAvatarName) throws IOException {
+    @Override
+    public Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException {
+        LambdaQueryWrapper<TestReport> testReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        testReportLambdaQueryWrapper.eq(TestReport::getTestPlanId, testPlanId);
+        TestReport testReport = testReportMapper.selectOne(testReportLambdaQueryWrapper);
+
+        TestPlan testPlan = testPlanMapper.selectById(testPlanId);
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (!Objects.equals(userId, testPlan.getHead())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无权限上传测试报告");
+        }
+
+        if (testReport == null) {
+            String url = uploadFileAndReturnUrl(file, UPLOAD_TESTREPORT, null);
+            TestReport newTestReport = new TestReport();
+            newTestReport.setTestPlanId(testPlanId);
+            newTestReport.setReportFile(url);
+            newTestReport.setTestReportName(file.getOriginalFilename());
+            newTestReport.setApprovalStatus(UNAUDITED.getCode());
+            newTestReport.setDelFlag(NOT_DELETE);
+            testReportMapper.insert(newTestReport);
+            notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")", "测试报告已上传，请尽快审核");
+            return Result.success("上传成功", url);
+        }
+
+        if (!testReport.getDelFlag()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "该测试计划已包含测试报告，如需替换请删除后上传");
+        }
+
+        String originTestReportUrl = testReport.getReportFile();
+        String[] split = originTestReportUrl.split("/");
+        String originTestReportName = split[split.length - 1];
+        String url = uploadFileAndReturnUrl(file, UPLOAD_TESTREPORT, UPLOAD_TESTREPORT + originTestReportName);
+
+        testReport.setTestReportName(file.getOriginalFilename());
+        testReport.setReportFile(url);
+        testReport.setDelFlag(NOT_DELETE);
+        testReport.setApprovalStatus(UNAUDITED.getCode());
+        testReportMapper.updateById(testReport);
+        return Result.success("上传成功", url);
+    }
+
+    private static String uploadFileAndReturnUrl(MultipartFile file, String type, String originFileName) throws IOException {
         OSS ossClient = new OSSClientBuilder().build(OSSConfig.END_POINT, OSSConfig.ACCESS_KEY_ID, OSSConfig.ACCESS_KEY_SECRET);
 
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
@@ -70,7 +133,9 @@ public class OssServiceImpl implements OssService {
         PutObjectRequest putObjectRequest = new PutObjectRequest(OSSConfig.BUCKET_NAME, fileName, new ByteArrayInputStream(file.getBytes()));
         try {
             ossClient.putObject(putObjectRequest);
-            ossClient.deleteObject(OSSConfig.BUCKET_NAME, originAvatarName);
+            if (originFileName != null) {
+                ossClient.deleteObject(OSSConfig.BUCKET_NAME, originFileName);
+            }
         } catch (OSSException e) {
             System.out.println(e.getErrorCode());
         } catch (ClientException e) {

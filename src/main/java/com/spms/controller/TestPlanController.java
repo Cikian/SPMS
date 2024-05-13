@@ -26,8 +26,9 @@ public class TestPlanController {
     public Result list(@RequestBody TestPlan testPlan,
                        @RequestParam(defaultValue = "1") Integer page,
                        @RequestParam(defaultValue = "10") Integer size,
-                       @RequestParam(defaultValue = "0") Integer type) {
-        return testPlanService.list(testPlan, page, size, type);
+                       @RequestParam(defaultValue = "0") Integer type,
+                       @RequestParam(defaultValue = "0") Integer status) {
+        return testPlanService.list(testPlan, page, size, type, status);
     }
 
     @GetMapping("/queryById/{id}")
