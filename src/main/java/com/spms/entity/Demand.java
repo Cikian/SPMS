@@ -33,6 +33,8 @@ public class Demand {
     private Long source;  // 需求来源
     private Integer storyPoint;  // 故事点
     private Integer level;  // 需求层级
+    private LocalDateTime startTime;  // 开始时间
+    private LocalDateTime endTime;  // 结束时间
 
     @TableField(exist = false)
     private List<Demand> children;  // 子需求

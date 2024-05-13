@@ -33,4 +33,28 @@ public class DemandController {
         String msg = b ? "添加成功" : "添加失败";
         return new Result(code, msg, null);
     }
+
+    @PutMapping("/changeStatus/{demandId}/{status}")
+    public Result changeStatus(@PathVariable("demandId") Long demandId, @PathVariable("status") Integer status) {
+        Boolean b = demandService.changeStatus(demandId, status);
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
+        return new Result(code, msg, null);
+    }
+
+    @PutMapping("/changeHeadId/{demandId}/{headId}")
+    public Result changeHeadId(@PathVariable("demandId") Long demandId, @PathVariable("headId") Long headId) {
+        Boolean b = demandService.changeHeadId(demandId, headId);
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
+        return new Result(code, msg, null);
+    }
+
+    @PutMapping("/changePriority/{demandId}/{priority}")
+    public Result changePriority(@PathVariable("demandId") Long demandId, @PathVariable("priority") Integer priority) {
+        Boolean b = demandService.changePriority(demandId, priority);
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
+        return new Result(code, msg, null);
+    }
 }
