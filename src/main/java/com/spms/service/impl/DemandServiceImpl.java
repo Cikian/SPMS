@@ -1,6 +1,8 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.spms.entity.Demand;
 import com.spms.mapper.DemandMapper;
 import com.spms.service.DemandService;
@@ -72,6 +74,33 @@ public class DemandServiceImpl implements DemandService {
     @Override
     public List<Demand> getAllDemandsByCreatedId(Long createdId) {
         return List.of();
+    }
+
+    @Override
+    public Boolean changeStatus(Long demandId, Integer status) {
+        LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+        luw.eq(Demand::getDemandId, demandId);
+        luw.set(Demand::getDemandStatus, status);
+
+        return demandMapper.update(null, luw) > 0;
+    }
+
+    @Override
+    public Boolean changeHeadId(Long demandId, Long headerId) {
+        LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+        luw.eq(Demand::getDemandId, demandId);
+        luw.set(Demand::getHeadId, headerId);
+
+        return demandMapper.update(null, luw) > 0;
+    }
+
+    @Override
+    public Boolean changePriority(Long demandId, Integer priority) {
+        LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+        luw.eq(Demand::getDemandId, demandId);
+        luw.set(Demand::getPriority, priority);
+
+        return demandMapper.update(null, luw) > 0;
     }
 
     private List<Demand> processDemands(List<Demand> demands) {
