@@ -51,6 +51,9 @@ spring:
       port: 6379
       password: chen0809
       database: 1
+  servlet:
+    multipart:
+      max-file-size: 5MB
 
 mybatis-plus:
   configuration:

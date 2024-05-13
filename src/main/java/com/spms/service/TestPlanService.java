@@ -6,7 +6,7 @@ import com.spms.entity.TestPlan;
 public interface TestPlanService {
     Result add(TestPlan testPlan);
 
-    Result list(TestPlan testPlan, Integer page, Integer size, Integer type);
+    Result list(TestPlan testPlan, Integer page, Integer size, Integer type, Integer status);
 
     Result queryById(Long id);
 
