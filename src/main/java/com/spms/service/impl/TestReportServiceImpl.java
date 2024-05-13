@@ -7,9 +7,11 @@ import com.spms.dto.Result;
 import com.spms.entity.TestPlan;
 import com.spms.entity.TestReport;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.TestPlanMapper;
 import com.spms.mapper.TestReportMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.TestReportService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,10 @@ import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
 public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestReport> implements TestReportService {
+
+    @Autowired
+    private TestPlanMapper testPlanMapper;
+
     @Override
     public Result list(Long testPlanId) {
         if (testPlanId == null) {
@@ -42,13 +48,17 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        TestReport testReport = this.getById(testReportId);
+        Long testPlanId = testReport.getTestPlanId();
+        TestPlan testPlan = testPlanMapper.selectById(testPlanId);
+
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
 
-        LambdaUpdateWrapper<TestReport> testReportLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        testReportLambdaUpdateWrapper.set(TestReport::getDelFlag, DELETE)
-                .eq(TestReport::getTestReportId, testReportId);
-        boolean update = this.update(testReportLambdaUpdateWrapper);
-        return update ? Result.success("删除成功") : Result.fail(ResultCode.FAIL.getCode(), "删除失败");
+        if (!testPlan.getHead().equals(userId)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无权限删除");
+        }
+
+        return Result.success("删除成功");
     }
 }
