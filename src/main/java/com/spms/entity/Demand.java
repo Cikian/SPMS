@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @Title: Demand
@@ -31,6 +32,10 @@ public class Demand {
     private Integer workItemType;  // 需求类型 0-史诗，1-特性，2-用户故事，3-任务
     private Long source;  // 需求来源
     private Integer storyPoint;  // 故事点
+    private Integer level;  // 需求层级
+
+    @TableField(exist = false)
+    private List<Demand> children;  // 子需求
 
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
@@ -40,4 +45,10 @@ public class Demand {
     private Long updateBy;
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    public void addChild(Demand child) {
+        if (children != null) {
+            this.children.add(child);
+        }
+    }
 }
