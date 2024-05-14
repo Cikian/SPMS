@@ -121,6 +121,7 @@ public class OssServiceImpl implements OssService {
         testReport.setDelFlag(NOT_DELETE);
         testReport.setApprovalStatus(UNAUDITED.getCode());
         testReportMapper.updateById(testReport);
+        notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")", "测试报告已上传，请尽快审核");
         return Result.success("上传成功", url);
     }
 

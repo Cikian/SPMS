@@ -10,10 +10,12 @@ import com.spms.enums.ResultCode;
 import com.spms.mapper.TestPlanMapper;
 import com.spms.mapper.TestReportMapper;
 import com.spms.security.LoginUser;
+import com.spms.service.NotificationService;
 import com.spms.service.TestReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import static com.spms.constants.SystemConstants.DELETE;
 import static com.spms.constants.SystemConstants.NOT_DELETE;
@@ -23,6 +25,9 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
 
     @Autowired
     private TestPlanMapper testPlanMapper;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public Result list(Long testPlanId) {
@@ -59,6 +64,38 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
             return Result.fail(ResultCode.FAIL.getCode(), "无权限删除");
         }
 
+        LambdaUpdateWrapper<TestReport> testReportLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        testReportLambdaUpdateWrapper.eq(TestReport::getTestReportId, testReportId)
+                .set(TestReport::getDelFlag, DELETE);
+        this.update(testReportLambdaUpdateWrapper);
+
         return Result.success("删除成功");
+    }
+
+    @Override
+    public Result update(Long testReportId, Integer status) {
+        TestReport testReport1 = this.getById(testReportId);
+        Long testPlanId = testReport1.getTestPlanId();
+        TestPlan testPlan = testPlanMapper.selectById(testPlanId);
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        if (!testPlan.getCreateBy().equals(userId)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无权限修改");
+        }
+
+        LambdaUpdateWrapper<TestReport> testReportLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        testReportLambdaUpdateWrapper.eq(TestReport::getTestReportId, testReportId)
+                .set(TestReport::getApprovalStatus, status);
+        this.update(testReportLambdaUpdateWrapper);
+
+        if (status == 1) {
+            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您的测试报告已审核通过！");
+        } else if (status == 2) {
+            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您的测试报告未通过审核,请修改后重新上传！");
+        }
+
+        return Result.success("修改成功");
     }
 }

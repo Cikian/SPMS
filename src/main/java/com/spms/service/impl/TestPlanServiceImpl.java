@@ -182,6 +182,13 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
         Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
         testPlanDTO.setProjectName(project.getProName());
+
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getUserId, testPlan.getCreateBy())
+                .select(User::getNickName);
+        User user = userMapper.selectOne(userLambdaQueryWrapper);
+        testPlanDTO.setCreatorName(user.getNickName());
+
         return Result.success(testPlanDTO);
     }
 

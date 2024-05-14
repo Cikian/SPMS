@@ -16,4 +16,5 @@ public class TestPlanDTO {
     private Integer progress;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private String creatorName;
 }
