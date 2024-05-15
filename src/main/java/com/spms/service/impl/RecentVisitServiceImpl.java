@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 
-import static com.spms.constants.RedisConstants.RECENT_VISIT;
+import static com.spms.constants.RedisConstants.*;
 
 @Service
 public class RecentVisitServiceImpl implements RecentVisitService {
@@ -41,17 +41,25 @@ public class RecentVisitServiceImpl implements RecentVisitService {
     public Result recordVisit(Long id, Integer type) {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
-        String key = RECENT_VISIT + userId;
         String itemId = id + ":" + type;
 
-        if (redisTemplate.opsForZSet().rank(key, itemId) != null) {
-            redisTemplate.opsForZSet().remove(key, itemId);
+        if (redisTemplate.opsForZSet().rank(RECENT_VISIT_PRO + userId, itemId) != null) {
+            redisTemplate.opsForZSet().remove(RECENT_VISIT_PRO + userId, itemId);
+        }
+
+        if (redisTemplate.opsForZSet().rank(RECENT_VISIT_OTHER + userId, itemId) != null) {
+            redisTemplate.opsForZSet().remove(RECENT_VISIT_OTHER + userId, itemId);
         }
 
         double score = System.currentTimeMillis();
-        redisTemplate.opsForZSet().add(key, itemId, score);
+        if (RecentVisitType.PROJECT.getType().equals(type)) {
+            redisTemplate.opsForZSet().add(RECENT_VISIT_PRO + userId, itemId, score);
+        } else {
+            redisTemplate.opsForZSet().add(RECENT_VISIT_OTHER + userId, itemId, score);
+        }
 
-        redisTemplate.opsForZSet().removeRange(key, 0, -16);
+        redisTemplate.opsForZSet().removeRange(RECENT_VISIT_PRO + userId, 0, -6);
+        redisTemplate.opsForZSet().removeRange(RECENT_VISIT_OTHER + userId, 0, -16);
         return Result.success();
     }
 
@@ -60,7 +68,7 @@ public class RecentVisitServiceImpl implements RecentVisitService {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
 
-        Set<String> strings = redisTemplate.opsForZSet().reverseRange(RECENT_VISIT + userId, 0, -1);
+        Set<String> strings = redisTemplate.opsForZSet().reverseRange(RECENT_VISIT_OTHER + userId, 0, -1);
         if (strings == null) {
             return Result.success();
         }
@@ -72,19 +80,47 @@ public class RecentVisitServiceImpl implements RecentVisitService {
             Integer type = Integer.valueOf(split[1]);
             recentVisitDTO.setId(Long.valueOf(id));
 
-            if (RecentVisitType.PROJECT.getType().equals(type)) {
-                Project project = projectMapper.selectById(Long.valueOf(id));
-                recentVisitDTO.setType(1);
-                recentVisitDTO.setName(project.getProName());
-                recentVisitDTO.setFlag(project.getProFlag());
-            } else if (RecentVisitType.DEMAND.getType().equals(type)) {
+            if (RecentVisitType.DEMAND.getType().equals(type)) {
                 Demand demand = demandMapper.selectById(Long.valueOf(id));
+                recentVisitDTO.setId(demand.getDemandId());
                 recentVisitDTO.setType(2);
                 recentVisitDTO.setName(demand.getTitle());
             } else if (RecentVisitType.TEST_PLAN.getType().equals(type)) {
                 TestPlan testPlan = testPlanMapper.selectById(Long.valueOf(id));
+                recentVisitDTO.setId(testPlan.getTestPlanId());
                 recentVisitDTO.setType(3);
                 recentVisitDTO.setName(testPlan.getPlanName());
+            }
+            return recentVisitDTO;
+        }).toList();
+
+        return Result.success(recentVisitDTOS);
+    }
+
+    @Override
+    public Result getRecentVisitsPro() {
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        Set<ZSetOperations.TypedTuple<String>> strings = redisTemplate.opsForZSet().reverseRangeWithScores(RECENT_VISIT_PRO + userId, 0, -1);
+        if (strings == null) {
+            return Result.success();
+        }
+
+        List<RecentVisitDTO> recentVisitDTOS = strings.stream().map(item -> {
+            RecentVisitDTO recentVisitDTO = new RecentVisitDTO();
+            String[] split = item.getValue().split(":");
+            String id = split[0];
+            Integer type = Integer.valueOf(split[1]);
+            recentVisitDTO.setId(Long.valueOf(id));
+
+            if (RecentVisitType.PROJECT.getType().equals(type)) {
+                Project project = projectMapper.selectById(Long.valueOf(id));
+                recentVisitDTO.setType(1);
+                recentVisitDTO.setId(project.getProId());
+                recentVisitDTO.setName(project.getProName());
+                recentVisitDTO.setFlag(project.getProFlag());
             }
             return recentVisitDTO;
         }).toList();

@@ -17,8 +17,13 @@ public class RecentVisitController {
         return recentVisitService.recordVisit(id, type);
     }
 
-    @GetMapping("getRecentVisits")
+    @GetMapping("/getRecentVisits")
     public Result getRecentVisits() {
         return recentVisitService.getRecentVisits();
+    }
+
+    @GetMapping("/getRecentVisitsPro")
+    public Result getRecentVisitsPro() {
+        return recentVisitService.getRecentVisitsPro();
     }
 }

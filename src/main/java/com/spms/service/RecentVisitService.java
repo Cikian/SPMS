@@ -6,4 +6,6 @@ public interface RecentVisitService {
     Result recordVisit(Long id, Integer type);
 
     Result getRecentVisits();
+
+    Result getRecentVisitsPro();
 }
