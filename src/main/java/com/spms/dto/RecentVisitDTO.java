@@ -8,6 +8,8 @@ public class RecentVisitDTO {
 
     private Integer type;
 
+    private Integer demandType;
+
     private String name;
 
     private String flag;

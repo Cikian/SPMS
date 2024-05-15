@@ -85,6 +85,7 @@ public class RecentVisitServiceImpl implements RecentVisitService {
                 recentVisitDTO.setId(demand.getDemandId());
                 recentVisitDTO.setType(2);
                 recentVisitDTO.setName(demand.getTitle());
+                recentVisitDTO.setDemandType(demand.getWorkItemType());
             } else if (RecentVisitType.TEST_PLAN.getType().equals(type)) {
                 TestPlan testPlan = testPlanMapper.selectById(Long.valueOf(id));
                 recentVisitDTO.setId(testPlan.getTestPlanId());
@@ -99,29 +100,23 @@ public class RecentVisitServiceImpl implements RecentVisitService {
 
     @Override
     public Result getRecentVisitsPro() {
-
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
 
-        Set<ZSetOperations.TypedTuple<String>> strings = redisTemplate.opsForZSet().reverseRangeWithScores(RECENT_VISIT_PRO + userId, 0, -1);
+        Set<String> strings = redisTemplate.opsForZSet().reverseRange(RECENT_VISIT_PRO + userId, 0, -1);
         if (strings == null) {
             return Result.success();
         }
 
         List<RecentVisitDTO> recentVisitDTOS = strings.stream().map(item -> {
             RecentVisitDTO recentVisitDTO = new RecentVisitDTO();
-            String[] split = item.getValue().split(":");
+            String[] split = item.split(":");
             String id = split[0];
-            Integer type = Integer.valueOf(split[1]);
             recentVisitDTO.setId(Long.valueOf(id));
-
-            if (RecentVisitType.PROJECT.getType().equals(type)) {
-                Project project = projectMapper.selectById(Long.valueOf(id));
-                recentVisitDTO.setType(1);
-                recentVisitDTO.setId(project.getProId());
-                recentVisitDTO.setName(project.getProName());
-                recentVisitDTO.setFlag(project.getProFlag());
-            }
+            Project project = projectMapper.selectById(Long.valueOf(id));
+            recentVisitDTO.setId(project.getProId());
+            recentVisitDTO.setName(project.getProName());
+            recentVisitDTO.setFlag(project.getProFlag());
             return recentVisitDTO;
         }).toList();
 
