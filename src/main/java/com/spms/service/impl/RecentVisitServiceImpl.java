@@ -117,6 +117,7 @@ public class RecentVisitServiceImpl implements RecentVisitService {
             recentVisitDTO.setId(project.getProId());
             recentVisitDTO.setName(project.getProName());
             recentVisitDTO.setFlag(project.getProFlag());
+            recentVisitDTO.setDesc(project.getProDesc());
             return recentVisitDTO;
         }).toList();
 
