@@ -16,6 +16,7 @@ public class RedisConstants {
 
     public static final String NOTIFICATION_KEY = "notification:";
 
-    public static final String RECENT_VISIT = "recent:visit:";
+    public static final String RECENT_VISIT_PRO = "recent:visit:pro:";
+    public static final String RECENT_VISIT_OTHER = "recent:visit:other:";
 
 }
