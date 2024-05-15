@@ -130,6 +130,13 @@ public class DemandServiceImpl implements DemandService {
         return demandMapper.update(null, luw) > 0;
     }
 
+    @Override
+    public List<Demand> getChildDemands(Long demandId) {
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getFatherDemandId, demandId);
+        return demandMapper.selectList(lqw);
+    }
+
     private List<Demand> processDemands(List<Demand> demands) {
         // 分离出demands中元素的不同level的元素
 

@@ -83,4 +83,12 @@ public class DemandController {
         String msg = b ? "更新成功" : "更新失败";
         return new Result(code, msg, null);
     }
+
+    @GetMapping("/child/{demandId}")
+    public Result getChildDemands(@PathVariable("demandId") Long demandId) {
+        List<Demand> demands = demandService.getChildDemands(demandId);
+        Integer code = demands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = demands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, demands);
+    }
 }

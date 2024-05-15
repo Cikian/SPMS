@@ -39,4 +39,6 @@ public interface DemandService {
     Boolean changeType(Long demandId, Long type);
     // 根据ID更新来源
     Boolean changeSource(Long demandId, Long source);
+    // 根据ID获取子工作项
+    List<Demand> getChildDemands(Long demandId);
 }
