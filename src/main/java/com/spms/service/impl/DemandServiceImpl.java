@@ -103,6 +103,33 @@ public class DemandServiceImpl implements DemandService {
         return demandMapper.update(null, luw) > 0;
     }
 
+    @Override
+    public Boolean changeDesc(Long demandId, String desc) {
+        LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+        luw.eq(Demand::getDemandId, demandId);
+        luw.set(Demand::getDemandDesc, desc);
+
+        return demandMapper.update(null, luw) > 0;
+    }
+
+    @Override
+    public Boolean changeType(Long demandId, Long type) {
+        LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+        luw.eq(Demand::getDemandId, demandId);
+        luw.set(Demand::getType, type);
+
+        return demandMapper.update(null, luw) > 0;
+    }
+
+    @Override
+    public Boolean changeSource(Long demandId, Long source) {
+        LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+        luw.eq(Demand::getDemandId, demandId);
+        luw.set(Demand::getSource, source);
+
+        return demandMapper.update(null, luw) > 0;
+    }
+
     private List<Demand> processDemands(List<Demand> demands) {
         // 分离出demands中元素的不同level的元素
 
