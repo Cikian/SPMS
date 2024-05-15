@@ -33,4 +33,10 @@ public interface DemandService {
     Boolean changeHeadId(Long demandId, Long headerId);
     // 根据需求ID更新优先级
     Boolean changePriority(Long demandId, Integer priority);
+    // 根据需求ID更新描述
+    Boolean changeDesc(Long demandId, String desc);
+    // 根据需求ID更新需求类型
+    Boolean changeType(Long demandId, Long type);
+    // 根据ID更新来源
+    Boolean changeSource(Long demandId, Long source);
 }
