@@ -13,4 +13,6 @@ public interface TestCaseService {
     Result update(TestCase testCase);
 
     Result delete(Long testCaseId);
+
+    Result calcProTestProgress(Long projectId);
 }

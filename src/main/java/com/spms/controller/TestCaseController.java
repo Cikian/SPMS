@@ -37,4 +37,9 @@ public class TestCaseController {
     public Result delete(@PathVariable("testCaseId") Long testCaseId) {
         return testCaseService.delete(testCaseId);
     }
+
+    @GetMapping("/calcProTestProgress/{projectId}")
+    public Result calcProTestProgress(@PathVariable("projectId") Long projectId) {
+        return testCaseService.calcProTestProgress(projectId);
+    }
 }
