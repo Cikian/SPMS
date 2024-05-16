@@ -2,6 +2,7 @@ package com.spms.service;
 
 import com.spms.entity.Demand;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -35,8 +36,14 @@ public interface DemandService {
     Boolean changePriority(Long demandId, Integer priority);
     // 根据需求ID更新描述
     Boolean changeDesc(Long demandId, String desc);
+    // 根据需求ID更新开始时间
+    Boolean changeStartTime(Long demandId, LocalDateTime startTime);
+    // 根据需求ID更新结束时间
+    Boolean changeEndTime(Long demandId, LocalDateTime endTime);
     // 根据需求ID更新需求类型
     Boolean changeType(Long demandId, Long type);
     // 根据ID更新来源
     Boolean changeSource(Long demandId, Long source);
+    // 根据ID获取子工作项
+    List<Demand> getChildDemands(Long demandId);
 }

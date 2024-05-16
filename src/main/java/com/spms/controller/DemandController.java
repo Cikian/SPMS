@@ -77,10 +77,33 @@ public class DemandController {
 
     @PutMapping("/changeDesc")
     public Result changeDesc(@RequestBody Demand demand) {
-        System.out.println("需求描述：" + demand.getDemandDesc());
         Boolean b = demandService.changeDesc(demand.getDemandId(), demand.getDemandDesc());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
         return new Result(code, msg, null);
+    }
+
+    @PutMapping("/changeStartTime")
+    public Result changeStartTime(@RequestBody Demand demand) {
+        Boolean b = demandService.changeStartTime(demand.getDemandId(), demand.getStartTime());
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
+        return new Result(code, msg, null);
+    }
+
+    @PutMapping("/changeEndTime")
+    public Result changeEndTime(@RequestBody Demand demand) {
+        Boolean b = demandService.changeEndTime(demand.getDemandId(), demand.getEndTime());
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
+        return new Result(code, msg, null);
+    }
+
+    @GetMapping("/child/{demandId}")
+    public Result getChildDemands(@PathVariable("demandId") Long demandId) {
+        List<Demand> demands = demandService.getChildDemands(demandId);
+        Integer code = demands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = demands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, demands);
     }
 }

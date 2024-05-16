@@ -13,4 +13,6 @@ public class RecentVisitDTO {
     private String name;
 
     private String flag;
+
+    private String desc;
 }
