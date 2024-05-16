@@ -9,4 +9,8 @@ public interface QualityTargetService {
     Result delete(Long[] ids);
 
     Result list(QualityTarget qualityTarget, Integer page, Integer size);
+
+    Result queryById(Long id);
+
+    Result update(QualityTarget qualityTarget);
 }

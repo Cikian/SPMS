@@ -5,14 +5,20 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.spms.dto.QualityTargetDTO;
 import com.spms.dto.Result;
 import com.spms.entity.QualityTarget;
 import com.spms.entity.QualityTargetRequirement;
+import com.spms.entity.User;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.QualityTargetMapper;
 import com.spms.mapper.QualityTargetRequirementMapper;
+import com.spms.mapper.UserMapper;
+import com.spms.security.LoginUser;
 import com.spms.service.QualityTargetService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,6 +33,9 @@ public class QualityTargetServiceImpl extends ServiceImpl<QualityTargetMapper, Q
 
     @Autowired
     private QualityTargetRequirementMapper qualityTargetRequirementMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public Result add(QualityTarget qualityTarget) {
@@ -74,6 +83,18 @@ public class QualityTargetServiceImpl extends ServiceImpl<QualityTargetMapper, Q
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        QualityTarget qualityTarget = this.getById(ids[0]);
+        if (qualityTarget == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
+        }
+
+        if (!userId.equals(qualityTarget.getCreateBy()) && !loginUser.getPermissions().toString().contains("system_admin")) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无权限删除");
+        }
+
         LambdaQueryWrapper<QualityTargetRequirement> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(QualityTargetRequirement::getDelFlag, NOT_DELETE)
                 .in(QualityTargetRequirement::getQualityTargetId, ids);
@@ -96,19 +117,11 @@ public class QualityTargetServiceImpl extends ServiceImpl<QualityTargetMapper, Q
     public Result list(QualityTarget qualityTarget, Integer page, Integer size) {
         Page<QualityTarget> qualityTargetPage = new Page<>(page, size);
 
-        LocalDateTime minCreateDate = null;
-        LocalDateTime maxCreateDate = null;
-        if (qualityTarget.getCreateTime() != null) {
-            minCreateDate = qualityTarget.getCreateTime().withHour(0).withMinute(0).withSecond(0).withNano(0);
-            maxCreateDate = qualityTarget.getCreateTime().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-        }
-
         LambdaQueryWrapper<QualityTarget> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper
                 .like(StrUtil.isNotEmpty(qualityTarget.getTargetName()), QualityTarget::getTargetName, qualityTarget.getTargetName())
                 .eq(Objects.nonNull(qualityTarget.getQualityAttribute()), QualityTarget::getQualityAttribute, qualityTarget.getQualityAttribute())
                 .eq(Objects.nonNull(qualityTarget.getPriority()), QualityTarget::getPriority, qualityTarget.getPriority())
-                .between(Objects.nonNull(qualityTarget.getCreateTime()), QualityTarget::getCreateTime, minCreateDate, maxCreateDate)
                 .eq(QualityTarget::getDelFlag, NOT_DELETE)
                 .select(QualityTarget::getQualityTargetId, QualityTarget::getTargetName, QualityTarget::getQualityAttribute, QualityTarget::getTargetValue,
                         QualityTarget::getPriority, QualityTarget::getMetric, QualityTarget::getCreateTime);
@@ -118,5 +131,70 @@ public class QualityTargetServiceImpl extends ServiceImpl<QualityTargetMapper, Q
             return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
         }
         return Result.success(qualityTargetPage);
+    }
+
+    @Override
+    public Result queryById(Long id) {
+        if (id == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        QualityTarget qualityTarget = this.getById(id);
+        QualityTargetDTO qualityTargetDTO = new QualityTargetDTO();
+        BeanUtils.copyProperties(qualityTarget, qualityTargetDTO);
+
+        User user = userMapper.selectById(qualityTarget.getCreateBy());
+        qualityTargetDTO.setCreateName(user.getUserName());
+
+        return Result.success(qualityTargetDTO);
+    }
+
+    @Override
+    public Result update(QualityTarget qualityTarget) {
+        if (qualityTarget == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        QualityTarget target = this.getById(qualityTarget.getQualityTargetId());
+        if (target == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        if (!userId.equals(qualityTarget.getCreateBy()) && !loginUser.getPermissions().toString().contains("system_admin")) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无权限修改");
+        }
+
+        if (StrUtil.isEmpty(qualityTarget.getTargetName())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "目标名称不能为空");
+        }
+
+        if (Objects.isNull(qualityTarget.getQualityAttribute())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "质量特性不能为空");
+        }
+
+        if (StrUtil.isEmpty(qualityTarget.getTargetValue())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "目标值不能为空");
+        }
+
+        if (Objects.isNull(qualityTarget.getPriority())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "目标优先级不能为空");
+        }
+
+        if (StrUtil.isEmpty(qualityTarget.getMetric())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "度量指标不能为空");
+        }
+
+        target.setTargetName(qualityTarget.getTargetName());
+        target.setQualityAttribute(qualityTarget.getQualityAttribute());
+        target.setTargetValue(qualityTarget.getTargetValue());
+        target.setPriority(qualityTarget.getPriority());
+        target.setMetric(qualityTarget.getMetric());
+
+        boolean update = this.updateById(target);
+
+        return update ? Result.success("修改成功") : Result.fail(ResultCode.FAIL.getCode(), "修改失败");
     }
 }
