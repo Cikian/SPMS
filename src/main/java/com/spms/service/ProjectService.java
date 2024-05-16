@@ -1,5 +1,6 @@
 package com.spms.service;
 
+import com.spms.dto.ProjectDTO;
 import com.spms.dto.Result;
 import com.spms.entity.Project;
 import com.spms.dto.AddProjectDTO;
@@ -22,5 +23,5 @@ public interface ProjectService {
 
     List<Project> getProjectByStatus(Integer status);
 
-    Project getProById(Long id);
+    ProjectDTO getProById(Long id);
 }

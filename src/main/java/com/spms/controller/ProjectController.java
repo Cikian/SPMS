@@ -1,5 +1,6 @@
 package com.spms.controller;
 
+import com.spms.dto.ProjectDTO;
 import com.spms.dto.Result;
 import com.spms.dto.AddProjectDTO;
 import com.spms.entity.Project;
@@ -46,7 +47,7 @@ public class ProjectController {
 
     @GetMapping("/getByProId/{proId}")
     public Result getProById(@PathVariable("proId") Long proId) {
-        Project proById = proService.getProById(proId);
+        ProjectDTO proById = proService.getProById(proId);
         Integer code = proById != null ? ErrorCode.GET_SUCCESS : ErrorCode.GET_FAIL;
         String msg = proById != null ? "获取成功" : "获取失败";
         return new Result(code, msg, proById);
