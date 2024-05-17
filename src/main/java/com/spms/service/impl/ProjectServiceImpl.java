@@ -10,6 +10,7 @@ import com.spms.entity.RatedTimeCost;
 import com.spms.entity.User;
 import com.spms.dto.AddProPeopleDTO;
 import com.spms.dto.AddProjectDTO;
+import com.spms.enums.ResourceType;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.ProjectResourceMapper;
@@ -70,7 +71,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             ProjectResource pr = new ProjectResource();
             pr.setProjectId(proId);
             pr.setResourceId(memberId);
-            pr.setResourceType(0);
+            pr.setResourceType(ResourceType.EMPLOYEE.getCode());
             pr.setEstimateStartTime(addProjectDTO.getExpectedStartTime());
             pr.setEstimateEndTime(addProjectDTO.getExpectedEndTime());
             pr.setUseType(1);

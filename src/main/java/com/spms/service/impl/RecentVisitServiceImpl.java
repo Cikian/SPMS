@@ -69,6 +69,7 @@ public class RecentVisitServiceImpl implements RecentVisitService {
         Long userId = loginUser.getUser().getUserId();
 
         Set<String> strings = redisTemplate.opsForZSet().reverseRange(RECENT_VISIT_OTHER + userId, 0, -1);
+
         if (strings == null) {
             return Result.success();
         }
@@ -79,6 +80,8 @@ public class RecentVisitServiceImpl implements RecentVisitService {
             String id = split[0];
             Integer type = Integer.valueOf(split[1]);
             recentVisitDTO.setId(Long.valueOf(id));
+            Double score = redisTemplate.opsForZSet().score(RECENT_VISIT_OTHER + userId, item);
+            recentVisitDTO.setTime(score.longValue());
 
             if (RecentVisitType.DEMAND.getType().equals(type)) {
                 Demand demand = demandMapper.selectById(Long.valueOf(id));

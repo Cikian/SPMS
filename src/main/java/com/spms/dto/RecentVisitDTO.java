@@ -15,4 +15,6 @@ public class RecentVisitDTO {
     private String flag;
 
     private String desc;
+
+    private Long time;
 }

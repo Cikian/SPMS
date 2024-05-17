@@ -95,7 +95,7 @@ public class OssServiceImpl implements OssService {
         }
 
         if (testReport == null) {
-            String url = uploadFileAndReturnUrl(file, UPLOAD_TESTREPORT, null);
+            String url = uploadFileAndReturnUrl(file, UPLOAD_TEST_REPORT, null);
             TestReport newTestReport = new TestReport();
             newTestReport.setTestPlanId(testPlanId);
             newTestReport.setReportFile(url);
@@ -114,7 +114,7 @@ public class OssServiceImpl implements OssService {
         String originTestReportUrl = testReport.getReportFile();
         String[] split = originTestReportUrl.split("/");
         String originTestReportName = split[split.length - 1];
-        String url = uploadFileAndReturnUrl(file, UPLOAD_TESTREPORT, UPLOAD_TESTREPORT + originTestReportName);
+        String url = uploadFileAndReturnUrl(file, UPLOAD_TEST_REPORT, UPLOAD_TEST_REPORT + originTestReportName);
 
         testReport.setTestReportName(file.getOriginalFilename());
         testReport.setReportFile(url);
