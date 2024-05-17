@@ -10,7 +10,7 @@ public class SystemConstants {
     public static final String ROLE_PREFIX = "ROLE_";
 
     public static final String UPLOAD_AVATAR  = "avatar/";
-    public static final String UPLOAD_TESTREPORT  = "testReport/";
+    public static final String UPLOAD_TEST_REPORT  = "testReport/";
 
 
 }
