@@ -15,16 +15,12 @@ public class QualityTarget {
 
     private String targetName;
 
-    //质量目标特性
-    private Integer qualityAttribute;
+    private Long qualityAttribute;
 
-    //目标值 例：达到xx水平
     private String targetValue;
 
-    //目标优先级
     private Integer priority;
 
-    //目标度量指标 例：平均xx即可满足
     private String metric;
 
     @TableField(fill = FieldFill.INSERT)

@@ -2,6 +2,7 @@ package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.spms.dto.ProjectDTO;
 import com.spms.dto.Result;
 import com.spms.entity.Project;
 import com.spms.entity.ProjectResource;
@@ -16,6 +17,7 @@ import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.ProjectService;
 import com.spms.utils.TimeUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -90,8 +94,16 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
-    public Project getProById(Long id) {
-        return projectMapper.selectById(id);
+    public ProjectDTO getProById(Long id) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        Project project = projectMapper.selectById(id);
+
+        ProjectDTO projectDTO = new ProjectDTO();
+        BeanUtils.copyProperties(project, projectDTO);
+        projectDTO.setIsReviewer(userId.equals(project.getCreateBy()));
+
+        return projectDTO;
     }
 
     @Override

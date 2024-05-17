@@ -18,15 +18,25 @@ public class QualityTargetController {
         return qualityTargetService.add(qualityTarget);
     }
 
-    @GetMapping("/list")
+    @PostMapping("/list")
     public Result list(@RequestBody QualityTarget qualityTarget,
                        @RequestParam(defaultValue = "1") Integer page,
                        @RequestParam(defaultValue = "10") Integer size) {
-        return qualityTargetService.list(qualityTarget,page,size);
+        return qualityTargetService.list(qualityTarget, page, size);
     }
 
     @PostMapping("/delete")
     public Result delete(@RequestBody Long[] ids) {
         return qualityTargetService.delete(ids);
+    }
+
+    @GetMapping("/queryById/{id}")
+    public Result queryById(@PathVariable("id") Long id) {
+        return qualityTargetService.queryById(id);
+    }
+
+    @PostMapping("/update")
+    public Result update(@RequestBody QualityTarget qualityTarget) {
+        return qualityTargetService.update(qualityTarget);
     }
 }
