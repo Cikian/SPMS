@@ -71,8 +71,10 @@ public class DemandServiceImpl implements DemandService {
 
     @Override
     public Demand getDemandById(Long demandId) {
-        return demandMapper.selectById(demandId);
+        Demand demand = demandMapper.selectById(demandId);
+        return getChildren(demand);
     }
+
 
     @Override
     public List<Demand> getAllDemandsByStatus(Integer status) {
@@ -299,5 +301,20 @@ public class DemandServiceImpl implements DemandService {
             }
             fatherDemand.setChildren(children);
         }
+    }
+
+    Demand getChildren(Demand demand){
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getFatherDemandId, demand.getDemandId());
+        List<Demand> children = demandMapper.selectList(lqw);
+        if (!children.isEmpty()){
+            List<Demand> childrenSChildren = new ArrayList<>();
+            for (Demand child : children){
+                Demand children1 = getChildren(child);
+                childrenSChildren.add(children1);
+            }
+            demand.setChildren(childrenSChildren);
+        }
+        return demand;
     }
 }
