@@ -46,4 +46,7 @@ public interface DemandService {
     Boolean changeSource(Long demandId, Long source);
     // 根据ID获取子工作项
     List<Demand> getChildDemands(Long demandId);
+    // 根据Id获取已完成和所有工作项的数量
+    Map<String, Integer> getDemandCounts(Long proId);
+
 }

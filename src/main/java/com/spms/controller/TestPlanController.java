@@ -43,4 +43,11 @@ public class TestPlanController {
         return testPlanService.updateTestPlan(testPlan);
     }
 
+    // @GetMapping("/count/{proId}")
+
+
+    @GetMapping("/byDemand/{demandId}")
+    public Result byDemand(@PathVariable("demandId") Long demandId) {
+        return testPlanService.queryByDemandId(demandId);
+    }
 }

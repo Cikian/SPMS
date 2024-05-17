@@ -11,4 +11,6 @@ public interface TestPlanService {
     Result queryById(Long id);
 
     Result updateTestPlan(TestPlan testPlan);
+
+    Result queryByDemandId(Long id);
 }

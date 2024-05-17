@@ -12,4 +12,5 @@ import com.spms.entity.Demand;
  */
 public interface DemandMapper extends BaseMapper<Demand> {
     Integer countByProId(Long proId);
+    Integer countByProIdWhereIsComplete(Long proId);
 }

@@ -106,4 +106,12 @@ public class DemandController {
         String msg = demands.isEmpty() ? "无数据" : "获取成功";
         return new Result(code, msg, demands);
     }
+
+    @GetMapping("/counts/{proId}")
+    public Result getDemandCounts(@PathVariable("proId") Long proId) {
+        Map<String, Integer> counts = demandService.getDemandCounts(proId);
+        Integer code = counts.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = counts.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, counts);
+    }
 }
