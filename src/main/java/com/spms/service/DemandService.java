@@ -18,6 +18,8 @@ public interface DemandService {
     Boolean addDemand(Demand demand);
     // 根据项目ID查询需求
     Map<String, List<Demand>> getAllDemandsByProId(Long proId);
+    // 根据需求ID查询需求
+    Demand getDemandById(Long demandId);
     // 根据状态查询需求
     List<Demand> getAllDemandsByStatus(Integer status);
     // 根据类型查询需求

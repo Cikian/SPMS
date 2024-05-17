@@ -70,6 +70,11 @@ public class DemandServiceImpl implements DemandService {
     }
 
     @Override
+    public Demand getDemandById(Long demandId) {
+        return demandMapper.selectById(demandId);
+    }
+
+    @Override
     public List<Demand> getAllDemandsByStatus(Integer status) {
         return List.of();
     }
