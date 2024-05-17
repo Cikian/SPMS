@@ -2,9 +2,7 @@ package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.spms.entity.Demand;
-import com.spms.entity.DemandActive;
 import com.spms.mapper.DemandMapper;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
@@ -69,6 +67,11 @@ public class DemandServiceImpl implements DemandService {
         result.put("allDemands", demandMapper.selectList(lqw));
         result.put("demandsByLevel", demandsByLevel);
         return result;
+    }
+
+    @Override
+    public Demand getDemandById(Long demandId) {
+        return demandMapper.selectById(demandId);
     }
 
     @Override
@@ -251,6 +254,13 @@ public class DemandServiceImpl implements DemandService {
         LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Demand::getFatherDemandId, demandId);
         return demandMapper.selectList(lqw);
+    }
+
+    @Override
+    public Map<String, Integer> getDemandCounts(Long proId) {
+        Integer all = demandMapper.countByProId(proId);
+        Integer completed = demandMapper.countByProIdWhereIsComplete(proId);
+        return Map.of("all", all, "completed", completed);
     }
 
     private List<Demand> processDemands(List<Demand> demands) {

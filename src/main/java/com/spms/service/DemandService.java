@@ -18,6 +18,8 @@ public interface DemandService {
     Boolean addDemand(Demand demand);
     // 根据项目ID查询需求
     Map<String, List<Demand>> getAllDemandsByProId(Long proId);
+    // 根据需求ID查询需求
+    Demand getDemandById(Long demandId);
     // 根据状态查询需求
     List<Demand> getAllDemandsByStatus(Integer status);
     // 根据类型查询需求
@@ -46,4 +48,7 @@ public interface DemandService {
     Boolean changeSource(Long demandId, Long source);
     // 根据ID获取子工作项
     List<Demand> getChildDemands(Long demandId);
+    // 根据Id获取已完成和所有工作项的数量
+    Map<String, Integer> getDemandCounts(Long proId);
+
 }

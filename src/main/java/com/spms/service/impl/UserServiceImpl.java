@@ -445,6 +445,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // TODO: 问题：添加项目时关联人力成本在表中存的type为0，这里实际查询的是1，数据库 代码（改？）
         projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, projectId)
                 .eq(ProjectResource::getResourceType, EMPLOYEE.getCode())
                 .select(ProjectResource::getResourceId);

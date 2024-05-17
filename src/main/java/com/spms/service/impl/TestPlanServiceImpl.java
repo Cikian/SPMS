@@ -161,11 +161,13 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
     @Override
     public Result queryById(Long id) {
+        System.out.println("testPlanId = " + id);
         if (id == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
         TestPlan testPlan = this.getById(id);
+        System.out.println("testPlan = " + testPlan);
         if (testPlan == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
         }
@@ -230,6 +232,36 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         }
 
         return Result.success("修改成功");
+    }
+
+    @Override
+    public Result queryByDemandId(Long id) {
+        if (id == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+
+        LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TestPlan::getDemandId, id)
+                .eq(TestPlan::getDelFlag, NOT_DELETE)
+                .select(TestPlan::getTestPlanId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
+        List<TestPlan> testPlanList = this.list(queryWrapper);
+        if (testPlanList.isEmpty()) {
+            return Result.success(null);
+        }
+
+        List<Map<String, Object>> resultList = testPlanList.stream().map(item -> {
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("testPlanId", item.getTestPlanId());
+            resultMap.put("planName", item.getPlanName());
+            resultMap.put("progress", item.getProgress());
+            resultMap.put("head", item.getHead());
+            resultMap.put("startTime", item.getStartTime());
+            resultMap.put("endTime", item.getEndTime());
+            return resultMap;
+        }).toList();
+
+        return Result.success(resultList);
     }
 
 }
