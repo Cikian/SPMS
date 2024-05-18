@@ -34,6 +34,8 @@ import static com.spms.enums.TestPlanStatus.*;
 
 @Service
 public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> implements TestPlanService {
+    @Autowired
+    TestPlanMapper testPlanMapper;
 
     @Autowired
     private DemandMapper demandMapper;
@@ -157,6 +159,11 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
         testPlanDTOPage.setRecords(testPlanDTOList);
         return Result.success(testPlanDTOPage);
+    }
+
+    @Override
+    public List<TestPlan> listByProId(Long proId) {
+        return testPlanMapper.selectListByProId(proId);
     }
 
     @Override
