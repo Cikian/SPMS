@@ -24,4 +24,6 @@ public interface ProjectService {
     List<Project> getProjectByStatus(Integer status);
 
     ProjectDTO getProById(Long id);
+
+    Boolean changeStatus(Long id, Integer status);
 }

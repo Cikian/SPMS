@@ -48,6 +48,7 @@ spring:
   data:
     redis:
       host: 140.143.140.103
+#      host: 127.0.0.1
       port: 6379
       password: chen0809
       database: 1

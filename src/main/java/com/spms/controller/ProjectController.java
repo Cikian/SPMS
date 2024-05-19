@@ -52,4 +52,12 @@ public class ProjectController {
         String msg = proById != null ? "获取成功" : "获取失败";
         return new Result(code, msg, proById);
     }
+
+    @PutMapping("/changeStatus/{proId}/{status}")
+    public Result changeStatus(@PathVariable("proId") Long proId, @PathVariable("status") Integer status) {
+        boolean b = proService.changeStatus(proId, status);
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
+        return new Result(code, msg, null);
+    }
 }

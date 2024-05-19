@@ -3,11 +3,12 @@ package com.spms.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.spms.entity.Defect;
-import com.spms.entity.Demand;
 import com.spms.mapper.DefectMapper;
+import com.spms.security.LoginUser;
 import com.spms.service.DefectService;
 import com.spms.service.DemandActiveService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,13 +70,25 @@ public class DefectServiceImpl implements DefectService {
     }
 
     @Override
-    public List<Defect> getAllDefectsByHeaderId(Long headerId) {
-        return List.of();
+    public List<Defect> getAllDefectsByHeaderId(Long proId) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Defect> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Defect::getHeadId, userId);
+        lqw.eq(Defect::getProId, proId);
+
+        return defectMapper.selectList(lqw);
     }
 
     @Override
-    public List<Defect> getAllDefectsByCreatedId(Long createdId) {
-        return List.of();
+    public List<Defect> getAllDefectsByCreatedId(Long proId) {
+            LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long userId = loginUser.getUser().getUserId();
+            LambdaQueryWrapper<Defect> lqw = new LambdaQueryWrapper<>();
+            lqw.eq(Defect::getCreateBy, userId);
+            lqw.eq(Defect::getProId, proId);
+
+            return defectMapper.selectList(lqw);
     }
 
     @Transactional
@@ -234,6 +247,9 @@ public class DefectServiceImpl implements DefectService {
     public Map<String, Integer> getDefectCounts(Long proId) {
         Integer all = defectMapper.countByProId(proId);
         Integer completed = defectMapper.countByProIdWhereIsComplete(proId);
-        return Map.of("all", all, "completed", completed);
+        Map<String, Integer> result = new HashMap<>();
+        result.put("all", all);
+        result.put("completed", completed);
+        return result;
     }
 }

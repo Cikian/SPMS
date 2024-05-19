@@ -34,6 +34,22 @@ public class DefectController {
         return new Result(code, msg, demand);
     }
 
+    @GetMapping("/byHead/{proId}")
+    public Result getDemandByHeadId(@PathVariable("proId") Long proId) {
+        List<Defect> allDefectsByHeaderId = defectService.getAllDefectsByHeaderId(proId);
+        Integer code = allDefectsByHeaderId.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = allDefectsByHeaderId.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, allDefectsByHeaderId);
+    }
+
+    @GetMapping("/byCreat/{proId}")
+    public Result getDefectByCreateId(@PathVariable("proId") Long proId) {
+        List<Defect> allDefectsByHeaderId = defectService.getAllDefectsByCreatedId(proId);
+        Integer code = allDefectsByHeaderId.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = allDefectsByHeaderId.isEmpty()? "无数据" : "获取成功";
+        return new Result(code, msg, allDefectsByHeaderId);
+    }
+
     @PostMapping
     public Result addDemand(@RequestBody Defect demand) {
         Boolean b = defectService.addDefect(demand);
@@ -117,9 +133,7 @@ public class DefectController {
 
     @GetMapping("/counts/{proId}")
     public Result getDemandCounts(@PathVariable("proId") Long proId) {
-        Map<String, Integer> counts = defectService.getDefectCounts(proId);
-        Integer code = counts.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
-        String msg = counts.isEmpty() ? "无数据" : "获取成功";
-        return new Result(code, msg, counts);
+        Map<String, Integer> count = defectService.getDefectCounts(proId);
+        return Result.success(count);
     }
 }

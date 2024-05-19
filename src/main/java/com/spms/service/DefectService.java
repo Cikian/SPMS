@@ -1,7 +1,6 @@
 package com.spms.service;
 
 import com.spms.entity.Defect;
-import com.spms.entity.Demand;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,9 +25,9 @@ public interface DefectService {
     // 根据类型查询需求
     List<Defect> getAllDefectsByType(Long type);
     // 根据负责人ID查询需求
-    List<Defect> getAllDefectsByHeaderId(Long headerId);
+    List<Defect> getAllDefectsByHeaderId(Long proId);
     // 根据创建人ID查询需求
-    List<Defect> getAllDefectsByCreatedId(Long createdId);
+    List<Defect> getAllDefectsByCreatedId(Long proId);
     // 根据需求ID更新需求状态
     Boolean changeStatus(Long demandId, Integer status);
     // 根据需求ID更新负责人

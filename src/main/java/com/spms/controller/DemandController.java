@@ -33,6 +33,22 @@ public class DemandController {
         return new Result(code, msg, demand);
     }
 
+    @GetMapping("/byHead/{proId}")
+    public Result getDemandByHeadId(@PathVariable("proId") Long proId) {
+        List<Demand> allDemandsByHeaderId = demandService.getAllDemandsByHeaderId(proId);
+        Integer code = allDemandsByHeaderId.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = allDemandsByHeaderId.isEmpty()? "无数据" : "获取成功";
+        return new Result(code, msg, allDemandsByHeaderId);
+    }
+
+    @GetMapping("/byCreat/{proId}")
+    public Result getDemandByCreateId(@PathVariable("proId") Long proId) {
+        List<Demand> allDemandsByHeaderId = demandService.getAllDemandsByCreatedId(proId);
+        Integer code = allDemandsByHeaderId.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = allDemandsByHeaderId.isEmpty()? "无数据" : "获取成功";
+        return new Result(code, msg, allDemandsByHeaderId);
+    }
+
     @PostMapping
     public Result addDemand(@RequestBody Demand demand) {
         System.out.println("新需求：" + demand);
@@ -117,9 +133,7 @@ public class DemandController {
 
     @GetMapping("/counts/{proId}")
     public Result getDemandCounts(@PathVariable("proId") Long proId) {
-        Map<String, Integer> counts = demandService.getDemandCounts(proId);
-        Integer code = counts.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
-        String msg = counts.isEmpty() ? "无数据" : "获取成功";
-        return new Result(code, msg, counts);
+        Map<String, Integer> count = demandService.getDemandCounts(proId);
+        return Result.success(count);
     }
 }

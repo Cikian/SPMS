@@ -108,6 +108,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
+    public Boolean changeStatus(Long id, Integer status) {
+        Project project = projectMapper.selectById(id);
+        project.setProStatus(status);
+
+        return projectMapper.updateById(project) > 0;
+    }
+
+    @Override
     public List<Project> getAllPro() {
         return projectMapper.selectList(null);
     }

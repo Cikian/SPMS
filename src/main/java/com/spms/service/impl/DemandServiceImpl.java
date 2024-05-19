@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.spms.entity.Demand;
 import com.spms.mapper.DemandMapper;
+import com.spms.security.LoginUser;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,13 +94,25 @@ public class DemandServiceImpl implements DemandService {
     }
 
     @Override
-    public List<Demand> getAllDemandsByHeaderId(Long headerId) {
-        return List.of();
+    public List<Demand> getAllDemandsByHeaderId(Long proId) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getHeadId, userId);
+        lqw.eq(Demand::getProId, proId);
+
+        return demandMapper.selectList(lqw);
     }
 
     @Override
-    public List<Demand> getAllDemandsByCreatedId(Long createdId) {
-        return List.of();
+    public List<Demand> getAllDemandsByCreatedId(Long proId) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getCreateBy, userId);
+        lqw.eq(Demand::getProId, proId);
+
+        return demandMapper.selectList(lqw);
     }
 
     @Transactional
@@ -262,7 +276,10 @@ public class DemandServiceImpl implements DemandService {
     public Map<String, Integer> getDemandCounts(Long proId) {
         Integer all = demandMapper.countByProId(proId);
         Integer completed = demandMapper.countByProIdWhereIsComplete(proId);
-        return Map.of("all", all, "completed", completed);
+        Map<String, Integer> result = new HashMap<>();
+        result.put("all", all);
+        result.put("completed", completed);
+        return result;
     }
 
     private List<Demand> processDemands(List<Demand> demands) {

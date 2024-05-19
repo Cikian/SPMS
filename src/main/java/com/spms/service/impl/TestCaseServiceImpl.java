@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -170,7 +172,7 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
         demandLambdaQueryWrapper.eq(Demand::getProId, projectId);
         List<Demand> demandList = demandMapper.selectList(demandLambdaQueryWrapper);
 
-        float progress;
+        int progress = 0;
         int total = 0;
         int finish = 0;
 
@@ -199,9 +201,11 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
             }
         }
 
-        progress = (float) finish / total * 100;
+        Map<String, Integer> resultMap = new HashMap<>();
+        resultMap.put("all", total);
+        resultMap.put("completed", finish);
 
-        return Result.success(progress);
+        return Result.success(resultMap);
     }
 
     private boolean noPermission(TestCase testCase) {

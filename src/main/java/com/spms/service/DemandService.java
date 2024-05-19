@@ -27,9 +27,9 @@ public interface DemandService {
     // 根据史诗or特性or用户故事or任务查询需求
     List<Demand> getAllDemandsByDType(Integer dType);
     // 根据负责人ID查询需求
-    List<Demand> getAllDemandsByHeaderId(Long headerId);
+    List<Demand> getAllDemandsByHeaderId(Long proId);
     // 根据创建人ID查询需求
-    List<Demand> getAllDemandsByCreatedId(Long createdId);
+    List<Demand> getAllDemandsByCreatedId(Long proId);
     // 根据需求ID更新需求状态
     Boolean changeStatus(Long demandId, Integer status);
     // 根据需求ID更新负责人
