@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spms.mapper.TestPlanMapper">
+    <select id="selectListByProId" resultType="com.spms.entity.TestPlan">
+        SELECT tp.*
+        FROM project p
+                 JOIN demand d ON p.pro_id = d.pro_id
+                 JOIN test_plan tp ON d.demand_id = tp.demand_id
+        WHERE p.pro_id = #{proId}
+          AND tp.del_flag = 0;
+    </select>
 </mapper>

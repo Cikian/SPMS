@@ -3,10 +3,13 @@ package com.spms.controller;
 import com.spms.dto.Result;
 import com.spms.entity.QualityTarget;
 import com.spms.entity.TestPlan;
+import com.spms.enums.ErrorCode;
 import com.spms.service.TestPlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/testPlan")
@@ -29,6 +32,14 @@ public class TestPlanController {
                        @RequestParam(defaultValue = "0") Integer type,
                        @RequestParam(defaultValue = "0") Integer status) {
         return testPlanService.list(testPlan, page, size, type, status);
+    }
+
+    @GetMapping("/listByProId")
+    public Result listByProId(@RequestParam("proId") Long proId) {
+        List<TestPlan> testPlans = testPlanService.listByProId(proId);
+        Integer code = testPlans.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = testPlans.isEmpty() ? "获取成功" : "获取失败";
+        return new Result(code, msg, testPlans);
     }
 
     @GetMapping("/queryById/{id}")
