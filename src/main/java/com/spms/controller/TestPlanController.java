@@ -37,8 +37,8 @@ public class TestPlanController {
     @GetMapping("/listByProId")
     public Result listByProId(@RequestParam("proId") Long proId) {
         List<TestPlan> testPlans = testPlanService.listByProId(proId);
-        Integer code = testPlans.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
-        String msg = testPlans.isEmpty() ? "获取成功" : "获取失败";
+        Integer code = testPlans == null ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = testPlans == null ? "获取失败" : "获取成功";
         return new Result(code, msg, testPlans);
     }
 

@@ -1,5 +1,6 @@
 package com.spms.controller;
 
+import com.spms.dto.BackupDTO;
 import com.spms.dto.Result;
 import com.spms.service.BackupService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,15 @@ public class BackupController {
         return backupService.getBackupFileList();
     }
 
-    //恢复备份
     @PostMapping("/restore")
     @PreAuthorize("hasRole('system_admin')")
-    public Result restore(@RequestParam("fileName") String fileName) throws IOException {
-        return backupService.restore(fileName);
+    public Result restore(@RequestBody BackupDTO backupDTO) {
+        return backupService.restore(backupDTO);
+    }
+
+    @GetMapping("/restoreInit")
+    @PreAuthorize("hasRole('system_admin')")
+    public Result restoreInit() {
+        return backupService.restoreInit();
     }
 }

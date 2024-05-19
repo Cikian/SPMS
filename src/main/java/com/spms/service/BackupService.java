@@ -1,5 +1,6 @@
 package com.spms.service;
 
+import com.spms.dto.BackupDTO;
 import com.spms.dto.Result;
 
 import java.io.IOException;
@@ -10,5 +11,7 @@ public interface BackupService {
 
     Result getBackupFileList();
 
-    Result restore(String fileName) throws IOException;
+    Result restore(BackupDTO backupDTO);
+
+    Result restoreInit();
 }
