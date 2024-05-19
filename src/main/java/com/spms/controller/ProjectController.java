@@ -1,8 +1,6 @@
 package com.spms.controller;
 
-import com.spms.dto.ProjectDTO;
-import com.spms.dto.Result;
-import com.spms.dto.AddProjectDTO;
+import com.spms.dto.*;
 import com.spms.entity.Project;
 import com.spms.enums.ErrorCode;
 import com.spms.service.ProjectService;
@@ -51,5 +49,15 @@ public class ProjectController {
         Integer code = proById != null ? ErrorCode.GET_SUCCESS : ErrorCode.GET_FAIL;
         String msg = proById != null ? "获取成功" : "获取失败";
         return new Result(code, msg, proById);
+    }
+
+    @PostMapping("/addMember")
+    public Result addMember(@RequestBody AddProPeopleDTO addProPeopleDTO) {
+        return proService.addMember(addProPeopleDTO);
+    }
+
+    @PostMapping("/deleteMember")
+    public Result deleteMember(@RequestBody DeleteProPeopleDTO deleteProPeopleDTO) {
+        return proService.deleteMember(deleteProPeopleDTO);
     }
 }

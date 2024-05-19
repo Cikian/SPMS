@@ -72,7 +72,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         LambdaQueryWrapper<Notification> notificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
         notificationLambdaQueryWrapper.eq(Notification::getReceiverId, userId)
-                .eq(Notification::getReadFlag, true);
+                .eq(Notification::getReadFlag, true)
+                .orderBy(true, false, Notification::getCreateTime);
         List<Notification> notificationList = this.list(notificationLambdaQueryWrapper);
 
         if (notificationList == null || notificationList.isEmpty()) {

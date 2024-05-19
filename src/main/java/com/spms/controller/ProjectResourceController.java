@@ -15,19 +15,8 @@ public class ProjectResourceController {
     @Autowired
     private ProjectResourceService projectCostService;
 
-    @GetMapping("getMembersByProId/{proId}")
-    public Result getMembersByProId(@PathVariable("proId") int proId) {
-        projectCostService.getMembersByProId(proId);
-        return null;
+    @GetMapping("/getMembersByProId")
+    public Result getMembersByProId(@RequestParam("proId") Long proId, @RequestParam("userName") String userName) {
+        return projectCostService.getMembersByProId(proId,userName);
     }
-
-   // @PostMapping("/estimateCost")
-   // public Result estimateCost(@RequestBody List<ProjectResource> projectCosts){
-   //     return projectCostService.estimateCost(projectCosts);
-   // }
-   //
-   // @PostMapping("/actualCost")
-   // public Result actualCost(@RequestBody List<ProjectResource> projectCosts){
-   //     return projectCostService.actualCost(projectCosts);
-   // }
 }

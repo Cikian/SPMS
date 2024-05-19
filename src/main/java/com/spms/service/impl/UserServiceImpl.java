@@ -458,11 +458,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         List<User> users = new ArrayList<>();
 
-        if (type == 0){
+        if (type == 0) {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
                     .in(User::getUserId, projectMembers)
-                    .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getEmail, User::getPhoneNumber,User::getGender);
+                    .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getEmail, User::getPhoneNumber, User::getGender);
             users = userMapper.selectList(userLambdaQueryWrapper);
         }
 
@@ -499,6 +499,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return Result.success(users);
+    }
+
+    @Override
+    public Result queryCanAddToProjectMember(Long proId) {
+        if (proId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        List<User> userList = this.list();
+
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, proId)
+                .eq(ProjectResource::getResourceType, EMPLOYEE.getCode())
+                .ne(ProjectResource::getActualCost, BigDecimal.ZERO);
+        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
+
+        List<User> userList1 = userList.stream().filter(user -> {
+            for (ProjectResource projectResource : projectResources) {
+                if (user.getUserId().equals(projectResource.getResourceId())) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
+
+        List<User> list = userList1.stream().map(item -> {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUserId, item.getUserId())
+                    .eq(User::getDelFlag, NOT_DELETE)
+                    .select(User::getUserId,User::getNickName);
+            return userMapper.selectOne(userLambdaQueryWrapper);
+        }).toList();
+
+        if (list.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        return Result.success(list);
     }
 
 }

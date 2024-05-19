@@ -11,5 +11,5 @@ public interface ProjectResourceService {
 //
 //    Result actualCost(List<ProjectResource> projectCosts);
 
-    List<User> getMembersByProId(int projectId);
+    Result getMembersByProId(Long projectId,String userName);
 }
