@@ -2,6 +2,7 @@ package com.spms.controller;
 
 import com.spms.dto.Result;
 import com.spms.entity.Demand;
+import com.spms.entity.Project;
 import com.spms.enums.ErrorCode;
 import com.spms.service.DemandService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,5 +136,21 @@ public class DemandController {
     public Result getDemandCounts(@PathVariable("proId") Long proId) {
         Map<String, Integer> count = demandService.getDemandCounts(proId);
         return Result.success(count);
+    }
+
+    @GetMapping("/myDemand")
+    public Result getMyDemands() {
+        Map<String, Project> myDemands = demandService.getMyDemands();
+        Integer code = myDemands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = myDemands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, myDemands);
+    }
+
+    @GetMapping("/myHeaderDemand")
+    public Result getMyHeaderDemands() {
+        Map<String, Project> myDemands = demandService.getMyHeaderDemands();
+        Integer code = myDemands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = myDemands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, myDemands);
     }
 }

@@ -1,6 +1,7 @@
 package com.spms.service;
 
 import com.spms.entity.Demand;
+import com.spms.entity.Project;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,5 +51,9 @@ public interface DemandService {
     List<Demand> getChildDemands(Long demandId);
     // 根据Id获取已完成和所有工作项的数量
     Map<String, Integer> getDemandCounts(Long proId);
+    // 获取当前用户进行中的需求
+    Map<String, Project> getMyDemands();
+    // 获取当前用户负责的需求
+    Map<String, Project> getMyHeaderDemands();
 
 }

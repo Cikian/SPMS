@@ -19,6 +19,16 @@ public interface ProjectService {
 
     List<Project> getAllPro();
 
+    List<Project> getNeedCompletePro();
+
+    List<Project> myPro();
+
+    List<Project> mySubmit();
+
+    List<Project> getAudit();
+
+    List<Project> searchPro(String keyword);
+
     List<Project> getProjectByStatus(Integer status);
 
     ProjectDTO getProById(Long id);
@@ -28,4 +38,6 @@ public interface ProjectService {
     Result deleteMember(DeleteProPeopleDTO deleteProPeopleDTO);
 
     Boolean changeStatus(Long id, Integer status);
+
+    Boolean deleteByProId(Long id);
 }

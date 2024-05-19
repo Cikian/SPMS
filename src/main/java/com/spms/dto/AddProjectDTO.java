@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
  */
 @Data
 public class AddProjectDTO {
+    private Long proId;
     private String proName;
     private String proDesc;  //描述
     private int proStatus; //状态

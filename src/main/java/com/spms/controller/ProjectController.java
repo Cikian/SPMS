@@ -32,9 +32,48 @@ public class ProjectController {
         return new Result(code, msg, null);
     }
 
+    @PutMapping
+    public Result updateProject(@RequestBody AddProjectDTO addProjectDTO) {
+        proService.deleteByProId(addProjectDTO.getProId());
+        return addProject(addProjectDTO);
+    }
+
+    @DeleteMapping
+    public Result deleteProject(@RequestParam("id")  Long proId) {
+        boolean b = proService.deleteByProId(proId);
+        Integer code = b ? ErrorCode.DELETE_SUCCESS : ErrorCode.DELETE_FAIL;
+        String msg = b ? "撤回成功" : "撤回失败，请确认项目状态";
+        return new Result(code, msg, null);
+    }
+
     @GetMapping()
     public Result getAllProject() {
         return Result.success(proService.getAllPro());
+    }
+
+    @GetMapping("/needComplete")
+    public Result getNeedCompleteProject() {
+        return Result.success(proService.getNeedCompletePro());
+    }
+
+    @GetMapping("/myPro")
+    public Result getMyProject() {
+        return Result.success(proService.myPro());
+    }
+
+    @GetMapping("/mySubmit")
+    public Result getMySubmit() {
+        return Result.success(proService.mySubmit());
+    }
+
+    @GetMapping("/audit")
+    public Result getAudit() {
+        return Result.success(proService.getAudit());
+    }
+
+    @GetMapping("/search/{keyword}")
+    public Result getSearchProject(@PathVariable("keyword") String keyword) {
+        return Result.success(proService.searchPro(keyword));
     }
 
     @GetMapping("/getProjectByStatus/{status}")

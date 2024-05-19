@@ -3,7 +3,9 @@ package com.spms.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.spms.entity.Demand;
+import com.spms.entity.Project;
 import com.spms.mapper.DemandMapper;
+import com.spms.mapper.ProjectMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
@@ -27,6 +29,8 @@ import java.util.*;
 public class DemandServiceImpl implements DemandService {
     @Autowired
     private DemandMapper demandMapper;
+    @Autowired
+    private ProjectMapper projectMapper;
     @Autowired
     private DemandActiveService demandActiveService;
 
@@ -280,6 +284,63 @@ public class DemandServiceImpl implements DemandService {
         result.put("all", all);
         result.put("completed", completed);
         return result;
+    }
+
+    @Override
+    public Map<String, Project> getMyDemands() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getHeadId, userId);
+        lqw.eq(Demand::getDemandStatus, 1);
+        List<Demand> demands = demandMapper.selectList(lqw);
+
+        // 获取demands中元素的不同pro_id
+
+        Set<Long> proIds = new HashSet<>();
+        for (Demand demand : demands) {
+            proIds.add(demand.getProId());
+        }
+        System.out.println("proIds: " + proIds);
+
+        Map<String, Project> proIdToDemands = new HashMap<>();
+        for (Long proId : proIds) {
+            LambdaQueryWrapper<Project> lqw1 = new LambdaQueryWrapper<>();
+            lqw1.eq(Project::getProId, proId);
+            Project project = projectMapper.selectOne(lqw1);
+            List<Demand> demandGroupByProId = demands.stream().filter(d -> d.getProId().equals(proId)).toList();
+            project.setDemands(demandGroupByProId);
+            proIdToDemands.put(proId.toString(), project);
+        }
+        return proIdToDemands;
+    }
+
+    @Override
+    public Map<String, Project> getMyHeaderDemands() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getHeadId, userId);
+        List<Demand> demands = demandMapper.selectList(lqw);
+
+        // 获取demands中元素的不同pro_id
+
+        Set<Long> proIds = new HashSet<>();
+        for (Demand demand : demands) {
+            proIds.add(demand.getProId());
+        }
+        System.out.println("proIds: " + proIds);
+
+        Map<String, Project> proIdToDemands = new HashMap<>();
+        for (Long proId : proIds) {
+            LambdaQueryWrapper<Project> lqw1 = new LambdaQueryWrapper<>();
+            lqw1.eq(Project::getProId, proId);
+            Project project = projectMapper.selectOne(lqw1);
+            List<Demand> demandGroupByProId = demands.stream().filter(d -> d.getProId().equals(proId)).toList();
+            project.setDemands(demandGroupByProId);
+            proIdToDemands.put(proId.toString(), project);
+        }
+        return proIdToDemands;
     }
 
     private List<Demand> processDemands(List<Demand> demands) {

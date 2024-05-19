@@ -23,6 +23,8 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @Title: ProjectServiceImpl
@@ -47,7 +49,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         long days = Duration.between(addProjectDTO.getExpectedStartTime(), addProjectDTO.getExpectedEndTime()).toDays();
 
         Project project = new Project();
-
+        project.setProStatus(-1);
         project.setProName(addProjectDTO.getProName());
         project.setProDesc(addProjectDTO.getProDesc());
         project.setProFlag(addProjectDTO.getProFlag());
@@ -84,6 +86,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public List<Project> getProjectByStatus(Integer status) {
         LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
         projectLambdaQueryWrapper.eq(!Objects.isNull(status), Project::getProFlag, status);
+        projectLambdaQueryWrapper.ne(Project::getProStatus, -1);
+        projectLambdaQueryWrapper.ne(Project::getProStatus, -2);
         return projectMapper.selectList(projectLambdaQueryWrapper);
     }
 
@@ -138,7 +142,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
         }
 
-        //计算实际成本
+        // 计算实际成本
         long days = Duration.between(deleteProPeopleDTO.getActualStartTime(), deleteProPeopleDTO.getActualEndTime()).toDays();
         LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
         lqw.eq(RatedTimeCost::getResourceId, projectResource.getResourceId());
@@ -160,9 +164,90 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         return projectMapper.updateById(project) > 0;
     }
 
+    @Transactional
+    @Override
+    public Boolean deleteByProId(Long id) {
+        LambdaQueryWrapper<ProjectResource> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(ProjectResource::getProjectId, id);
+        projectResourceMapper.delete(lqw);
+
+        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectLambdaQueryWrapper.eq(Project::getProId, id);
+        projectLambdaQueryWrapper.eq(Project::getProStatus, -1).or().eq(Project::getProStatus, -2);
+        return projectMapper.delete(projectLambdaQueryWrapper) > 0;
+    }
+
     @Override
     public List<Project> getAllPro() {
-        return projectMapper.selectList(null);
+        LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
+        lqw.ne(Project::getProStatus, -1);
+        lqw.ne(Project::getProStatus, -2);
+        lqw.orderByDesc(Project::getCreateTime);
+
+        return projectMapper.selectList(lqw);
     }
+
+    @Override
+    public List<Project> getNeedCompletePro() {
+        LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
+        lqw.ne(Project::getProStatus, 3);
+        lqw.ne(Project::getProStatus, -1);
+        lqw.ne(Project::getProStatus, -2);
+        lqw.orderByDesc(Project::getCreateTime);
+
+        return projectMapper.selectList(lqw);
+    }
+
+    @Override
+    public List<Project> myPro() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaQueryWrapper<ProjectResource> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(ProjectResource::getResourceId, userId);
+        lqw.eq(ProjectResource::getResourceType, ResourceType.EMPLOYEE.getCode());
+
+        Set<Long> proIds = projectResourceMapper.selectList(lqw).stream().map(ProjectResource::getProjectId).collect(Collectors.toSet());
+        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectLambdaQueryWrapper.ne(Project::getProStatus, -1);
+        projectLambdaQueryWrapper.ne(Project::getProStatus, -2);
+        projectLambdaQueryWrapper.orderByDesc(Project::getCreateTime);
+        projectLambdaQueryWrapper.in(Project::getProId, proIds);
+
+
+        return projectMapper.selectList(projectLambdaQueryWrapper);
+    }
+
+    @Override
+    public List<Project> mySubmit() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Project::getCreateBy, userId);
+
+
+        return projectMapper.selectList(lqw);
+    }
+
+    @Override
+    public List<Project> getAudit() {
+        LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Project::getProStatus, -1);
+        lqw.orderByDesc(Project::getCreateTime);
+
+        return projectMapper.selectList(lqw);
+    }
+
+    @Override
+    public List<Project> searchPro(String keyword) {
+        LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
+        lqw.like(Project::getProName, keyword).or().like(Project::getProFlag, keyword);
+        lqw.ne(Project::getProStatus, -1);
+        lqw.ne(Project::getProStatus, -2);
+        lqw.orderByDesc(Project::getCreateTime);
+
+        return projectMapper.selectList(lqw);
+    }
+
 
 }
