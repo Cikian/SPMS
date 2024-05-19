@@ -1,6 +1,9 @@
 package com.spms.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * @Title: ProPeople
@@ -12,6 +15,9 @@ import lombok.Data;
 @Data
 public class AddProPeopleDTO {
     private Long proId;
-    private Long peoId;
-    private int days;
+    private Long memberId;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    private LocalDateTime estimateStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    private LocalDateTime estimateEndTime;
 }

@@ -1,9 +1,7 @@
 package com.spms.service;
 
-import com.spms.dto.ProjectDTO;
-import com.spms.dto.Result;
+import com.spms.dto.*;
 import com.spms.entity.Project;
-import com.spms.dto.AddProjectDTO;
 
 import java.util.List;
 
@@ -24,6 +22,10 @@ public interface ProjectService {
     List<Project> getProjectByStatus(Integer status);
 
     ProjectDTO getProById(Long id);
+
+    Result addMember(AddProPeopleDTO addProPeopleDTO);
+
+    Result deleteMember(DeleteProPeopleDTO deleteProPeopleDTO);
 
     Boolean changeStatus(Long id, Integer status);
 }

@@ -2,22 +2,22 @@ package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.spms.dto.ProjectResourceDTO;
 import com.spms.dto.Result;
 import com.spms.entity.ProjectResource;
-import com.spms.entity.RatedTimeCost;
+import com.spms.entity.RoleUser;
 import com.spms.entity.User;
+import com.spms.enums.ResourceType;
 import com.spms.enums.ResultCode;
-import com.spms.mapper.ProjectResourceMapper;
-import com.spms.mapper.RatedTimeCostMapper;
+import com.spms.mapper.*;
 import com.spms.service.ProjectResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.spms.enums.ResourceUseTimeUnit.DAY;
+import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
 public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMapper, ProjectResource> implements ProjectResourceService {
@@ -25,88 +25,64 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
     @Autowired
     private RatedTimeCostMapper ratedTimeCostMapper;
 
-    @Override
-    public List<User> getMembersByProId(int projectId) {
-        return List.of();
-    }
+    @Autowired
+    private UserMapper userMapper;
 
-//    @Override
-//    @Transactional
-//    public Result estimateCost(List<ProjectCost> projectCosts) {
-//        if (projectCosts == null || projectCosts.isEmpty()) {
-//            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-//        }
-//
-//        for (ProjectCost projectCost : projectCosts) {
-//            if (projectCost.getProjectId() == null || projectCost.getResourceId() == null || projectCost.getEstimateUseTime() == null || projectCost.getTimeUnit() == null) {
-//                return Result.fail(ResultCode.FAIL.getCode(), "非法操作");
-//            }
-//        }
-//
-//        BigDecimal totalEstimateCost = BigDecimal.ZERO;
-//
-//        for (ProjectCost projectCost : projectCosts) {
-//            LambdaQueryWrapper<RatedTimeCost> ratedTimeCostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-//            ratedTimeCostLambdaQueryWrapper.eq(RatedTimeCost::getResourceId, projectCost.getResourceId());
-//            RatedTimeCost ratedTimeCost = ratedTimeCostMapper.selectOne(ratedTimeCostLambdaQueryWrapper);
-//
-//            Integer estimateUesTime = projectCost.getEstimateUseTime();
-//            BigDecimal estimateCost;
-//
-//            Integer timeUnit = projectCost.getTimeUnit();
-//            if (DAY.getCode().equals(timeUnit)) {
-//                BigDecimal dailyCost = ratedTimeCost.getDailyCost();
-//                estimateCost = BigDecimal.valueOf(estimateUesTime).multiply(dailyCost);
-//            } else {
-//                BigDecimal monthlyCost = ratedTimeCost.getMonthlyCost();
-//                estimateCost = BigDecimal.valueOf(estimateUesTime).multiply(monthlyCost);
-//            }
-//
-//            projectCost.setEstimateCost(estimateCost);
-//            totalEstimateCost = totalEstimateCost.add(estimateCost);
-//            this.save(projectCost);
-//        }
-//
-//        return Result.success(totalEstimateCost);
-//    }
-//
-//    @Override
-//    public Result actualCost(List<ProjectCost> projectCosts) {
-//        if (projectCosts == null || projectCosts.isEmpty()) {
-//            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-//        }
-//
-//        for (ProjectCost projectCost : projectCosts) {
-//            if (projectCost.getProjectId() == null || projectCost.getResourceId() == null || projectCost.getActualUseTime() == null) {
-//                return Result.fail(ResultCode.FAIL.getCode(), "非法操作");
-//            }
-//        }
-//
-//        BigDecimal totalActualCost = BigDecimal.ZERO;
-//
-//        for (ProjectCost projectCost : projectCosts) {
-//            LambdaQueryWrapper<RatedTimeCost> ratedTimeCostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-//            ratedTimeCostLambdaQueryWrapper.eq(RatedTimeCost::getResourceId, projectCost.getResourceId());
-//            RatedTimeCost ratedTimeCost = ratedTimeCostMapper.selectOne(ratedTimeCostLambdaQueryWrapper);
-//
-//            Integer actualUseTime = projectCost.getActualUseTime();
-//            BigDecimal actualCost;
-//
-//            Integer timeUnit = projectCost.getTimeUnit();
-//            if (DAY.getCode().equals(timeUnit)) {
-//                BigDecimal dailyCost = ratedTimeCost.getDailyCost();
-//                actualCost = BigDecimal.valueOf(actualUseTime).multiply(dailyCost);
-//            } else {
-//                BigDecimal monthlyCost = ratedTimeCost.getMonthlyCost();
-//                actualCost = BigDecimal.valueOf(actualUseTime).multiply(monthlyCost);
-//            }
-//
-//            projectCost.setActualCost(actualCost);
-//            totalActualCost = totalActualCost.add(actualCost);
-//            this.save(projectCost);
-//        }
-//
-//        return Result.success(totalActualCost);
-//    }
+    @Autowired
+    private RoleUserMapper roleUserMapper;
+
+    @Autowired
+    private RoleMapper roleMapper;
+
+    @Override
+    public Result getMembersByProId(Long projectId, String userName) {
+        if (projectId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, projectId)
+                .eq(ProjectResource::getResourceType, ResourceType.EMPLOYEE.getCode())
+                .eq(ProjectResource::getActualCost, BigDecimal.ZERO);
+        List<ProjectResource> projectResourceList = this.list(projectResourceLambdaQueryWrapper);
+
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.like(User::getNickName, userName);
+        List<User> users = userMapper.selectList(userLambdaQueryWrapper);
+
+        if (users == null || users.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "未找到该用户");
+        }
+
+        // 过滤出符合条件的用户
+        projectResourceList = projectResourceList.stream().filter(item -> {
+            for (User user : users) {
+                if (item.getResourceId().equals(user.getUserId())) {
+                    return true;
+                }
+            }
+            return false;
+        }).toList();
+
+        List<ProjectResourceDTO> projectResourceDTOS = projectResourceList.stream().map(item -> {
+            ProjectResourceDTO projectResourceDTO = new ProjectResourceDTO();
+            User user = userMapper.selectById(item.getResourceId());
+
+            LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            roleUserLambdaQueryWrapper.eq(RoleUser::getUserId, item.getResourceId())
+                    .eq(RoleUser::getDelFlag, NOT_DELETE);
+            List<RoleUser> roleUsers = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
+            List<String> list = roleUsers.stream().map(ru -> roleMapper.selectById(ru.getRoleId()).getRemark()).toList();
+            projectResourceDTO.setId(item.getProjectResourceId());
+            projectResourceDTO.setRole(list);
+            projectResourceDTO.setResourceId(item.getResourceId());
+            projectResourceDTO.setResourceName(user.getNickName());
+            projectResourceDTO.setEstimateStartTime(item.getEstimateStartTime());
+            projectResourceDTO.setEstimateEndTime(item.getEstimateEndTime());
+
+            return projectResourceDTO;
+        }).toList();
+
+        return Result.success(projectResourceDTOS);
+    }
 
 }
