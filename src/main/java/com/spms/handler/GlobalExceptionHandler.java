@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 
@@ -17,7 +18,7 @@ import java.sql.SQLSyntaxErrorException;
 @ResponseBody
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({MailSendException.class, SQLException.class, SQLSyntaxErrorException.class, RedisException.class})
+    @ExceptionHandler({MailSendException.class, SQLException.class, SQLSyntaxErrorException.class, RedisException.class, IOException.class})
     public Result handleRuntimeException(Exception e) {
         System.out.println(e.getMessage());
         return Result.fail(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "服务器异常");

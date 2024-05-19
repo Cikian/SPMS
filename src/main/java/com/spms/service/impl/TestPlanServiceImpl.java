@@ -143,9 +143,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
                 testPlanDTO.setHeadName(finalUser.getNickName());
             } else {
                 LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                userLambdaQueryWrapper.eq(User::getUserId, userId);
-                User currentUser = userMapper.selectOne(userLambdaQueryWrapper);
-                testPlanDTO.setHeadName(currentUser.getNickName());
+                userLambdaQueryWrapper.eq(User::getUserId, item.getHead());
+                User head = userMapper.selectOne(userLambdaQueryWrapper);
+                testPlanDTO.setHeadName(head.getNickName());
             }
 
             LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
