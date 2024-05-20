@@ -46,7 +46,7 @@ public class TestPlanController {
     }
 
     @GetMapping("/queryById/{id}")
-    @PreAuthorize("hasAuthority('testPlan:queryById') ||  hasRole('system_admin')")
+//    @PreAuthorize("hasAuthority('testPlan:queryById') ||  hasRole('system_admin')")
     public Result queryById(@PathVariable("id") Long id) {
         return testPlanService.queryById(id);
     }

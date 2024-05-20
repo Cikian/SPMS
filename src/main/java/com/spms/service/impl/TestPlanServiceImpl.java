@@ -6,15 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
 import com.spms.dto.TestPlanDTO;
-import com.spms.entity.Demand;
-import com.spms.entity.Project;
-import com.spms.entity.TestPlan;
-import com.spms.entity.User;
+import com.spms.entity.*;
 import com.spms.enums.ResultCode;
-import com.spms.mapper.DemandMapper;
-import com.spms.mapper.ProjectMapper;
-import com.spms.mapper.TestPlanMapper;
-import com.spms.mapper.UserMapper;
+import com.spms.mapper.*;
 import com.spms.security.LoginUser;
 import com.spms.service.NotificationService;
 import com.spms.service.TestPlanService;
@@ -49,11 +43,34 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
     @Autowired
     private ProjectMapper projectMapper;
 
+    @Autowired
+    private ProjectResourceMapper projectResourceMapper;
+
     @Override
     @Transactional
     public Result add(TestPlan testPlan) {
         if (testPlan == null || testPlan.getDemandId() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        demandLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
+        Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
+
+        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
+        Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
+
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId,project.getProId());
+        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
+
+        //只要是项目成员都可以添加测试计划
+        if (projectResources.stream().noneMatch(item -> Objects.equals(item.getResourceId(), userId))) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您无权添加");
         }
 
         if (StrUtil.isEmpty(testPlan.getPlanName())) {
@@ -81,14 +98,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         if (this.exists(queryWrapper)) {
             return Result.fail(ResultCode.FAIL.getCode(), "该需求已存在测试计划");
         }
-
-        LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        demandLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
-        Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
-
-        LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
-        Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
 
         testPlan.setProgress(0);
         testPlan.setDelFlag(NOT_DELETE);
@@ -199,13 +208,11 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
     @Override
     public Result queryById(Long id) {
-        System.out.println("testPlanId = " + id);
         if (id == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
         TestPlan testPlan = this.getById(id);
-        System.out.println("testPlan = " + testPlan);
         if (testPlan == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
         }
@@ -240,14 +247,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-        if (StrUtil.isEmpty(testPlan.getPlanName())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "计划名称不能为空");
-        }
-
-        if (testPlan.getHead() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请选择负责人");
-        }
-
         TestPlan testPlan1 = this.getById(testPlan.getTestPlanId());
         if (testPlan1 == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
@@ -260,12 +259,19 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "您无权修改");
         }
 
+        if (StrUtil.isEmpty(testPlan.getPlanName())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "计划名称不能为空");
+        }
+
+        if (testPlan.getHead() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请选择负责人");
+        }
+
         if (!this.updateById(testPlan)) {
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
         }
 
         if (!Objects.equals(testPlan.getHead(), testPlan1.getHead())) {
-            //通知新负责人
             notificationService.addNotification(testPlan.getHead(), testPlan1.getPlanName(), "您的测试计划有更新");
         }
 

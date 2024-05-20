@@ -16,6 +16,7 @@ import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.ProjectResourceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
 import com.spms.security.LoginUser;
+import com.spms.service.NotificationService;
 import com.spms.service.ProjectService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     ProjectResourceMapper projectResourceMapper;
     @Autowired
     private DeviceMapper deviceMapper;
+    @Autowired
+    private NotificationService notificationService;
 
     @Transactional
     @Override
@@ -135,6 +138,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
         projectResource.setEstimateCost(estimateCost);
         projectResourceMapper.insert(projectResource);
+
+        notificationService.addNotification(addProResourceDTO.getMemberId(), "您已被添加到项目：" + project.getProName(), "加入项目");
         return Result.success();
     }
 

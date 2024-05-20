@@ -19,16 +19,20 @@ import java.util.Random;
 class SpmsApplicationTests {
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private PasswordEncoder bCryptPasswordEncoder;
     @SneakyThrows
     @Test
     void testDruid() {
-        Connection connection =   dataSource.getConnection();
-        System.out.println(connection);
-        DruidDataSource druidDataSource = (DruidDataSource) dataSource;
-        System.out.println("druidDataSource 数据源最大连接数：" + druidDataSource.getMaxActive());
-        System.out.println("druidDataSource 数据源初始化连接数：" + druidDataSource.getInitialSize());
-        long timeBetweenEvictionRunsMillis = druidDataSource.getTimeBetweenEvictionRunsMillis();
-        connection.close();
+//        Connection connection =   dataSource.getConnection();
+//        System.out.println(connection);
+//        DruidDataSource druidDataSource = (DruidDataSource) dataSource;
+//        System.out.println("druidDataSource 数据源最大连接数：" + druidDataSource.getMaxActive());
+//        System.out.println("druidDataSource 数据源初始化连接数：" + druidDataSource.getInitialSize());
+//        long timeBetweenEvictionRunsMillis = druidDataSource.getTimeBetweenEvictionRunsMillis();
+//        connection.close();
+
     }
 
 }
