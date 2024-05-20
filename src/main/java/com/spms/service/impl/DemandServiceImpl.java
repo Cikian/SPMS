@@ -9,6 +9,7 @@ import com.spms.mapper.ProjectMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
+import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,8 @@ public class DemandServiceImpl implements DemandService {
     private ProjectMapper projectMapper;
     @Autowired
     private DemandActiveService demandActiveService;
+    @Autowired
+    private ProjectService projectService;
 
     @Override
     public Boolean addDemand(Demand demand) {
@@ -46,6 +49,13 @@ public class DemandServiceImpl implements DemandService {
         // 查询该项目一共有多少个需求，编号加1
         Integer demandCount = demandMapper.countByProId(proId);
         demand.setDemandNo(demandCount + 1);
+
+        Long projectId = demand.getProId();
+        Boolean isProHeader = projectService.judgeIsProHeader(projectId);
+        if (isProHeader){
+            demand.setDemandStatus(0);
+        }
+
         int i = demandMapper.insert(demand);
         String activeContent = "";
         if (demand.getWorkItemType() == 0){
@@ -57,6 +67,7 @@ public class DemandServiceImpl implements DemandService {
         } else if (demand.getWorkItemType() == 3){
             activeContent = "任务";
         }
+
         demandActiveService.addActive("创建", activeContent, demand.getDemandId(), "", "");
 
         return i > 0;
@@ -66,12 +77,27 @@ public class DemandServiceImpl implements DemandService {
     public Map<String, List<Demand>> getAllDemandsByProId(Long proId) {
         LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Demand::getProId, proId);
+        lqw.ne(Demand::getDemandStatus, -2);
+        lqw.ne(Demand::getDemandStatus, -3);
         List<Demand> allDemands = demandMapper.selectList(lqw);
 
         List<Demand> demandsByLevel = processDemands(allDemands);
         Map<String, List<Demand>> result = new HashMap<>();
         result.put("allDemands", demandMapper.selectList(lqw));
         result.put("demandsByLevel", demandsByLevel);
+        return result;
+    }
+
+    @Override
+    public Map<String, List<Demand>> searchDemands(Long proId, String keyword) {
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getProId, proId);
+        lqw.ne(Demand::getDemandStatus, -2);
+        lqw.ne(Demand::getDemandStatus, -3);
+        lqw.like(Demand::getTitle, keyword).or().like(Demand::getDemandNo, keyword);
+
+        Map<String, List<Demand>> result = new HashMap<>();
+        result.put("allDemands", demandMapper.selectList(lqw));
         return result;
     }
 
@@ -104,6 +130,8 @@ public class DemandServiceImpl implements DemandService {
         LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Demand::getHeadId, userId);
         lqw.eq(Demand::getProId, proId);
+        lqw.ne(Demand::getDemandStatus, -2);
+        lqw.ne(Demand::getDemandStatus, -3);
 
         return demandMapper.selectList(lqw);
     }
@@ -128,8 +156,9 @@ public class DemandServiceImpl implements DemandService {
         Demand oldDemand = demandMapper.selectById(demandId);
         int update = demandMapper.update(null, luw);
         Demand newDemand = demandMapper.selectById(demandId);
-        demandActiveService.addActive("修改", "状态", demandId, oldDemand.getDemandStatus().toString(), newDemand.getDemandStatus().toString());
-
+        if (oldDemand.getDemandStatus() != -2 && oldDemand.getDemandStatus() != -3) {
+            demandActiveService.addActive("修改", "状态", demandId, oldDemand.getDemandStatus().toString(), newDemand.getDemandStatus().toString());
+        }
         return update > 0;
     }
 
@@ -341,6 +370,26 @@ public class DemandServiceImpl implements DemandService {
             proIdToDemands.put(proId.toString(), project);
         }
         return proIdToDemands;
+    }
+
+    @Override
+    public Map<String, List<Demand>> getAuditByProId(Long proId) {
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getProId, proId);
+        lqw.eq(Demand::getDemandStatus, -2);
+        List<Demand> allDemands = demandMapper.selectList(lqw);
+
+        List<Demand> demandsByLevel = processDemands(allDemands);
+        Map<String, List<Demand>> result = new HashMap<>();
+        result.put("allDemands", demandMapper.selectList(lqw));
+        result.put("demandsByLevel", demandsByLevel);
+        return result;
+    }
+
+    @Override
+    public Boolean deleteDemand(Long demandId) {
+        int i = demandMapper.deleteById(demandId);
+        return i > 0;
     }
 
     private List<Demand> processDemands(List<Demand> demands) {

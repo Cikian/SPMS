@@ -116,4 +116,9 @@ public class ProjectController {
         String msg = b ? "更新成功" : "更新失败";
         return new Result(code, msg, null);
     }
+
+    @GetMapping("/judgeIsProHeader")
+    public Result judgeIsProHeader(@RequestParam("proId") Long proId) {
+        return Result.success(proService.judgeIsProHeader(proId));
+    }
 }

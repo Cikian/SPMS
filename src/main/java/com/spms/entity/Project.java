@@ -40,5 +40,8 @@ public class Project {
     private LocalDateTime updateTime;
 
     @TableField(exist = false)
+    private User user; // 项目负责人信息
+
+    @TableField(exist = false)
     private List<Demand> demands;
 }

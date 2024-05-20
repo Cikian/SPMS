@@ -10,4 +10,6 @@ public interface ProjectResourceService {
     Result getMembersByProId(Long projectId,String userName);
 
     Result getDevicesByProId(Long proId, String deviceName);
+
+    Result getMemberCostByProId(Long proId);
 }

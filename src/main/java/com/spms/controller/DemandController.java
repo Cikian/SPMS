@@ -26,6 +26,14 @@ public class DemandController {
         return new Result(code, msg, demands);
     }
 
+    @GetMapping("/audit/{proId}")
+    public Result getAuditByProId(@PathVariable("proId") Long proId) {
+        Map<String, List<Demand>> demands = demandService.getAuditByProId(proId);
+        Integer code = demands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = demands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, demands);
+    }
+
     @GetMapping("/{demandId}")
     public Result getDemandById(@PathVariable("demandId") Long demandId) {
         Demand demand = demandService.getDemandById(demandId);
@@ -99,7 +107,6 @@ public class DemandController {
         return new Result(code, msg, null);
     }
 
-
     @PutMapping("/changeDesc")
     public Result changeDesc(@RequestBody Demand demand) {
         Boolean b = demandService.changeDesc(demand.getDemandId(), demand.getDemandDesc());
@@ -152,5 +159,21 @@ public class DemandController {
         Integer code = myDemands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
         String msg = myDemands.isEmpty() ? "无数据" : "获取成功";
         return new Result(code, msg, myDemands);
+    }
+
+    @DeleteMapping("/{demandId}")
+    public Result deleteDemand(@PathVariable("demandId") Long demandId) {
+        Boolean b = demandService.deleteDemand(demandId);
+        Integer code = b ? ErrorCode.DELETE_SUCCESS : ErrorCode.DELETE_FAIL;
+        String msg = b ? "删除成功" : "删除失败";
+        return new Result(code, msg, null);
+    }
+
+    @GetMapping("/search")
+    public Result searchDemands(@RequestParam("proId") Long proId, @RequestParam("keyword") String keyword) {
+        Map<String, List<Demand>> demands = demandService.searchDemands(proId, keyword);
+        Integer code = demands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = demands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, demands);
     }
 }

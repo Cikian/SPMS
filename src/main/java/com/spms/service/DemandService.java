@@ -19,6 +19,8 @@ public interface DemandService {
     Boolean addDemand(Demand demand);
     // 根据项目ID查询需求
     Map<String, List<Demand>> getAllDemandsByProId(Long proId);
+    // 搜索
+    Map<String, List<Demand>> searchDemands(Long proId, String keyword);
     // 根据需求ID查询需求
     Demand getDemandById(Long demandId);
     // 根据状态查询需求
@@ -55,5 +57,10 @@ public interface DemandService {
     Map<String, Project> getMyDemands();
     // 获取当前用户负责的需求
     Map<String, Project> getMyHeaderDemands();
+
+    // 获取审批需求
+    Map<String, List<Demand>> getAuditByProId(Long proId);
+
+    Boolean deleteDemand(Long demandId);
 
 }

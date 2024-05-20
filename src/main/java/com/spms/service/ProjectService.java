@@ -45,4 +45,6 @@ public interface ProjectService {
 
     Boolean deleteByProId(Long id);
 
+    Boolean judgeIsProHeader(Long proId);
+
 }

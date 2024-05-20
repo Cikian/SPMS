@@ -35,6 +35,8 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
 
     @Autowired
     private DictionaryDataMapper dictionaryDataMapper;
+    @Autowired
+    private ProjectResourceMapper projectResourceMapper;
 
     @Override
     public Result getMembersByProId(Long projectId, String userName) {
@@ -134,6 +136,16 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
             return projectResourceDTO;
         }).toList();
         return Result.success(projectResourceDTOS);
+    }
+
+    @Override
+    public Result getMemberCostByProId(Long proId) {
+        LambdaQueryWrapper<ProjectResource> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(ProjectResource::getProjectId, proId);
+        lqw.eq(ProjectResource::getResourceType, ResourceType.EMPLOYEE.getCode());
+        List<ProjectResource> projectResources = projectResourceMapper.selectList(lqw);
+        BigDecimal totalCost = projectResources.stream().map(ProjectResource::getEstimateCost).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return Result.success(totalCost);
     }
 
 }

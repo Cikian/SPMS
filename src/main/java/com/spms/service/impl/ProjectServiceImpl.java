@@ -267,6 +267,17 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
+    public Boolean judgeIsProHeader(Long proId) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Project::getProId, proId);
+        Project project = projectMapper.selectOne(lqw);
+        return project.getCreateBy().equals(userId);
+    }
+
+    @Override
     public List<Project> getAllPro() {
         LambdaQueryWrapper<Project> lqw = new LambdaQueryWrapper<>();
         lqw.ne(Project::getProStatus, -1);
