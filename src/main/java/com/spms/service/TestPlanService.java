@@ -1,6 +1,7 @@
 package com.spms.service;
 
 import com.spms.dto.Result;
+import com.spms.dto.TestPlanDTO;
 import com.spms.entity.TestPlan;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public interface TestPlanService {
 
     Result list(TestPlan testPlan, Integer page, Integer size, Integer type, Integer status);
 
-    List<TestPlan> listByProId(Long proId);
+    List<TestPlanDTO> listByProId(Long proId, String testPlanName, Integer status);
 
     Result queryById(Long id);
 

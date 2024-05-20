@@ -59,4 +59,9 @@ public class DeviceController {
     public Result releaseAllResource(@PathVariable("proId") Long proId) {
         return deviceService.releaseAllResource(proId);
     }
+
+    @GetMapping("/queryCanAddToProjectDevice/{proId}")
+    public Result queryCanAddToProjectDevice(@PathVariable("proId") Long proId) {
+        return deviceService.queryCanAddToProjectDevice(proId);
+    }
 }

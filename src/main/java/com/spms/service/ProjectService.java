@@ -33,11 +33,16 @@ public interface ProjectService {
 
     ProjectDTO getProById(Long id);
 
-    Result addMember(AddProPeopleDTO addProPeopleDTO);
+    Result addMember(AddProResourceDTO addProResourceDTO);
 
-    Result deleteMember(DeleteProPeopleDTO deleteProPeopleDTO);
+    Result deleteMember(DeleteProResourceDTO deleteProResourceDTO);
+
+    Result addDevice(AddProResourceDTO addProResourceDTO);
+
+    Result deleteDevice(DeleteProResourceDTO deleteProResourceDTO);
 
     Boolean changeStatus(Long id, Integer status);
 
     Boolean deleteByProId(Long id);
+
 }

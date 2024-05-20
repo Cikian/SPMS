@@ -4,9 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.ProjectResourceDTO;
 import com.spms.dto.Result;
-import com.spms.entity.ProjectResource;
-import com.spms.entity.RoleUser;
-import com.spms.entity.User;
+import com.spms.entity.*;
 import com.spms.enums.ResourceType;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.*;
@@ -15,15 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
 public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMapper, ProjectResource> implements ProjectResourceService {
-
-    @Autowired
-    private RatedTimeCostMapper ratedTimeCostMapper;
 
     @Autowired
     private UserMapper userMapper;
@@ -33,6 +29,12 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
 
     @Autowired
     private RoleMapper roleMapper;
+
+    @Autowired
+    private DeviceMapper deviceMapper;
+
+    @Autowired
+    private DictionaryDataMapper dictionaryDataMapper;
 
     @Override
     public Result getMembersByProId(Long projectId, String userName) {
@@ -82,6 +84,55 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
             return projectResourceDTO;
         }).toList();
 
+        return Result.success(projectResourceDTOS);
+    }
+
+    @Override
+    public Result getDevicesByProId(Long proId, String deviceName) {
+        if (proId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, proId)
+                .eq(ProjectResource::getResourceType, ResourceType.DEVICE.getCode())
+                .eq(ProjectResource::getActualCost, BigDecimal.ZERO);
+        List<ProjectResource> projectResourceList = this.list(projectResourceLambdaQueryWrapper);
+
+        LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        deviceLambdaQueryWrapper.like(Device::getDevName, deviceName);
+        List<Device> devices = deviceMapper.selectList(deviceLambdaQueryWrapper);
+
+        if (devices == null || devices.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "未找到该设备");
+        }
+
+        projectResourceList = projectResourceList.stream().filter(item -> {
+            for (Device device : devices) {
+                if (item.getResourceId().equals(device.getDevId())) {
+                    return true;
+                }
+            }
+            return false;
+        }).toList();
+
+        List<ProjectResourceDTO> projectResourceDTOS = projectResourceList.stream().map(item -> {
+            ProjectResourceDTO projectResourceDTO = new ProjectResourceDTO();
+            Device device = deviceMapper.selectById(item.getResourceId());
+            LambdaQueryWrapper<DictionaryData> dictionaryDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            dictionaryDataLambdaQueryWrapper.eq(DictionaryData::getDictionaryDataId, device.getTypeId());
+            DictionaryData dictionaryData = dictionaryDataMapper.selectOne(dictionaryDataLambdaQueryWrapper);
+            List<String> list = new ArrayList<>();
+            list.add(dictionaryData.getLabel());
+            projectResourceDTO.setId(item.getProjectResourceId());
+            projectResourceDTO.setResourceId(item.getResourceId());
+            projectResourceDTO.setRole(list);
+            projectResourceDTO.setResourceName(device.getDevName());
+            projectResourceDTO.setEstimateStartTime(item.getEstimateStartTime());
+            projectResourceDTO.setEstimateEndTime(item.getEstimateEndTime());
+
+            return projectResourceDTO;
+        }).toList();
         return Result.success(projectResourceDTOS);
     }
 

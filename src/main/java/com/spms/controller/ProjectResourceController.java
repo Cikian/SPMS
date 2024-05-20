@@ -19,4 +19,9 @@ public class ProjectResourceController {
     public Result getMembersByProId(@RequestParam("proId") Long proId, @RequestParam("userName") String userName) {
         return projectCostService.getMembersByProId(proId,userName);
     }
+
+    @GetMapping("/getDevicesByProId")
+    public Result getDevicesByProId(@RequestParam("proId") Long proId, @RequestParam("deviceName") String deviceName) {
+        return projectCostService.getDevicesByProId(proId,deviceName);
+    }
 }

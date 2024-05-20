@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @description: SPMS: 人力成本与项目关联
  */
 @Data
-public class DeleteProPeopleDTO {
+public class DeleteProResourceDTO {
     private Long id;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime actualStartTime;

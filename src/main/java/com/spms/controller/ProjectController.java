@@ -90,13 +90,23 @@ public class ProjectController {
     }
 
     @PostMapping("/addMember")
-    public Result addMember(@RequestBody AddProPeopleDTO addProPeopleDTO) {
-        return proService.addMember(addProPeopleDTO);
+    public Result addMember(@RequestBody AddProResourceDTO addProResourceDTO) {
+        return proService.addMember(addProResourceDTO);
+    }
+
+    @PostMapping("/addDevice")
+    public Result addDevice(@RequestBody AddProResourceDTO addProResourceDTO) {
+        return proService.addDevice(addProResourceDTO);
     }
 
     @PostMapping("/deleteMember")
-    public Result deleteMember(@RequestBody DeleteProPeopleDTO deleteProPeopleDTO) {
-        return proService.deleteMember(deleteProPeopleDTO);
+    public Result deleteMember(@RequestBody DeleteProResourceDTO deleteProResourceDTO) {
+        return proService.deleteMember(deleteProResourceDTO);
+    }
+
+    @PostMapping("/deleteDevice")
+    public Result deleteDevice(@RequestBody DeleteProResourceDTO deleteProResourceDTO) {
+        return proService.deleteDevice(deleteProResourceDTO);
     }
 
     @PutMapping("/changeStatus/{proId}/{status}")

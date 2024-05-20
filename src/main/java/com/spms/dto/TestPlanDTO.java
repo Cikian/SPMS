@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 @Data
 public class TestPlanDTO {
     private Long testPlanId;
-    private Long projectId;
-    private Long head;
     private String planName;
+    private Long projectId;
     private String projectName;
-    private String demandName;
+    private Long head;
     private String headName;
+    private String demandName;
     private Integer progress;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

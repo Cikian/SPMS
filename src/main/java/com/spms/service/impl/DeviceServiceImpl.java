@@ -298,4 +298,33 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
         return Result.success("删除成功");
     }
+
+    @Override
+    public Result queryCanAddToProjectDevice(Long proId) {
+        if (proId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        deviceLambdaQueryWrapper.eq(Device::getDelFlag, NOT_DELETE)
+                .eq(Device::getDeviceUsage,DeviceUsage.FREE.getCode());
+        List<Device> deviceList = this.list(deviceLambdaQueryWrapper);
+
+        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, proId)
+                .eq(ProjectResource::getResourceType, DEVICE.getCode())
+                .ne(ProjectResource::getActualCost, BigDecimal.ZERO);
+        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
+
+        List<Device> deviceList1 = deviceList.stream().filter(device -> {
+            for (ProjectResource projectResource : projectResources) {
+                if (device.getDevId().equals(projectResource.getResourceId())) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
+
+        return Result.success(deviceList1);
+    }
 }

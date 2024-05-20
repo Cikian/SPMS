@@ -162,8 +162,39 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
     }
 
     @Override
-    public List<TestPlan> listByProId(Long proId) {
-        return testPlanMapper.selectListByProId(proId);
+    public List<TestPlanDTO> listByProId(Long proId, String testPlanName, Integer status) {
+        List<TestPlan> testPlans = testPlanMapper.selectListByProId(proId);
+
+        testPlans = testPlans.stream().filter(item -> {
+            if (StrUtil.isNotEmpty(testPlanName)) {
+                return item.getPlanName().contains(testPlanName);
+            }
+            return true;
+        }).filter(item -> {
+            if (status != null) {
+                if (status == 0) {
+                    return true;
+                } else if (status == 1) {
+                    return item.getProgress() == 0;
+                } else if (status == 2) {
+                    return item.getProgress() > 0 && item.getProgress() < 100;
+                } else {
+                    return item.getProgress() == 100;
+                }
+            }
+            return true;
+        }).toList();
+
+        return testPlans.stream().map(item -> {
+            TestPlanDTO testPlanDTO = new TestPlanDTO();
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUserId, item.getHead())
+                    .select(User::getNickName);
+            User user = userMapper.selectOne(userLambdaQueryWrapper);
+            BeanUtils.copyProperties(item, testPlanDTO);
+            testPlanDTO.setHeadName(user.getNickName());
+            return testPlanDTO;
+        }).toList();
     }
 
     @Override

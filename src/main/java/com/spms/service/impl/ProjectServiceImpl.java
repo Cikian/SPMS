@@ -1,13 +1,17 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.*;
+import com.spms.entity.Device;
 import com.spms.entity.Project;
 import com.spms.entity.ProjectResource;
 import com.spms.entity.RatedTimeCost;
+import com.spms.enums.DeviceUsage;
 import com.spms.enums.ResourceType;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.DeviceMapper;
 import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.ProjectResourceMapper;
 import com.spms.mapper.RatedTimeCostMapper;
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -42,6 +47,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     RatedTimeCostMapper ratedTimeCostMapper;
     @Autowired
     ProjectResourceMapper projectResourceMapper;
+    @Autowired
+    private DeviceMapper deviceMapper;
 
     @Transactional
     @Override
@@ -105,25 +112,25 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
-    public Result addMember(AddProPeopleDTO addProPeopleDTO) {
-        Project project = projectMapper.selectById(addProPeopleDTO.getProId());
+    public Result addMember(AddProResourceDTO addProResourceDTO) {
+        Project project = projectMapper.selectById(addProResourceDTO.getProId());
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
         if (!userId.equals(project.getCreateBy())) {
             return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
         }
         ProjectResource projectResource = new ProjectResource();
-        projectResource.setProjectId(addProPeopleDTO.getProId());
-        projectResource.setResourceId(addProPeopleDTO.getMemberId());
+        projectResource.setProjectId(addProResourceDTO.getProId());
+        projectResource.setResourceId(addProResourceDTO.getMemberId());
         projectResource.setResourceType(ResourceType.EMPLOYEE.getCode());
-        projectResource.setEstimateStartTime(addProPeopleDTO.getEstimateStartTime());
-        projectResource.setEstimateEndTime(addProPeopleDTO.getEstimateEndTime());
+        projectResource.setEstimateStartTime(addProResourceDTO.getEstimateStartTime());
+        projectResource.setEstimateEndTime(addProResourceDTO.getEstimateEndTime());
         projectResource.setUseType(1);
         projectResource.setActualCost(BigDecimal.ZERO);
         LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(RatedTimeCost::getResourceId, addProPeopleDTO.getMemberId());
+        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
 
-        long days = Duration.between(addProPeopleDTO.getEstimateStartTime(), addProPeopleDTO.getEstimateEndTime()).toDays();
+        long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
         BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
         BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
         projectResource.setEstimateCost(estimateCost);
@@ -132,8 +139,49 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
-    public Result deleteMember(DeleteProPeopleDTO deleteProPeopleDTO) {
-        ProjectResource projectResource = projectResourceMapper.selectById(deleteProPeopleDTO.getId());
+    @Transactional
+    public Result addDevice(AddProResourceDTO addProResourceDTO) {
+        Project project = projectMapper.selectById(addProResourceDTO.getProId());
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (!userId.equals(project.getCreateBy())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
+        }
+
+        ProjectResource projectResource = new ProjectResource();
+        projectResource.setProjectId(addProResourceDTO.getProId());
+        projectResource.setResourceId(addProResourceDTO.getMemberId());
+        projectResource.setResourceType(ResourceType.DEVICE.getCode());
+        projectResource.setEstimateStartTime(addProResourceDTO.getEstimateStartTime());
+        projectResource.setEstimateEndTime(addProResourceDTO.getEstimateEndTime());
+        projectResource.setUseType(1);
+        projectResource.setActualCost(BigDecimal.ZERO);
+        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
+
+        long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
+        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+        BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
+        projectResource.setEstimateCost(estimateCost);
+
+        if (projectResourceMapper.insert(projectResource) < 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+        }
+
+        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.OCCUPIED.getCode())
+                .set(Device::getUpdateTime, LocalDateTime.now())
+                .set(Device::getUpdateBy, userId)
+                .eq(Device::getDevId, addProResourceDTO.getMemberId());
+        if (deviceMapper.update(deviceLambdaUpdateWrapper) < 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+        }
+        return Result.success();
+    }
+
+    @Override
+    public Result deleteMember(DeleteProResourceDTO deleteProResourceDTO) {
+        ProjectResource projectResource = projectResourceMapper.selectById(deleteProResourceDTO.getId());
 
         Project project = projectMapper.selectById(projectResource.getProjectId());
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -143,16 +191,52 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         }
 
         // 计算实际成本
-        long days = Duration.between(deleteProPeopleDTO.getActualStartTime(), deleteProPeopleDTO.getActualEndTime()).toDays();
+        long days = Duration.between(deleteProResourceDTO.getActualStartTime(), deleteProResourceDTO.getActualEndTime()).toDays();
         LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
         lqw.eq(RatedTimeCost::getResourceId, projectResource.getResourceId());
         BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
         BigDecimal actualCost = BigDecimal.valueOf(days).multiply(dailyCost);
 
-        projectResource.setActualStartTime(deleteProPeopleDTO.getActualStartTime());
-        projectResource.setActualEndTime(deleteProPeopleDTO.getActualEndTime());
+        projectResource.setActualStartTime(deleteProResourceDTO.getActualStartTime());
+        projectResource.setActualEndTime(deleteProResourceDTO.getActualEndTime());
         projectResource.setActualCost(actualCost);
         projectResourceMapper.updateById(projectResource);
+        return Result.success();
+    }
+
+    @Override
+    public Result deleteDevice(DeleteProResourceDTO deleteProResourceDTO) {
+        ProjectResource projectResource = projectResourceMapper.selectById(deleteProResourceDTO.getId());
+
+        Project project = projectMapper.selectById(projectResource.getProjectId());
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (!userId.equals(project.getCreateBy())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
+        }
+
+        long days = Duration.between(deleteProResourceDTO.getActualStartTime(), deleteProResourceDTO.getActualEndTime()).toDays();
+        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(RatedTimeCost::getResourceId, projectResource.getResourceId());
+        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+        BigDecimal actualCost = BigDecimal.valueOf(days).multiply(dailyCost);
+
+        projectResource.setActualStartTime(deleteProResourceDTO.getActualStartTime());
+        projectResource.setActualEndTime(deleteProResourceDTO.getActualEndTime());
+        projectResource.setActualCost(actualCost);
+        if (projectResourceMapper.updateById(projectResource) < 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "释放失败");
+        }
+
+        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.FREE.getCode())
+                .set(Device::getUpdateTime, LocalDateTime.now())
+                .set(Device::getUpdateBy, userId)
+                .eq(Device::getDevId, projectResource.getResourceId());
+        if (deviceMapper.update(deviceLambdaUpdateWrapper) < 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "释放失败");
+        }
+
         return Result.success();
     }
 

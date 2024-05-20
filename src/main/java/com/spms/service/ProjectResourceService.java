@@ -7,9 +7,7 @@ import com.spms.entity.User;
 import java.util.List;
 
 public interface ProjectResourceService {
-//    Result estimateCost(List<ProjectResource> projectCosts);
-//
-//    Result actualCost(List<ProjectResource> projectCosts);
-
     Result getMembersByProId(Long projectId,String userName);
+
+    Result getDevicesByProId(Long proId, String deviceName);
 }

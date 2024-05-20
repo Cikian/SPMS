@@ -1,6 +1,7 @@
 package com.spms.controller;
 
 import com.spms.dto.Result;
+import com.spms.dto.TestPlanDTO;
 import com.spms.entity.QualityTarget;
 import com.spms.entity.TestPlan;
 import com.spms.enums.ErrorCode;
@@ -35,8 +36,10 @@ public class TestPlanController {
     }
 
     @GetMapping("/listByProId")
-    public Result listByProId(@RequestParam("proId") Long proId) {
-        List<TestPlan> testPlans = testPlanService.listByProId(proId);
+    public Result listByProId(@RequestParam("proId") Long proId,
+                              @RequestParam("testPlanName") String testPlanName,
+                              @RequestParam("status") Integer status) {
+        List<TestPlanDTO> testPlans = testPlanService.listByProId(proId,testPlanName,status);
         Integer code = testPlans == null ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
         String msg = testPlans == null ? "获取失败" : "获取成功";
         return new Result(code, msg, testPlans);

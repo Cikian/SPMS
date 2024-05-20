@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @description: SPMS: 人力成本与项目关联
  */
 @Data
-public class AddProPeopleDTO {
+public class AddProResourceDTO {
     private Long proId;
     private Long memberId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
