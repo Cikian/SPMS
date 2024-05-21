@@ -9,18 +9,17 @@ import com.aliyun.oss.model.PutObjectRequest;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.spms.config.OSSConfig;
 import com.spms.dto.Result;
+import com.spms.entity.Meeting;
 import com.spms.entity.TestPlan;
 import com.spms.entity.TestReport;
 import com.spms.entity.User;
 import com.spms.enums.ResultCode;
+import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.TestPlanMapper;
 import com.spms.mapper.TestReportMapper;
 import com.spms.mapper.UserMapper;
 import com.spms.security.LoginUser;
-import com.spms.service.NotificationService;
-import com.spms.service.OssService;
-import com.spms.service.TestPlanService;
-import com.spms.service.TestReportService;
+import com.spms.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -55,6 +54,9 @@ public class OssServiceImpl implements OssService {
 
     @Autowired
     private TestPlanMapper testPlanMapper;
+
+    @Autowired
+    private ProjectService projectService;
 
     @Override
     public Result uploadFileAvatar(MultipartFile file, HttpServletRequest request) throws IOException {
@@ -122,6 +124,17 @@ public class OssServiceImpl implements OssService {
         testReport.setApprovalStatus(UNAUDITED.getCode());
         testReportMapper.updateById(testReport);
         notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")", "测试报告已上传，请尽快审核");
+        return Result.success("上传成功", url);
+    }
+
+    @Override
+    public Result uploadFileMeetingReport(MultipartFile file, Long proId, HttpServletRequest request) throws IOException {
+
+        if (!projectService.judgeIsProHeader(proId)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "无权限上传会议记录");
+        }
+        String url = uploadFileAndReturnUrl(file, UPLOAD_MEETING_REPORT, null);
+
         return Result.success("上传成功", url);
     }
 

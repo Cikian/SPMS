@@ -11,6 +11,7 @@ public class SystemConstants {
 
     public static final String UPLOAD_AVATAR  = "avatar/";
     public static final String UPLOAD_TEST_REPORT  = "testReport/";
+    public static final String UPLOAD_MEETING_REPORT  = "meetingReport/";
 
 
 }

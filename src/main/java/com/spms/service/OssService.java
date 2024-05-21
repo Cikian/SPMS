@@ -10,4 +10,6 @@ public interface OssService {
     Result uploadFileAvatar(MultipartFile file, HttpServletRequest request) throws IOException;
 
     Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException;
+
+    Result uploadFileMeetingReport(MultipartFile file, Long proId, HttpServletRequest request) throws IOException;
 }
