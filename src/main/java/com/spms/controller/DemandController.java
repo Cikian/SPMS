@@ -6,6 +6,7 @@ import com.spms.entity.Project;
 import com.spms.enums.ErrorCode;
 import com.spms.service.DemandService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +60,7 @@ public class DemandController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('system_admin')")
     public Result addDemand(@RequestBody Demand demand) {
         System.out.println("新需求：" + demand);
         Boolean b = demandService.addDemand(demand);

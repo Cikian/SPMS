@@ -7,6 +7,7 @@ import com.spms.dto.PasswordUpdateDTO;
 import com.spms.dto.Result;
 import com.spms.dto.UserDTO;
 import com.spms.entity.User;
+import com.spms.mapper.RoleMapper;
 import com.spms.service.UserService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +24,10 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private DataSource dataSource;
 
     @SneakyThrows
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
-        Connection connection = dataSource.getConnection();
-        System.out.println(connection);
-        DruidDataSource druidDataSource = (DruidDataSource) dataSource;
-        long timeBetweenEvictionRunsMillis = druidDataSource.getTimeBetweenEvictionRunsMillis();
-
         return userService.login(user);
     }
 

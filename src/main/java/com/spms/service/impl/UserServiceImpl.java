@@ -23,6 +23,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.spms.constants.RedisConstants.*;
 import static com.spms.constants.SystemConstants.*;
@@ -98,7 +100,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(loginUser.getUser(), userDTO, "userId", "email", "phoneNumber", "status", "gender", "createTime");
         map.put("userInfo", JSONObject.toJSONString(userDTO));
-        map.put("hasRole", JSONObject.toJSONString(loginUser.getAuthorities()));
+
+        List<SimpleGrantedAuthority> hasRole = roleMapper.selectUserHasRoles(Long.valueOf(userId)).stream().map(SimpleGrantedAuthority::new).toList();
+        map.put("hasRole", JSONObject.toJSONString(hasRole));
         return Result.success("登录成功", map);
     }
 

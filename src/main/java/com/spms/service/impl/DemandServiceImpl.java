@@ -9,6 +9,7 @@ import com.spms.mapper.ProjectMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
+import com.spms.service.NotificationService;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,8 @@ public class DemandServiceImpl implements DemandService {
     private DemandActiveService demandActiveService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public Boolean addDemand(Demand demand) {
@@ -52,19 +55,19 @@ public class DemandServiceImpl implements DemandService {
 
         Long projectId = demand.getProId();
         Boolean isProHeader = projectService.judgeIsProHeader(projectId);
-        if (isProHeader){
+        if (isProHeader) {
             demand.setDemandStatus(0);
         }
 
         int i = demandMapper.insert(demand);
         String activeContent = "";
-        if (demand.getWorkItemType() == 0){
+        if (demand.getWorkItemType() == 0) {
             activeContent = "史诗";
-        } else if (demand.getWorkItemType() == 1){
+        } else if (demand.getWorkItemType() == 1) {
             activeContent = "特性";
-        } else if (demand.getWorkItemType() == 2){
+        } else if (demand.getWorkItemType() == 2) {
             activeContent = "用户故事";
-        } else if (demand.getWorkItemType() == 3){
+        } else if (demand.getWorkItemType() == 3) {
             activeContent = "任务";
         }
 
@@ -159,6 +162,10 @@ public class DemandServiceImpl implements DemandService {
         if (oldDemand.getDemandStatus() != -2 && oldDemand.getDemandStatus() != -3) {
             demandActiveService.addActive("修改", "状态", demandId, oldDemand.getDemandStatus().toString(), newDemand.getDemandStatus().toString());
         }
+
+        if (oldDemand.getDemandStatus() == -2 && newDemand.getDemandStatus() == 0) {
+            notificationService.addNotification(oldDemand.getCreateBy(), oldDemand.getTitle(), "您提交的需求已通过");
+        }
         return update > 0;
     }
 
@@ -173,10 +180,10 @@ public class DemandServiceImpl implements DemandService {
 
         String oldHeaderId = "";
         String newHeaderId = "";
-        if (oldDemand.getHeadId() != null){
+        if (oldDemand.getHeadId() != null) {
             oldHeaderId = oldDemand.getHeadId().toString();
         }
-        if (newDemand.getHeadId() != null){
+        if (newDemand.getHeadId() != null) {
             newHeaderId = newDemand.getHeadId().toString();
         }
         demandActiveService.addActive("修改", "负责人", demandId, oldHeaderId, newHeaderId);
@@ -220,10 +227,10 @@ public class DemandServiceImpl implements DemandService {
 
         String fromTime = "";
         String toTime = "";
-        if (oldDemand.getStartTime() != null){
+        if (oldDemand.getStartTime() != null) {
             fromTime = oldDemand.getStartTime().toString();
         }
-        if (newDemand.getStartTime() != null){
+        if (newDemand.getStartTime() != null) {
             toTime = newDemand.getStartTime().toString();
         }
         demandActiveService.addActive("修改", "开始时间", demandId, fromTime, toTime);
@@ -244,10 +251,10 @@ public class DemandServiceImpl implements DemandService {
 
         String fromTime = "";
         String toTime = "";
-        if (oldDemand.getEndTime() != null){
+        if (oldDemand.getEndTime() != null) {
             fromTime = oldDemand.getEndTime().toString();
         }
-        if (newDemand.getEndTime() != null){
+        if (newDemand.getEndTime() != null) {
             toTime = newDemand.getEndTime().toString();
         }
         demandActiveService.addActive("修改", "结束时间", demandId, fromTime, toTime);
@@ -265,10 +272,10 @@ public class DemandServiceImpl implements DemandService {
 
         String oldType = "";
         String newType = "";
-        if (oldDemand.getType() != null){
+        if (oldDemand.getType() != null) {
             oldType = oldDemand.getType().toString();
         }
-        if (newDemand.getType() != null){
+        if (newDemand.getType() != null) {
             newType = newDemand.getType().toString();
         }
         demandActiveService.addActive("修改", "需求类型", demandId, oldType, newType);
@@ -287,10 +294,10 @@ public class DemandServiceImpl implements DemandService {
 
         String oldDemandSource = "";
         String newDemandSource = "";
-        if (oldDemand.getSource() != null){
+        if (oldDemand.getSource() != null) {
             oldDemandSource = oldDemand.getSource().toString();
         }
-        if (newDemand.getSource() != null){
+        if (newDemand.getSource() != null) {
             newDemandSource = newDemand.getSource().toString();
         }
         demandActiveService.addActive("修改", "需求来源", demandId, oldDemandSource, newDemandSource);
@@ -430,13 +437,13 @@ public class DemandServiceImpl implements DemandService {
         }
     }
 
-    Demand getChildren(Demand demand){
+    Demand getChildren(Demand demand) {
         LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Demand::getFatherDemandId, demand.getDemandId());
         List<Demand> children = demandMapper.selectList(lqw);
-        if (!children.isEmpty()){
+        if (!children.isEmpty()) {
             List<Demand> childrenSChildren = new ArrayList<>();
-            for (Demand child : children){
+            for (Demand child : children) {
                 Demand children1 = getChildren(child);
                 childrenSChildren.add(children1);
             }
