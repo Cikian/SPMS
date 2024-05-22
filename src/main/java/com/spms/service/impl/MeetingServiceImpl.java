@@ -24,7 +24,7 @@ public class MeetingServiceImpl implements MeetingService {
 
     @Override
     public Boolean addMeeting(Meeting meeting) {
-        return null;
+        return meetingMapper.insert(meeting) > 0;
     }
 
     @Override

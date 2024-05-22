@@ -60,7 +60,10 @@ public class DemandController {
 
     @PostMapping
     public Result addDemand(@RequestBody Demand demand) {
-        System.out.println("新需求：" + demand);
+        boolean r = demandService.isProjectMember(demand.getProId(), null);
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限添加需求");
+        }
         Boolean b = demandService.addDemand(demand);
         Integer code = b ? ErrorCode.ADD_SUCCESS : ErrorCode.ADD_FAIL;
         String msg = b ? "添加成功" : "添加失败";
@@ -69,6 +72,11 @@ public class DemandController {
 
     @PutMapping("/changeStatus/{demandId}/{status}")
     public Result changeStatus(@PathVariable("demandId") Long demandId, @PathVariable("status") Integer status) {
+        boolean r = demandService.isProjectMember(null, demandId);
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeStatus(demandId, status);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -77,6 +85,11 @@ public class DemandController {
 
     @PutMapping("/changeHeadId/{demandId}/{headId}")
     public Result changeHeadId(@PathVariable("demandId") Long demandId, @PathVariable("headId") Long headId) {
+        boolean r = demandService.isProjectMember(null, demandId);
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeHeadId(demandId, headId);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -85,6 +98,11 @@ public class DemandController {
 
     @PutMapping("/changePriority/{demandId}/{priority}")
     public Result changePriority(@PathVariable("demandId") Long demandId, @PathVariable("priority") Integer priority) {
+        boolean r = demandService.isProjectMember(null, demandId);
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changePriority(demandId, priority);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -93,6 +111,11 @@ public class DemandController {
 
     @PutMapping("/changeType/{demandId}/{type}")
     public Result changeType(@PathVariable("demandId") Long demandId, @PathVariable("type") Long type) {
+        boolean r = demandService.isProjectMember(null, demandId);
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeType(demandId, type);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -101,6 +124,11 @@ public class DemandController {
 
     @PutMapping("/changeSource/{demandId}/{source}")
     public Result changeSource(@PathVariable("demandId") Long demandId, @PathVariable("source") Long source) {
+        boolean r = demandService.isProjectMember(null, demandId);
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeSource(demandId, source);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -109,6 +137,11 @@ public class DemandController {
 
     @PutMapping("/changeDesc")
     public Result changeDesc(@RequestBody Demand demand) {
+        boolean r = demandService.isProjectMember(null, demand.getDemandId());
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeDesc(demand.getDemandId(), demand.getDemandDesc());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -117,6 +150,11 @@ public class DemandController {
 
     @PutMapping("/changeStartTime")
     public Result changeStartTime(@RequestBody Demand demand) {
+        boolean r = demandService.isProjectMember(null, demand.getDemandId());
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeStartTime(demand.getDemandId(), demand.getStartTime());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -125,6 +163,11 @@ public class DemandController {
 
     @PutMapping("/changeEndTime")
     public Result changeEndTime(@RequestBody Demand demand) {
+        boolean r = demandService.isProjectMember(null, demand.getDemandId());
+        if (!r) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
         Boolean b = demandService.changeEndTime(demand.getDemandId(), demand.getEndTime());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
