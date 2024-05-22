@@ -12,6 +12,7 @@ import com.spms.mapper.ProjectResourceMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
+import com.spms.service.NotificationService;
 import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,6 +40,8 @@ public class DemandServiceImpl implements DemandService {
     private DemandActiveService demandActiveService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private NotificationService notificationService;
     @Autowired
     private ProjectResourceMapper projectResourceMapper;
 
@@ -164,6 +167,10 @@ public class DemandServiceImpl implements DemandService {
         Demand newDemand = demandMapper.selectById(demandId);
         if (oldDemand.getDemandStatus() != -2 && oldDemand.getDemandStatus() != -3) {
             demandActiveService.addActive("修改", "状态", demandId, oldDemand.getDemandStatus().toString(), newDemand.getDemandStatus().toString());
+        }
+
+        if (oldDemand.getDemandStatus() == -2 && newDemand.getDemandStatus() == 0) {
+            notificationService.addNotification(oldDemand.getCreateBy(), oldDemand.getTitle(), "您提交的需求已通过");
         }
         return update > 0;
     }

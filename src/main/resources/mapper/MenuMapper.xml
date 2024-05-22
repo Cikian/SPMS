@@ -4,4 +4,11 @@
 
 <mapper namespace="com.spms.mapper.MenuMapper">
 
+    <select id="selectUserHasPermission" resultType="java.lang.String">
+        select m.perms
+        from menu m
+                 left join role_menu rm on m.menu_id = rm.menu_id
+                 left join role_user ru on rm.role_id = ru.role_id
+        where ru.user_id = #{userId}
+    </select>
 </mapper>

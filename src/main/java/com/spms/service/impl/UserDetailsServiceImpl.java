@@ -1,6 +1,7 @@
 package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.spms.mapper.MenuMapper;
 import com.spms.mapper.RoleMapper;
 import com.spms.security.LoginUser;
 import com.spms.entity.User;
@@ -23,6 +24,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private RoleMapper roleMapper;
 
+    @Autowired
+    private MenuMapper menuMapper;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
@@ -34,6 +38,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         List<String> roles = roleMapper.selectUserHasRoles(user.getUserId());
-        return new LoginUser(user, roles);
+        List<String> permissions = menuMapper.selectUserHasPermission(user.getUserId());
+        return new LoginUser(user, permissions, roles);
     }
 }
