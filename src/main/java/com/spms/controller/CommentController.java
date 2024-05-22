@@ -27,7 +27,7 @@ public class CommentController {
     public Result addComment(@RequestBody Comment comment) {
         Boolean b = commentService.addComment(comment);
         Integer code = b ? ErrorCode.ADD_SUCCESS : ErrorCode.ADD_FAIL;
-        String msg = b ? "添加成功" : "添加失败";
+        String msg = b ? "留言成功" : "留言失败";
         return new Result(code, msg, null);
     }
 
