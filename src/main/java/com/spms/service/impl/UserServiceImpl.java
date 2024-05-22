@@ -103,7 +103,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(loginUser.getUser(), userDTO, "userId", "email", "phoneNumber", "status", "gender", "createTime");
         map.put("userInfo", JSONObject.toJSONString(userDTO));
-        map.put("hasRole", JSONObject.toJSONString(loginUser.getHasRoles().stream().map(SimpleGrantedAuthority::new).toList()));
+        map.put("hasRole", JSONObject.toJSONString(roleMapper.selectUserHasRoles(Long.valueOf(userId)).stream().map(SimpleGrantedAuthority::new).toList()));
         return Result.success("登录成功", map);
     }
 
@@ -476,7 +476,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         for (Long projectMember : projectMembers) {
             //获取用户的所有权限
             List<String> menuList = menuMapper.selectUserHasPermission(projectMember);
-            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.contains("test")){
+            menuList = menuList.stream().distinct().toList();
+            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.toString().contains("test")){
                 queryUserById(users, projectMember);
             } else if (type.equals(ProjectMemberType.DEVELOPER.getCode()) && menuList.contains("dev")){
                 queryUserById(users, projectMember);

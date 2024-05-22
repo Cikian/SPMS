@@ -24,7 +24,7 @@ spring:
     port: 25   # 端口号
   datasource:
     druid:
-      url: jdbc:mysql://127.0.0.1:3306/spms?useSSL=false&serverTimezone=UTC
+      url: jdbc:mysql://140.143.140.103:3306/spms?useSSL=false&serverTimezone=UTC
       username: root
       password: chen0809
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -47,8 +47,8 @@ spring:
       pool-prepared-statements: true
   data:
     redis:
-#      host: 140.143.140.103
-      host: 127.0.0.1
+      host: 140.143.140.103
+#      host: 127.0.0.1
       port: 6379
       password: chen0809
       database: 1

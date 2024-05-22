@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasRole('system_admin') || hasAuthority('sys:user:add')")
     public Result add(@RequestBody User user) {
         return userService.add(user);
     }
@@ -57,7 +57,6 @@ public class UserController {
     }
 
     @GetMapping("/queryById/{userId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryById(@PathVariable("userId") Long userId) {
         return userService.queryById(userId);
     }

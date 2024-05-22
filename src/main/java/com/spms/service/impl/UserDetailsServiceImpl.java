@@ -39,6 +39,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         List<String> roles = roleMapper.selectUserHasRoles(user.getUserId());
         List<String> permissions = menuMapper.selectUserHasPermission(user.getUserId());
-        return new LoginUser(user, permissions, roles);
+        roles.addAll(permissions);
+        return new LoginUser(user, roles);
     }
 }
