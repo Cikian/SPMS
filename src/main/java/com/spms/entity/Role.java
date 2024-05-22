@@ -17,6 +17,8 @@ public class Role {
     //是否禁用
     private Boolean status;
 
+    private Boolean isSystem;
+
     //创建人
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;

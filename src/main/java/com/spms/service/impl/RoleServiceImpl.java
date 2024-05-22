@@ -94,6 +94,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         if (!role.getRoleName().startsWith(ROLE_PREFIX)) {
             role.setRoleName(ROLE_PREFIX + role.getRoleName());
         }
+        role.setIsSystem(false);
         role.setDelFlag(NOT_DELETE);
         boolean isSuccess = this.save(role);
 

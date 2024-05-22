@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.spms.dto.Result;
 import com.spms.dto.TestPlanDTO;
 import com.spms.entity.*;
+import com.spms.enums.ResourceType;
 import com.spms.enums.ResultCode;
 import com.spms.mapper.*;
 import com.spms.security.LoginUser;
@@ -36,6 +37,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private RoleUserMapper roleUserMapper;
 
     @Autowired
     private NotificationService notificationService;
@@ -68,8 +72,20 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId,project.getProId());
         List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
 
-        //只要是项目成员都可以添加测试计划
-        if (projectResources.stream().noneMatch(item -> Objects.equals(item.getResourceId(), userId))) {
+        //只有项目的测试人员才能添加测试计划
+        List<ProjectResource> proAllMembers = projectResources.stream().filter(item -> Objects.equals(item.getResourceType(), ResourceType.EMPLOYEE.getCode())).toList();
+        List<ProjectResource> proAllTestMember = proAllMembers.stream().filter(item -> {
+            Long memberId = item.getResourceId();
+
+            LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            roleUserLambdaQueryWrapper.eq(RoleUser::getUserId, memberId);
+            List<RoleUser> roleUsers = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
+
+            return roleUsers.stream().anyMatch(roleUser -> Objects.equals(roleUser.getRoleId(), 1777954267000070145L));
+        }).toList();
+
+
+        if (proAllTestMember.stream().noneMatch(item -> Objects.equals(item.getResourceId(), userId))) {
             return Result.fail(ResultCode.FAIL.getCode(), "您无权添加");
         }
 
