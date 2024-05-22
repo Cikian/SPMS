@@ -31,4 +31,10 @@ public class MeetingController {
         String msg = byProId.isEmpty()? "无数据" : "获取成功 ";
         return new Result(code, msg, byProId);
     }
+
+    @PostMapping
+    public Result addMeeting(@RequestBody Meeting meeting) {
+        meetingService.addMeeting(meeting);
+        return new Result(ErrorCode.ADD_SUCCESS, "添加成功");
+    }
 }

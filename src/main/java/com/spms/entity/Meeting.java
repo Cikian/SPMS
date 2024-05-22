@@ -22,8 +22,8 @@ public class Meeting {
     private Long meetId;
     private Long proId;
     private String title;
-    private String desc;
-    private String file;
+    private String meetingAbstract;
+    private String reportFile;
 
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;

@@ -469,6 +469,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .in(User::getUserId, projectMembers)
                     .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getEmail, User::getPhoneNumber, User::getGender);
             users = userMapper.selectList(userLambdaQueryWrapper);
+            return Result.success(users);
         }
 
         //根据type获取项目下对应的成员
@@ -525,7 +526,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getUserId, item.getUserId())
                     .eq(User::getDelFlag, NOT_DELETE)
-                    .select(User::getUserId,User::getNickName);
+                    .select(User::getUserId, User::getNickName);
             return userMapper.selectOne(userLambdaQueryWrapper);
         }).toList();
 

@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.spms.entity.Demand;
 import com.spms.entity.Project;
+import com.spms.entity.ProjectResource;
+import com.spms.enums.ResourceType;
 import com.spms.mapper.DemandMapper;
 import com.spms.mapper.ProjectMapper;
+import com.spms.mapper.ProjectResourceMapper;
 import com.spms.security.LoginUser;
 import com.spms.service.DemandActiveService;
 import com.spms.service.DemandService;
@@ -39,9 +42,12 @@ public class DemandServiceImpl implements DemandService {
     private ProjectService projectService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private ProjectResourceMapper projectResourceMapper;
 
     @Override
     public Boolean addDemand(Demand demand) {
+
         Long proId = demand.getProId();
         if (demand.getFatherDemandId() == 0) {
             demand.setLevel(0);
@@ -450,5 +456,31 @@ public class DemandServiceImpl implements DemandService {
             demand.setChildren(childrenSChildren);
         }
         return demand;
+    }
+
+    @Override
+    public boolean isProjectMember(Long proId, Long demandId) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (proId != null) {
+            LambdaQueryWrapper<ProjectResource> lqw = new LambdaQueryWrapper<>();
+            lqw.eq(ProjectResource::getProjectId, proId);
+            lqw.eq(ProjectResource::getResourceType, ResourceType.EMPLOYEE.getCode());
+            lqw.eq(ProjectResource::getActualCost, 0);
+            List<ProjectResource> projectResources = projectResourceMapper.selectList(lqw);
+
+            for (ProjectResource projectResource : projectResources) {
+                if (Objects.equals(projectResource.getResourceId(), userId)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+            lqw.eq(Demand::getDemandId, demandId);
+            Demand demand = demandMapper.selectOne(lqw);
+            Long proIdByDemand = demand.getProId();
+            return isProjectMember(proIdByDemand, null);
+        }
     }
 }
