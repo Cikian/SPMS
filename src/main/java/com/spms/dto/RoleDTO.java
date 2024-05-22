@@ -10,5 +10,6 @@ public class RoleDTO {
     private String roleName;
     private Boolean status;
     private String remark;
+    private Boolean isSystem;
     private LocalDateTime createTime;
 }

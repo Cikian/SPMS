@@ -43,7 +43,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     private RoleUserMapper roleUserMapper;
 
     @Override
-    @Transactional
     public Result list(Integer page, Integer size) {
         String currentPageData = redisTemplate.opsForValue().get(ROLE_LIST + page + ":" + size);
         if (currentPageData != null) {
@@ -76,6 +75,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     @Override
+    @Transactional
     public Result add(Role role) {
         if (role == null || role.getRoleName() == null || role.getRemark() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
