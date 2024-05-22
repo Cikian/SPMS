@@ -71,6 +71,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private ProjectResourceMapper projectResourceMapper;
 
+    @Autowired
+    private MenuMapper menuMapper;
+
     @Override
     public Result login(User user) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
@@ -446,8 +449,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        //获取项目下所有的成员
         LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        // TODO: 问题：添加项目时关联人力成本在表中存的type为0，这里实际查询的是1，数据库 代码（改？）
         projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, projectId)
                 .eq(ProjectResource::getResourceType, EMPLOYEE.getCode())
                 .select(ProjectResource::getResourceId);
@@ -468,31 +471,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             users = userMapper.selectList(userLambdaQueryWrapper);
         }
 
+        //根据type获取项目下对应的成员
         for (Long projectMember : projectMembers) {
-            LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            roleUserLambdaQueryWrapper.eq(RoleUser::getUserId, projectMember);
-            List<RoleUser> userHasRole = roleUserMapper.selectList(roleUserLambdaQueryWrapper);
-            for (RoleUser roleUser : userHasRole) {
-                LambdaQueryWrapper<Role> roleLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                roleLambdaQueryWrapper.eq(Role::getRoleId, roleUser.getRoleId());
-                Role role = roleMapper.selectOne(roleLambdaQueryWrapper);
-
-                LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
-                        .eq(User::getUserId, projectMember)
-                        .eq(User::getStatus, true)
-                        .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getGender);
-                User user = this.getOne(userLambdaQueryWrapper);
-                if (ProjectMemberType.TESTER.getCode().equals(type) && role.getRoleName().contains("test")) {
-                    users.add(user);
-                    break;
-                } else if (ProjectMemberType.DEVELOPER.getCode().equals(type) && role.getRoleName().contains("dev")) {
-                    users.add(user);
-                    break;
-                } else if (ProjectMemberType.MANAGER.getCode().equals(type) && role.getRoleName().contains("manager")) {
-                    users.add(user);
-                    break;
-                }
+            //获取用户的所有权限
+            List<String> menuList = menuMapper.selectUserHasPermission(projectMember);
+            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.contains("test")){
+                queryUserById(users, projectMember);
+            } else if (type.equals(ProjectMemberType.DEVELOPER.getCode()) && menuList.contains("dev")){
+                queryUserById(users, projectMember);
             }
         }
 
@@ -501,6 +487,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return Result.success(users);
+    }
+
+    private void queryUserById(List<User> users, Long projectMember) {
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getUserId, projectMember)
+                .eq(User::getDelFlag, NOT_DELETE)
+                .select(User::getUserId, User::getAvatar, User::getUserName, User::getNickName, User::getEmail, User::getPhoneNumber, User::getGender);
+        User user = userMapper.selectOne(userLambdaQueryWrapper);
+        users.add(user);
     }
 
     @Override
