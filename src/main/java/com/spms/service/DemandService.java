@@ -1,5 +1,6 @@
 package com.spms.service;
 
+import com.spms.dto.Result;
 import com.spms.entity.Demand;
 import com.spms.entity.Project;
 
@@ -64,5 +65,4 @@ public interface DemandService {
     Boolean deleteDemand(Long demandId);
 
     boolean isProjectMember(Long proId, Long demandId);
-
 }

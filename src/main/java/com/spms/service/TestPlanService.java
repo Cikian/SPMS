@@ -18,4 +18,10 @@ public interface TestPlanService {
     Result updateTestPlan(TestPlan testPlan);
 
     Result queryByDemandId(Long id);
+
+    Result updateReviewStatus(Long testPlanId, Integer reviewResult);
+
+    Result listAllPendingByProId(Long proId);
+
+    Result listMySubmit(TestPlan testPlan, Integer page, Integer size, Integer reviewStatus);
 }

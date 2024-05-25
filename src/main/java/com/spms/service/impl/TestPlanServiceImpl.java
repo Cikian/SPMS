@@ -19,12 +19,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import static com.spms.constants.SystemConstants.NOT_DELETE;
+import static com.spms.enums.ReviewStatus.*;
 import static com.spms.enums.TestPlanStatus.*;
 
 @Service
@@ -69,7 +71,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
 
         LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId,project.getProId());
+        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, project.getProId());
         List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
 
         //只有项目的测试人员才能添加测试计划
@@ -97,24 +99,35 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "请选择负责人");
         }
 
+        if (testPlan.getStartTime() == null || testPlan.getEndTime() == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请选择计划时间");
+        }
+
+        //判断需求是否存在
         LambdaQueryWrapper<Demand> requirementLambdaQueryWrapper = new LambdaQueryWrapper<>();
         requirementLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
         if (!demandMapper.exists(requirementLambdaQueryWrapper)) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        //判断负责人是否存在
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getUserId, testPlan.getHead());
         if (!userMapper.exists(userLambdaQueryWrapper)) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        //如果之前有通过的测试计划或在审核中的测试计划，不允许再次添加
         LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(TestPlan::getDemandId, testPlan.getDemandId());
+        queryWrapper.eq(TestPlan::getDemandId, testPlan.getDemandId())
+                .and(i -> {
+                    i.eq(TestPlan::getReviewStatus, PENDING.getCode()).or().eq(TestPlan::getReviewStatus, PASS.getCode());
+                });
         if (this.exists(queryWrapper)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "该需求已存在测试计划");
+            return Result.fail(ResultCode.FAIL.getCode(), "该需求已存在测试计划或者测试计划正在审核中");
         }
 
+        testPlan.setReviewStatus(PENDING.getCode());
         testPlan.setProgress(0);
         testPlan.setDelFlag(NOT_DELETE);
         boolean isSuccess = this.save(testPlan);
@@ -122,7 +135,8 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
 
-        Boolean addSuccess = notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName() + "(" + project.getProName() + ")", "您有一个新的测试计划");
+        //发送审核通知给项目创建人
+        Boolean addSuccess = notificationService.addNotification(project.getCreateBy(), testPlan.getPlanName() + "(" + project.getProName() + ")", "您有一条新的测试计划需要审核");
         if (!addSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
@@ -138,6 +152,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
 
+        //type = 1 查询我负责的
         LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(!Objects.isNull(testPlan.getPlanName()), TestPlan::getPlanName, testPlan.getPlanName())
                 .eq(Objects.equals(status, NOT_STARTED.getCode()), TestPlan::getProgress, 0)
@@ -145,6 +160,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
                 .eq(Objects.equals(status, COMPLETED.getCode()), TestPlan::getProgress, 100)
                 .eq(type == 1, TestPlan::getHead, userId)
                 .eq(TestPlan::getDelFlag, NOT_DELETE)
+                .eq(TestPlan::getReviewStatus, PASS.getCode())
                 .orderBy(true, false, TestPlan::getCreateTime)
                 .select(TestPlan::getTestPlanId, TestPlan::getDemandId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
         this.page(testPlanPage, queryWrapper);
@@ -168,11 +184,13 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             BeanUtils.copyProperties(item, testPlanDTO);
             if (finalUser != null) {
                 testPlanDTO.setHeadName(finalUser.getNickName());
+                testPlanDTO.setHeadAvatar(finalUser.getAvatar());
             } else {
                 LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 userLambdaQueryWrapper.eq(User::getUserId, item.getHead());
                 User head = userMapper.selectOne(userLambdaQueryWrapper);
                 testPlanDTO.setHeadName(head.getNickName());
+                testPlanDTO.setHeadAvatar(head.getAvatar());
             }
 
             LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -287,8 +305,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
         }
 
+        //如果更新了负责人
         if (!Objects.equals(testPlan.getHead(), testPlan1.getHead())) {
-            notificationService.addNotification(testPlan.getHead(), testPlan1.getPlanName(), "您的测试计划有更新");
+            notificationService.addNotification(testPlan.getHead(), testPlan1.getPlanName(), "您有一条新的测试计划");
         }
 
         return Result.success("修改成功");
@@ -300,10 +319,10 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-
         LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TestPlan::getDemandId, id)
                 .eq(TestPlan::getDelFlag, NOT_DELETE)
+                .eq(TestPlan::getReviewStatus, PASS.getCode())
                 .select(TestPlan::getTestPlanId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
         List<TestPlan> testPlanList = this.list(queryWrapper);
         if (testPlanList.isEmpty()) {
@@ -322,6 +341,151 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         }).toList();
 
         return Result.success(resultList);
+    }
+
+    @Override
+    public Result listAllPendingByProId(Long proId) {
+        if (proId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        demandLambdaQueryWrapper.eq(Demand::getProId, proId)
+                .select(Demand::getDemandId);
+        List<Demand> demands = demandMapper.selectList(demandLambdaQueryWrapper);
+        if (demands.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+        List<Long> demandIds = demands.stream().map(Demand::getDemandId).toList();
+
+        LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(TestPlan::getDemandId, demandIds)
+                .eq(TestPlan::getReviewStatus, PENDING.getCode())
+                .eq(TestPlan::getDelFlag, NOT_DELETE);
+        List<TestPlan> testPlans = this.list(queryWrapper);
+        if (testPlans.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        List<TestPlanDTO> testPlanDTOList = testPlans.stream().map(item -> {
+            TestPlanDTO testPlanDTO = new TestPlanDTO();
+            BeanUtils.copyProperties(item, testPlanDTO);
+
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUserId, item.getHead())
+                    .select(User::getNickName,User::getAvatar);
+            User user = userMapper.selectOne(userLambdaQueryWrapper);
+
+            LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper1.eq(User::getUserId, item.getCreateBy())
+                    .select(User::getNickName,User::getAvatar);
+            User user1 = userMapper.selectOne(userLambdaQueryWrapper);
+
+            LambdaQueryWrapper<Demand> demandLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+            demandLambdaQueryWrapper1.eq(Demand::getDemandId, item.getDemandId())
+                    .select(Demand::getTitle);
+            Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper1);
+
+            testPlanDTO.setDemandName(demand.getTitle());
+            testPlanDTO.setHeadName(user.getNickName());
+            testPlanDTO.setHeadAvatar(user.getAvatar());
+            testPlanDTO.setCreatorName(user1.getNickName());
+            testPlanDTO.setCreatorAvatar(user1.getAvatar());
+            return testPlanDTO;
+        }).toList();
+
+        return Result.success(testPlanDTOList);
+    }
+
+    @Override
+    @Transactional
+    public Result updateReviewStatus(Long testPlanId, Integer reviewResult) {
+        if (testPlanId == null || reviewResult == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        TestPlan testPlan = this.getById(testPlanId);
+        if (testPlan == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
+        }
+
+        if (!Objects.equals(testPlan.getReviewStatus(), PENDING.getCode())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "该测试计划不在审核中");
+        }
+
+        if (Objects.equals(reviewResult, PASS.getCode())) {
+            testPlan.setProgress(0);
+        }
+
+        testPlan.setReviewStatus(reviewResult);
+        if (!this.updateById(testPlan)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "操作失败");
+        }
+
+        //发送审核结果通知给创建人，如果是通过，再发送给负责人
+        Boolean addSuccess = notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName(), "您的测试计划" + (Objects.equals(reviewResult, PASS.getCode()) ? "已通过审核" : "未通过审核"));
+        if (!addSuccess) {
+            return Result.fail(ResultCode.FAIL.getCode(), "操作失败");
+        }
+
+        if (Objects.equals(reviewResult, PASS.getCode())) {
+            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您有一条新的测试计划");
+        }
+        return Result.success("操作成功");
+    }
+
+    @Override
+    public Result listMySubmit(TestPlan testPlan, Integer page, Integer size, Integer reviewStatus) {
+        Page<TestPlan> testPlanPage = new Page<>(page, size);
+        Page<TestPlanDTO> testPlanDTOPage = new Page<>();
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+
+        LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(!Objects.isNull(testPlan.getPlanName()), TestPlan::getPlanName, testPlan.getPlanName())
+                .eq(Objects.equals(reviewStatus, PENDING.getCode()), TestPlan::getReviewStatus, PENDING.getCode())
+                .eq(Objects.equals(reviewStatus, PASS.getCode()), TestPlan::getReviewStatus, PASS.getCode())
+                .eq(Objects.equals(reviewStatus, REJECT.getCode()), TestPlan::getReviewStatus, REJECT.getCode())
+                .eq(TestPlan::getCreateBy, userId)
+                .eq(TestPlan::getDelFlag, NOT_DELETE)
+                .orderBy(true, false, TestPlan::getCreateTime);
+        this.page(testPlanPage, queryWrapper);
+
+        if (testPlanPage.getRecords().isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
+        }
+
+        BeanUtils.copyProperties(testPlanPage, testPlanDTOPage, "records");
+
+        List<TestPlanDTO> testPlanDTOList = testPlanPage.getRecords().stream().map(item -> {
+            TestPlanDTO testPlanDTO = new TestPlanDTO();
+            BeanUtils.copyProperties(item, testPlanDTO);
+
+            LambdaQueryWrapper<Demand> demandLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            demandLambdaQueryWrapper.eq(Demand::getDemandId, item.getDemandId());
+            Demand demand = demandMapper.selectOne(demandLambdaQueryWrapper);
+            testPlanDTO.setDemandName(demand.getTitle());
+
+            LambdaQueryWrapper<Project> projectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            projectLambdaQueryWrapper.eq(Project::getProId, demand.getProId());
+            Project project = projectMapper.selectOne(projectLambdaQueryWrapper);
+            testPlanDTO.setProjectName(project.getProName());
+            testPlanDTO.setProjectId(project.getProId());
+
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUserId, item.getHead())
+                    .select(User::getNickName,User::getAvatar);
+            User user = userMapper.selectOne(userLambdaQueryWrapper);
+            testPlanDTO.setHeadName(user.getNickName());
+            testPlanDTO.setHeadAvatar(user.getAvatar());
+
+            return testPlanDTO;
+        }).toList();
+
+        testPlanDTOPage.setRecords(testPlanDTOList);
+
+        return Result.success(testPlanDTOPage);
     }
 
 }
