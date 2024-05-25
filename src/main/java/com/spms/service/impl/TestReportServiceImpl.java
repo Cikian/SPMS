@@ -64,10 +64,10 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
             return Result.fail(ResultCode.FAIL.getCode(), "无权限删除");
         }
 
-        LambdaUpdateWrapper<TestReport> testReportLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        testReportLambdaUpdateWrapper.eq(TestReport::getTestReportId, testReportId)
-                .set(TestReport::getDelFlag, DELETE);
-        this.update(testReportLambdaUpdateWrapper);
+        testReport.setDelFlag(DELETE);
+        if (!this.updateById(testReport)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "删除失败");
+        }
 
         return Result.success("删除成功");
     }

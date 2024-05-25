@@ -28,4 +28,6 @@ public class DictionaryType {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    private Boolean delFlag;
+
 }

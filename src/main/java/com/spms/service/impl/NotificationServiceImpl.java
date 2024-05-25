@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.spms.constants.RedisConstants.NOTIFICATION_KEY;
+import static com.spms.constants.SystemConstants.NOT_DELETE;
 
 @Service
 public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification> implements NotificationService {
@@ -33,6 +34,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setTitle(title);
         notification.setContent(content);
         notification.setReadFlag(false);
+        notification.setDelFlag(NOT_DELETE);
 
         boolean isSuccess = this.save(notification);
         if (!isSuccess) {
@@ -88,18 +90,18 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         if (notificationId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = loginUser.getUser().getUserId();
 
-        LambdaUpdateWrapper<Notification> notificationLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        notificationLambdaUpdateWrapper.eq(Notification::getNotificationId, notificationId)
-                .set(Notification::getReadFlag, true);
-        boolean update = this.update(notificationLambdaUpdateWrapper);
+        Notification notification = this.getById(notificationId);
+        notification.setReadFlag(true);
+
+        boolean update = this.updateById(notification);
 
         if (!update) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
         Long remove = redisTemplate.opsForList().remove(NOTIFICATION_KEY + userId, 1, notificationId.toString());
         if (remove == null || remove == 0) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");

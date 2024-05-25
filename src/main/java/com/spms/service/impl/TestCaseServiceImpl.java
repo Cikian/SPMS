@@ -172,7 +172,6 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
         demandLambdaQueryWrapper.eq(Demand::getProId, projectId);
         List<Demand> demandList = demandMapper.selectList(demandLambdaQueryWrapper);
 
-        int progress = 0;
         int total = 0;
         int finish = 0;
 
