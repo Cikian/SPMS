@@ -16,7 +16,7 @@ public class TestReport {
 
     private String reportFile;
 
-    private Integer approvalStatus;
+    private Integer reviewStatus;
 
     private Boolean delFlag;
 }

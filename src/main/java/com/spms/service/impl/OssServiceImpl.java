@@ -102,7 +102,7 @@ public class OssServiceImpl implements OssService {
             newTestReport.setTestPlanId(testPlanId);
             newTestReport.setReportFile(url);
             newTestReport.setTestReportName(file.getOriginalFilename());
-            newTestReport.setApprovalStatus(UNAUDITED.getCode());
+            newTestReport.setReviewStatus(UNAUDITED.getCode());
             newTestReport.setDelFlag(NOT_DELETE);
             testReportMapper.insert(newTestReport);
             notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")", "测试报告已上传，请尽快审核");
@@ -121,7 +121,7 @@ public class OssServiceImpl implements OssService {
         testReport.setTestReportName(file.getOriginalFilename());
         testReport.setReportFile(url);
         testReport.setDelFlag(NOT_DELETE);
-        testReport.setApprovalStatus(UNAUDITED.getCode());
+        testReport.setReviewStatus(UNAUDITED.getCode());
         testReportMapper.updateById(testReport);
         notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")", "测试报告已上传，请尽快审核");
         return Result.success("上传成功", url);

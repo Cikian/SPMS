@@ -11,8 +11,11 @@ public class Role {
     @TableId(type = IdType.ASSIGN_ID)
     private Long roleId;
 
-    //角色名称
+    //角色标识
     private String roleName;
+
+    //角色名称
+    private String remark;
 
     //是否禁用
     private Boolean status;
@@ -37,7 +40,4 @@ public class Role {
 
     //删除标记
     private Boolean delFlag;
-
-    //备注
-    private String remark;
 }

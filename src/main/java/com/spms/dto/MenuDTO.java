@@ -8,5 +8,4 @@ public class MenuDTO {
     private String menuName;
     private Boolean status;
     private Integer type;
-    private String remark;
 }

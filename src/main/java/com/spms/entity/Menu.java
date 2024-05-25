@@ -41,7 +41,4 @@ public class Menu {
 
     //删除标记
     private Boolean delFlag;
-
-    //备注
-    private String remark;
 }

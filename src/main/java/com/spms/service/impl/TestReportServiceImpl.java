@@ -87,7 +87,7 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
 
         LambdaUpdateWrapper<TestReport> testReportLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         testReportLambdaUpdateWrapper.eq(TestReport::getTestReportId, testReportId)
-                .set(TestReport::getApprovalStatus, status);
+                .set(TestReport::getReviewStatus, status);
         this.update(testReportLambdaUpdateWrapper);
 
         if (status == 1) {
