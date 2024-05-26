@@ -103,21 +103,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
             return Result.fail(ResultCode.FAIL.getCode(), "请选择计划时间");
         }
 
-        //判断需求是否存在
-        LambdaQueryWrapper<Demand> requirementLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        requirementLambdaQueryWrapper.eq(Demand::getDemandId, testPlan.getDemandId());
-        if (!demandMapper.exists(requirementLambdaQueryWrapper)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        //判断负责人是否存在
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getUserId, testPlan.getHead());
-        if (!userMapper.exists(userLambdaQueryWrapper)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        //如果之前有通过的测试计划或在审核中的测试计划，不允许再次添加
         LambdaQueryWrapper<TestPlan> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TestPlan::getDemandId, testPlan.getDemandId())
                 .and(i -> {
@@ -373,12 +358,12 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getUserId, item.getHead())
-                    .select(User::getNickName,User::getAvatar);
+                    .select(User::getNickName, User::getAvatar);
             User user = userMapper.selectOne(userLambdaQueryWrapper);
 
             LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper1.eq(User::getUserId, item.getCreateBy())
-                    .select(User::getNickName,User::getAvatar);
+                    .select(User::getNickName, User::getAvatar);
             User user1 = userMapper.selectOne(userLambdaQueryWrapper);
 
             LambdaQueryWrapper<Demand> demandLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
@@ -423,7 +408,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         }
 
         //发送审核结果通知给创建人，如果是通过，再发送给负责人
-        Boolean addSuccess = notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName(), "您的测试计划" + (Objects.equals(reviewResult, PASS.getCode()) ? "已通过审核" : "未通过审核"));
+        Boolean addSuccess = notificationService
+                .addNotification(testPlan.getCreateBy(), testPlan.getPlanName(),
+                        "您的测试计划" + (Objects.equals(reviewResult, PASS.getCode()) ? "已通过审核" : "未通过审核"));
         if (!addSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "操作失败");
         }
@@ -475,7 +462,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getUserId, item.getHead())
-                    .select(User::getNickName,User::getAvatar);
+                    .select(User::getNickName, User::getAvatar);
             User user = userMapper.selectOne(userLambdaQueryWrapper);
             testPlanDTO.setHeadName(user.getNickName());
             testPlanDTO.setHeadAvatar(user.getAvatar());

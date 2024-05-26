@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.spms.constants.SystemConstants.NOT_DELETE;
 
@@ -48,16 +50,12 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
                 .eq(ProjectResource::getResourceType, ResourceType.EMPLOYEE.getCode())
                 .eq(ProjectResource::getActualCost, BigDecimal.ZERO);
         List<ProjectResource> projectResourceList = this.list(projectResourceLambdaQueryWrapper);
-
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.like(User::getNickName, userName);
         List<User> users = userMapper.selectList(userLambdaQueryWrapper);
-
         if (users == null || users.isEmpty()) {
             return Result.fail(ResultCode.FAIL.getCode(), "未找到该用户");
         }
-
-        // 过滤出符合条件的用户
         projectResourceList = projectResourceList.stream().filter(item -> {
             for (User user : users) {
                 if (item.getResourceId().equals(user.getUserId())) {
@@ -66,7 +64,6 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
             }
             return false;
         }).toList();
-
         List<ProjectResourceDTO> projectResourceDTOS = projectResourceList.stream().map(item -> {
             ProjectResourceDTO projectResourceDTO = new ProjectResourceDTO();
             User user = userMapper.selectById(item.getResourceId());
@@ -85,8 +82,11 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
 
             return projectResourceDTO;
         }).toList();
-
-        return Result.success(projectResourceDTOS);
+        BigDecimal totalCost = projectResourceList.stream().map(ProjectResource::getEstimateCost).reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<String,Object> resultMap = new HashMap<>();
+        resultMap.put("totalCost",totalCost);
+        resultMap.put("members",projectResourceDTOS);
+        return Result.success(resultMap);
     }
 
     @Override

@@ -222,9 +222,13 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
         testCaseLambdaQueryWrapper.eq(TestCase::getTestPlanId, testPlanId)
                 .eq(TestCase::getDelFlag, NOT_DELETE);
         List<TestCase> testCaseList = this.list(testCaseLambdaQueryWrapper);
-
+        if (testCaseList.isEmpty()){
+            LambdaUpdateWrapper<TestPlan> testPlanLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            testPlanLambdaUpdateWrapper.eq(TestPlan::getTestPlanId, testPlanId)
+                    .set(TestPlan::getProgress, 0);
+            return testPlanMapper.update(testPlanLambdaUpdateWrapper) > 0;
+        }
         float progress;
-
         int total = testCaseList.size();
         int finish = 0;
         for (TestCase testCase : testCaseList) {
@@ -233,7 +237,6 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
             }
         }
         progress = (float) finish / total * 100;
-
         LambdaUpdateWrapper<TestPlan> testPlanLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         testPlanLambdaUpdateWrapper.eq(TestPlan::getTestPlanId, testPlanId)
                 .set(TestPlan::getProgress, progress);

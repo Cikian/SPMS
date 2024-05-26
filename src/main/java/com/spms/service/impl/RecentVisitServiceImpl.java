@@ -42,22 +42,18 @@ public class RecentVisitServiceImpl implements RecentVisitService {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
         String itemId = id + ":" + type;
-
         if (redisTemplate.opsForZSet().rank(RECENT_VISIT_PRO + userId, itemId) != null) {
             redisTemplate.opsForZSet().remove(RECENT_VISIT_PRO + userId, itemId);
         }
-
         if (redisTemplate.opsForZSet().rank(RECENT_VISIT_OTHER + userId, itemId) != null) {
             redisTemplate.opsForZSet().remove(RECENT_VISIT_OTHER + userId, itemId);
         }
-
         double score = System.currentTimeMillis();
         if (RecentVisitType.PROJECT.getType().equals(type)) {
             redisTemplate.opsForZSet().add(RECENT_VISIT_PRO + userId, itemId, score);
         } else {
             redisTemplate.opsForZSet().add(RECENT_VISIT_OTHER + userId, itemId, score);
         }
-
         redisTemplate.opsForZSet().removeRange(RECENT_VISIT_PRO + userId, 0, -6);
         redisTemplate.opsForZSet().removeRange(RECENT_VISIT_OTHER + userId, 0, -16);
         return Result.success();
