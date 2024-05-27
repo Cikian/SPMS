@@ -122,7 +122,7 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
             ProjectResourceDTO projectResourceDTO = new ProjectResourceDTO();
             Device device = deviceMapper.selectById(item.getResourceId());
             LambdaQueryWrapper<DictionaryData> dictionaryDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            dictionaryDataLambdaQueryWrapper.eq(DictionaryData::getDictionaryDataId, device.getTypeId());
+            dictionaryDataLambdaQueryWrapper.eq(DictionaryData::getDictionaryDataId, device.getType());
             DictionaryData dictionaryData = dictionaryDataMapper.selectOne(dictionaryDataLambdaQueryWrapper);
             List<String> list = new ArrayList<>();
             list.add(dictionaryData.getLabel());

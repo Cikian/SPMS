@@ -9,6 +9,7 @@ import com.spms.dto.TestPlanDTO;
 import com.spms.entity.*;
 import com.spms.enums.ResourceType;
 import com.spms.enums.ResultCode;
+import com.spms.enums.ReviewStatus;
 import com.spms.mapper.*;
 import com.spms.security.LoginUser;
 import com.spms.service.NotificationService;
@@ -51,6 +52,9 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
 
     @Autowired
     private ProjectResourceMapper projectResourceMapper;
+
+    @Autowired
+    private TestReportMapper testReportMapper;
 
     @Override
     @Transactional
@@ -473,6 +477,42 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         testPlanDTOPage.setRecords(testPlanDTOList);
 
         return Result.success(testPlanDTOPage);
+    }
+
+    @Override
+    public Result finishTestPlan(Long testPlanId) {
+        if (testPlanId == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        TestPlan testPlan = this.getById(testPlanId);
+        if (testPlan == null) {
+            return Result.fail(ResultCode.FAIL.getCode(), "该测试计划不存在");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (!userId.equals(testPlan.getHead())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您无权修改");
+        }
+
+        if (testPlan.getProgress() != 100) {
+            return Result.fail(ResultCode.FAIL.getCode(), "该计划尚未完成，请完成后再进行存档");
+        }
+
+        LambdaQueryWrapper<TestReport> reportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        reportLambdaQueryWrapper.eq(TestReport::getTestPlanId, testPlanId);
+        TestReport testReport = testReportMapper.selectOne(reportLambdaQueryWrapper);
+        if (testReport == null || testReport.getReviewStatus().equals(PENDING.getCode()) || testReport.getReviewStatus().equals(REJECT.getCode())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请检查测试报告是否上传，审核是否通过");
+        }
+
+        testPlan.setIsArchive(true);
+        if (!this.updateById(testPlan)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "存档失败");
+        }
+
+        return Result.success("存档成功");
     }
 
 }

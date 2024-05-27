@@ -61,7 +61,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称不能为空");
         }
 
-        if (device.getTypeId() == null) {
+        if (device.getType() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 
@@ -126,7 +126,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
                 .like((!Objects.isNull(device.getDevName())), Device::getDevName, device.getDevName())
                 .eq((!Objects.isNull(device.getStatus())), Device::getStatus, device.getStatus())
                 .eq((!Objects.isNull(device.getDeviceUsage())), Device::getDeviceUsage, device.getDeviceUsage())
-                .eq((!Objects.isNull(device.getTypeId())), Device::getTypeId, device.getTypeId())
+                .eq((!Objects.isNull(device.getType())), Device::getType, device.getType())
                 .ge((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, minCost)
                 .le((!Objects.isNull(device.getPurchaseCost())), Device::getPurchaseCost, maxCost)
                 .between((!Objects.isNull(device.getPurchaseDate())), Device::getPurchaseDate, minPurchaseDate, maxPurchaseDate)
@@ -142,7 +142,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         List<DeviceDTO> deviceDTOList = devicePage.getRecords().stream().map(item -> {
             LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
-            lqw.eq(DictionaryData::getDictionaryDataId, item.getTypeId()).select(DictionaryData::getLabel);
+            lqw.eq(DictionaryData::getDictionaryDataId, item.getType()).select(DictionaryData::getLabel);
             DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
             DeviceDTO deviceDTO = new DeviceDTO();
             deviceDTO.setTypeName(dictionaryData.getLabel());
@@ -169,7 +169,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(DictionaryData::getDictionaryDataId, device.getTypeId())
+        lqw.eq(DictionaryData::getDictionaryDataId, device.getType())
                 .select(DictionaryData::getLabel);
         DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
 
@@ -248,7 +248,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称不能为空");
         }
 
-        if (device.getTypeId() == null) {
+        if (device.getType() == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
         }
 

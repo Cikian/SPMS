@@ -55,7 +55,7 @@ public class TestPlanController {
                                @RequestParam(defaultValue = "1") Integer page,
                                @RequestParam(defaultValue = "10") Integer size,
                                @RequestParam(defaultValue = "3") Integer reviewStatus) {
-        return testPlanService.listMySubmit(testPlan,page,size,reviewStatus);
+        return testPlanService.listMySubmit(testPlan, page, size, reviewStatus);
     }
 
     @GetMapping("/queryById/{id}")
@@ -72,12 +72,17 @@ public class TestPlanController {
 
     @PostMapping("/updateReviewStatus/{testPlanId}/{reviewResult}")
     @PreAuthorize("hasAuthority('testPlan:update:review') ||  hasRole('system_admin')")
-    public Result updateReviewStatus(@PathVariable Long testPlanId, @PathVariable Integer reviewResult) {
+    public Result updateReviewStatus(@PathVariable("testPlanId") Long testPlanId, @PathVariable("reviewResult") Integer reviewResult) {
         return testPlanService.updateReviewStatus(testPlanId, reviewResult);
     }
 
     @GetMapping("/byDemand/{demandId}")
     public Result byDemand(@PathVariable("demandId") Long demandId) {
         return testPlanService.queryByDemandId(demandId);
+    }
+
+    @PostMapping("/finishTestPlan/{testPlanId}")
+    public Result finishTestPlan(@PathVariable("testPlanId") Long testPlanId) {
+        return testPlanService.finishTestPlan(testPlanId);
     }
 }

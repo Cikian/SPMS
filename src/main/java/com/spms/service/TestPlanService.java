@@ -24,4 +24,6 @@ public interface TestPlanService {
     Result listAllPendingByProId(Long proId);
 
     Result listMySubmit(TestPlan testPlan, Integer page, Integer size, Integer reviewStatus);
+
+    Result finishTestPlan(Long testPlanId);
 }

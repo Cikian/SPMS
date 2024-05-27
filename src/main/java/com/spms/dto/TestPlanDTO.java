@@ -21,4 +21,5 @@ public class TestPlanDTO {
     private String creatorAvatar;
     private LocalDateTime createTime;
     private Integer reviewStatus;
+    private Boolean isArchive;
 }

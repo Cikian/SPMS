@@ -23,9 +23,6 @@ import static com.spms.constants.SystemConstants.NOT_DELETE;
 @Service
 public class DictionaryTypeServiceImpl extends ServiceImpl<DictionaryTypeMapper, DictionaryType> implements DictionaryTypeService {
 
-    @Autowired
-    private DictionaryDataMapper dictionaryDataMapper;
-
     @Override
     public Result add(DictionaryType dictionaryType) {
         LambdaQueryWrapper<DictionaryType> dictionaryTypeLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -42,8 +39,7 @@ public class DictionaryTypeServiceImpl extends ServiceImpl<DictionaryTypeMapper,
         Page<DictionaryType> dictionaryTypePage = new Page<>(page, size);
 
         LambdaQueryWrapper<DictionaryType> dictionaryTypeLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        dictionaryTypeLambdaQueryWrapper.like((!Objects.isNull(dictionaryType.getDictionaryTypeName())), DictionaryType::getDictionaryTypeName, dictionaryType.getDictionaryTypeName())
-                .eq(DictionaryType::getDelFlag,NOT_DELETE);
+        dictionaryTypeLambdaQueryWrapper.like((!Objects.isNull(dictionaryType.getDictionaryTypeName())), DictionaryType::getDictionaryTypeName, dictionaryType.getDictionaryTypeName());
         this.page(dictionaryTypePage, dictionaryTypeLambdaQueryWrapper);
 
         if (dictionaryTypePage.getRecords().isEmpty()) {
@@ -60,7 +56,7 @@ public class DictionaryTypeServiceImpl extends ServiceImpl<DictionaryTypeMapper,
         }
 
         DictionaryType dictionaryType = this.getById(dictionaryTypeId);
-        if (dictionaryType == null || dictionaryType.getDelFlag()) {
+        if (dictionaryType == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "数据不存在");
         }
         return Result.success(dictionaryType);

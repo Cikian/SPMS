@@ -20,6 +20,8 @@ public class TestPlan {
 
     private Integer progress;
 
+    private Boolean isArchive;
+
     private Long head;
 
     private Integer reviewStatus;
