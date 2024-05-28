@@ -23,44 +23,63 @@ public class BackupServiceImpl implements BackupService {
     private static final String DB_NAME = "spms";
     private static final String DB_USER = "root";
     private static final String DB_PASS = "chen0809";
-    //    linux路径
-    private static final String DB_INIT_DIR = "/usr/spms/db_backup/init_backup";
-    private static final String DB_FULL_DIR = "/usr/spms/db_backup/full_backup";
 
+    //    jar包所在目录
     ApplicationHome h = new ApplicationHome(getClass());
     File jarF = h.getSource();
-    String dirPath = jarF.getParentFile().toString() + "/backup/";
+    String dirPath = jarF.getParentFile().toString() + "/backup";
 
     @Override
-    public void performInitialBackup() {
-        String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-
-        File filePath = new File(dirPath + "full");
+    public void performInitialBackup() throws IOException {
+        //初始化备份文件路径
+        String initBackupFilePath = dirPath + "/init_backup";
+        //如果有过初始备份文件，则不再备份
+        File initFile = new File(initBackupFilePath);
+        if (initFile.exists() && initFile.isDirectory()) {
+            File[] files = initFile.listFiles();
+            if (files != null && files.length > 0) {
+                return;
+            }
+        }
+        //备份文件夹不存在则创建
+        File filePath = new File(initBackupFilePath);
         if (!filePath.exists()) {
             filePath.mkdirs();
         }
-        String initBackupDir = dirPath + "full";
-        String initBackupFile = initBackupDir + "/initial_backup_" + timestamp + ".sql";
-
-//        linux路径
-//        String backupFile = DB_INIT_DIR + "/initial_backup_" + timestamp + ".sql";
-
+        String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String initBackupFile = initBackupFilePath + "/init_backup_" + timestamp + ".sql";
         String command = String.format("mysqldump -h %s -P %s -u %s -p%s %s > %s", DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME, initBackupFile);
-
+        //执行初始化备份命令
         Map<String, String> host = getHost();
-        try {
-            Runtime.getRuntime().exec(new String[]{host.get("shell"), host.get("execParam"), command});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Runtime.getRuntime().exec(new String[]{host.get("shell"), host.get("execParam"), command});
     }
 
     @Override
-    public Result getBackupFileList() {
-//        linux路径
-//        File file = new File(DB_FULL_DIR);
+    public Result restoreInit() {
+        //获取初始化备份文件
+        File file = new File(dirPath + "/init_backup");
+        if (!file.exists() || !file.isDirectory()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "初始化备份文件不存在");
+        }
+        File[] files = file.listFiles();
+        if (files == null || files.length == 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "初始化备份文件不存在");
+        }
 
-        File file = new File(dirPath + "full");
+        try {
+            String command = String.format("mysql -h %s -P %s -u %s -p%s %s < %s", DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME, files[0].getAbsolutePath());
+            Map<String, String> host = getHost();
+            Runtime.getRuntime().exec(new String[]{host.get("shell"), host.get("execParam"), command});
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return Result.success("恢复成功");
+    }
+
+    @Override
+    public Result getFullBackupFileList() {
+        File file = new File(dirPath + "/full_backup");
+
         if (file.exists() && file.isDirectory()) {
             File[] files = file.listFiles();
             if (files == null || files.length == 0) {
@@ -82,13 +101,14 @@ public class BackupServiceImpl implements BackupService {
                 return backupDTO;
             }).sorted(Comparator.comparing(BackupDTO::getCreateTime).reversed()).toList();
             return Result.success(backupDTOList);
+        } else {
+            return Result.success("暂无数据");
         }
-        return Result.success();
     }
 
     @Override
     public Result restore(BackupDTO backupDTO) {
-        String restoreFile = dirPath + "full/" + backupDTO.getFileName() + ".sql";
+        String restoreFile = dirPath + "full_backup/" + backupDTO.getFileName() + ".sql";
         try {
             String currentChecksum = FileCheckCodeUtil.generateChecksum(restoreFile);
             if (!currentChecksum.equals(backupDTO.getCheckCode())) {
@@ -103,18 +123,6 @@ public class BackupServiceImpl implements BackupService {
             throw new RuntimeException(e);
         }
 
-        return Result.success("恢复成功");
-    }
-
-    @Override
-    public Result restoreInit() {
-        try {
-            String command = String.format("mysql -h %s -P %s -u %s -p%s %s < %s", DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME, dirPath + "init/initial_backup_20240519091341.sql");
-            Map<String, String> host = getHost();
-            Runtime.getRuntime().exec(new String[]{host.get("shell"), host.get("execParam"), command});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
         return Result.success("恢复成功");
     }
 

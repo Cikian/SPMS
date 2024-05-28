@@ -3,11 +3,13 @@ package com.spms.service;
 import com.spms.dto.BackupDTO;
 import com.spms.dto.Result;
 
+import java.io.IOException;
+
 public interface BackupService {
 
-    void performInitialBackup();
+    void performInitialBackup() throws IOException;
 
-    Result getBackupFileList();
+    Result getFullBackupFileList();
 
     Result restore(BackupDTO backupDTO);
 

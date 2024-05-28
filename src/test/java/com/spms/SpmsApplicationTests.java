@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.sql.DataSource;
+import java.io.File;
 import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,13 +26,11 @@ class SpmsApplicationTests {
     @SneakyThrows
     @Test
     void testDruid() {
-//        Connection connection =   dataSource.getConnection();
-//        System.out.println(connection);
-//        DruidDataSource druidDataSource = (DruidDataSource) dataSource;
-//        System.out.println("druidDataSource 数据源最大连接数：" + druidDataSource.getMaxActive());
-//        System.out.println("druidDataSource 数据源初始化连接数：" + druidDataSource.getInitialSize());
-//        long timeBetweenEvictionRunsMillis = druidDataSource.getTimeBetweenEvictionRunsMillis();
-//        connection.close();
+        File file = new File("E:\\IDEA\\Code\\SPMS\\target\\backup\\init");
+        File[] files = file.listFiles();
+        File file1 = files[0];
+        System.out.println(file1);
+        System.out.println(file1.getName());
 
     }
 
