@@ -108,21 +108,21 @@ public class BackupServiceImpl implements BackupService {
 
     @Override
     public Result restore(BackupDTO backupDTO) {
-        String restoreFile = dirPath + "full_backup/" + backupDTO.getFileName() + ".sql";
+        //获取备份文件
+        String restoreFile = dirPath + "/full_backup/" + backupDTO.getFileName() + ".sql";
+        //校验备份文件
         try {
             String currentChecksum = FileCheckCodeUtil.generateChecksum(restoreFile);
             if (!currentChecksum.equals(backupDTO.getCheckCode())) {
                 return Result.fail(ResultCode.FAIL.getCode(), "校验码不匹配，文件可能已损坏或被篡改");
             }
-
+            //执行恢复命令
             String command = String.format("mysql -h %s -P %s -u %s -p%s %s < %s", DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME, restoreFile);
             Map<String, String> host = getHost();
             Runtime.getRuntime().exec(new String[]{host.get("shell"), host.get("execParam"), command});
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
         return Result.success("恢复成功");
     }
 

@@ -18,20 +18,4 @@ import java.util.Random;
 
 @SpringBootTest
 class SpmsApplicationTests {
-    @Autowired
-    private DataSource dataSource;
-
-    @Autowired
-    private PasswordEncoder bCryptPasswordEncoder;
-    @SneakyThrows
-    @Test
-    void testDruid() {
-        File file = new File("E:\\IDEA\\Code\\SPMS\\target\\backup\\init");
-        File[] files = file.listFiles();
-        File file1 = files[0];
-        System.out.println(file1);
-        System.out.println(file1.getName());
-
-    }
-
 }

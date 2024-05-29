@@ -45,17 +45,21 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
         if (projectId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
+        // 查询符合条件的用户
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.like(User::getNickName, userName);
+        List<User> users = userMapper.selectList(userLambdaQueryWrapper);
+        // 如果没有符合条件的用户，则直接返回
+        if (users == null || users.isEmpty()) {
+            return Result.fail(ResultCode.FAIL.getCode(), "未找到目标用户");
+        }
+        // 查询项目中的所有员工
         LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
         projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, projectId)
                 .eq(ProjectResource::getResourceType, ResourceType.EMPLOYEE.getCode())
                 .eq(ProjectResource::getActualCost, BigDecimal.ZERO);
         List<ProjectResource> projectResourceList = this.list(projectResourceLambdaQueryWrapper);
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.like(User::getNickName, userName);
-        List<User> users = userMapper.selectList(userLambdaQueryWrapper);
-        if (users == null || users.isEmpty()) {
-            return Result.fail(ResultCode.FAIL.getCode(), "未找到该用户");
-        }
+        // 过滤出符合条件的项目员工
         projectResourceList = projectResourceList.stream().filter(item -> {
             for (User user : users) {
                 if (item.getResourceId().equals(user.getUserId())) {
@@ -64,6 +68,7 @@ public class ProjectResourceServiceImpl extends ServiceImpl<ProjectResourceMappe
             }
             return false;
         }).toList();
+        // 封装数据
         List<ProjectResourceDTO> projectResourceDTOS = projectResourceList.stream().map(item -> {
             ProjectResourceDTO projectResourceDTO = new ProjectResourceDTO();
             User user = userMapper.selectById(item.getResourceId());

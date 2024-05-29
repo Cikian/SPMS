@@ -36,10 +36,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setReadFlag(false);
         notification.setDelFlag(NOT_DELETE);
 
-        boolean isSuccess = this.save(notification);
-        if (!isSuccess) {
+        if (!this.save(notification)) {
             return false;
         }
+        // 将通知id放入redis中
         redisTemplate.opsForList().leftPush(NOTIFICATION_KEY + receiverId, notification.getNotificationId().toString());
         return true;
     }
@@ -56,14 +56,13 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public Result getNotification() {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
-
+        // 从redis中获取通知id
         List<String> range = redisTemplate.opsForList().range(NOTIFICATION_KEY + userId, 0, -1);
         if (range == null || range.isEmpty()) {
             return Result.success("暂无最新通知");
         }
-
+        // 根据通知id查询通知内容
         List<Notification> notificationList = range.stream().map(notificationIdStr -> this.getById(Long.valueOf(notificationIdStr))).toList();
-
         return Result.success(notificationList);
     }
 

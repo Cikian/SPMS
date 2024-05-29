@@ -84,18 +84,18 @@ public class OssServiceImpl implements OssService {
 
     @Override
     public Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException {
-        LambdaQueryWrapper<TestReport> testReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        testReportLambdaQueryWrapper.eq(TestReport::getTestPlanId, testPlanId);
-        TestReport testReport = testReportMapper.selectOne(testReportLambdaQueryWrapper);
-
+        // 判断是否有权限上传测试报告
         TestPlan testPlan = testPlanMapper.selectById(testPlanId);
-
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
         if (!Objects.equals(userId, testPlan.getHead())) {
             return Result.fail(ResultCode.FAIL.getCode(), "无权限上传测试报告");
         }
-
+        // 判断是否已经上传过测试报告
+        LambdaQueryWrapper<TestReport> testReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        testReportLambdaQueryWrapper.eq(TestReport::getTestPlanId, testPlanId);
+        TestReport testReport = testReportMapper.selectOne(testReportLambdaQueryWrapper);
+        // 没有上传过测试报告
         if (testReport == null) {
             String url = uploadFileAndReturnUrl(file, UPLOAD_TEST_REPORT, null);
             TestReport newTestReport = new TestReport();
@@ -105,14 +105,15 @@ public class OssServiceImpl implements OssService {
             newTestReport.setReviewStatus(UNAUDITED.getCode());
             newTestReport.setDelFlag(NOT_DELETE);
             testReportMapper.insert(newTestReport);
-            notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")", "测试报告已上传，请尽快审核");
+            notificationService.addNotification(testPlan.getCreateBy(), testPlan.getPlanName() + "(" + file.getOriginalFilename() + ")",
+                    "测试报告已上传，请尽快审核");
             return Result.success("上传成功", url);
         }
 
         if (!testReport.getDelFlag()) {
             return Result.fail(ResultCode.FAIL.getCode(), "该测试计划已包含测试报告，如需替换请删除后上传");
         }
-
+        // 获取原测试报告文件名
         String originTestReportUrl = testReport.getReportFile();
         String[] split = originTestReportUrl.split("/");
         String originTestReportName = split[split.length - 1];
@@ -140,24 +141,24 @@ public class OssServiceImpl implements OssService {
     }
 
     private static String uploadFileAndReturnUrl(MultipartFile file, String type, String originFileName) throws IOException {
+        // 创建OSSClient实例
         OSS ossClient = new OSSClientBuilder().build(OSSConfig.END_POINT, OSSConfig.ACCESS_KEY_ID, OSSConfig.ACCESS_KEY_SECRET);
-
+        // 生成文件名
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         String fileName = type + uuid + file.getOriginalFilename();
-
+        // 上传文件
         PutObjectRequest putObjectRequest = new PutObjectRequest(OSSConfig.BUCKET_NAME, fileName, new ByteArrayInputStream(file.getBytes()));
         try {
             ossClient.putObject(putObjectRequest);
             if (originFileName != null) {
                 ossClient.deleteObject(OSSConfig.BUCKET_NAME, originFileName);
             }
-        } catch (OSSException e) {
-            System.out.println(e.getErrorCode());
-        } catch (ClientException e) {
-            System.out.println(e.getErrorCode());
+        } catch (OSSException | ClientException e) {
+            throw new RuntimeException("上传失败");
         } finally {
             ossClient.shutdown();
         }
+        // 返回文件URL
         return "https://" + OSSConfig.BUCKET_NAME + "." + OSSConfig.END_POINT + "/" + fileName;
     }
 }
