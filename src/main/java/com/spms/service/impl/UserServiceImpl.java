@@ -79,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String key = USER_LOGIN_FAIL + user.getUserName();
         String value = redisTemplate.opsForValue().get(key);
         if (value != null && Integer.parseInt(value) >= 5) {
-            return Result.fail(ResultCode.FAIL.getCode(), "登录失败次数过多，请10分钟后再试");
+            return Result.fail(ResultCode.FAIL.getCode(), "账号已被锁定，请10分钟后再试");
         }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
         Authentication authenticate = authentication.authenticate(authenticationToken);
