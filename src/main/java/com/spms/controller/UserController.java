@@ -9,6 +9,7 @@ import com.spms.dto.UserDTO;
 import com.spms.entity.User;
 import com.spms.mapper.RoleMapper;
 import com.spms.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,7 +28,8 @@ public class UserController {
 
     @SneakyThrows
     @PostMapping("/login")
-    public Result login(@RequestBody User user) {
+    public Result login(@RequestBody User user, HttpServletRequest request) {
+        request.setAttribute("userName",user.getUserName());
         return userService.login(user);
     }
 
@@ -37,19 +39,16 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('system_admin') || hasAuthority('sys:user:add')")
     public Result add(@RequestBody User user) {
         return userService.add(user);
     }
 
     @PostMapping("/delete")
-    @PreAuthorize("hasRole('system_admin')")
     public Result delete(@RequestBody Long[] ids) {
         return userService.delete(ids);
     }
 
     @PostMapping("/list")
-    @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody UserDTO userDTO,
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
@@ -62,7 +61,6 @@ public class UserController {
     }
 
     @PostMapping("/updateStatus")
-    @PreAuthorize("hasRole('system_admin')")
     public Result updateStatus(@RequestBody UserDTO userDTO) {
         return userService.updateStatus(userDTO);
     }
@@ -75,6 +73,11 @@ public class UserController {
     @PostMapping("/verifyEmail")
     public Result verifyEmail(@RequestBody EmailVerifyDTO emailVerifyDTO) {
         return userService.verifyEmail(emailVerifyDTO);
+    }
+
+    @PostMapping("/retrievePassword")
+    public Result retrievePassword(@RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        return userService.retrievePassword(passwordUpdateDTO);
     }
 
     @PostMapping("/updatePassword")

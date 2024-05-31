@@ -76,6 +76,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result login(User user) {
+        String key = USER_LOGIN_FAIL + user.getUserName();
+        String value = redisTemplate.opsForValue().get(key);
+        if (value != null && Integer.parseInt(value) >= 5) {
+            return Result.fail(ResultCode.FAIL.getCode(), "登录失败次数过多，请10分钟后再试");
+        }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
         Authentication authenticate = authentication.authenticate(authenticationToken);
 
@@ -87,7 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String userId = loginUser.getUser().getUserId().toString();
 
         if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userId))) {
-            return Result.fail(ResultCode.FAIL.getCode(), "该账号已在其他地方登录");
+            return Result.fail(ResultCode.FAIL.getCode(), "该账号已在其它地方登录");
         }
 
         String jwt = JwtUtils.createJWT(userId);
@@ -179,7 +184,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         Boolean sent = redisTemplate.hasKey(EMAIL_CODE + email);
         if (Boolean.TRUE.equals(sent)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "验证码已发送，请勿重复发送");
+            return Result.fail(ResultCode.FAIL.getCode(), "验证码已发送，请勿重复获取");
         }
 
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -208,10 +213,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String code = redisTemplate.opsForValue().get(EMAIL_CODE + emailVerifyDTO.getEmail());
         if (StrUtil.isEmpty(code)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "无效验证码");
+            return Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
         }
         boolean isSuccess = StrUtil.equals(code, emailVerifyDTO.getCode());
-        return isSuccess ? Result.success("验证通过") : Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
+        return isSuccess ? Result.success() : Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
     }
 
     @Override
@@ -221,13 +226,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
-        }
-
         boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
         if (!passwordCheck) {
-            return Result.fail(ResultCode.FAIL.getCode(), "密码格式错误");
+            return Result.fail(ResultCode.FAIL.getCode(), "密码必须包含大小写字母、数字、特殊字符，且长度不少于12位");
+        }
+
+        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
         }
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -477,9 +482,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             //获取用户的所有权限
             List<String> menuList = menuMapper.selectUserHasPermission(projectMember);
             menuList = menuList.stream().distinct().toList();
-            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.toString().contains("test")){
+            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.toString().contains("test")) {
                 queryUserById(users, projectMember);
-            } else if (type.equals(ProjectMemberType.DEVELOPER.getCode()) && menuList.contains("dev")){
+            } else if (type.equals(ProjectMemberType.DEVELOPER.getCode()) && menuList.contains("dev")) {
                 queryUserById(users, projectMember);
             }
         }
@@ -536,6 +541,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return Result.success(list);
+    }
+
+    @Override
+    @Transactional
+    public Result retrievePassword(PasswordUpdateDTO passwordUpdateDTO) {
+        if (StrUtil.isEmpty(passwordUpdateDTO.getNewPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
+        if (!passwordCheck) {
+            return Result.fail(ResultCode.FAIL.getCode(), "密码必须包含大小写字母、数字、特殊字符，且长度不少于12位");
+        }
+
+        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
+        }
+
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.set(User::getPassword, bCryptPasswordEncoder.encode(passwordUpdateDTO.getNewPassword()))
+                .eq(User::getEmail, passwordUpdateDTO.getEmail());
+        if (!this.update(userLambdaUpdateWrapper)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        sendMailMessageService.sendEmail(javaMailSender, passwordUpdateDTO.getEmail(), "SPMS密码重置", "【SPMS】您的密码已重置成功，请妥善保管");
+        redisTemplate.delete(EMAIL_CODE + passwordUpdateDTO.getEmail());
+        return Result.success("修改成功");
     }
 
 }

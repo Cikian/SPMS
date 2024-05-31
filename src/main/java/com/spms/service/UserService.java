@@ -39,4 +39,6 @@ public interface UserService {
     Result queryProjectMembers(Long projectId, Integer type);
 
     Result queryCanAddToProjectMember(Long proId);
+
+    Result retrievePassword(PasswordUpdateDTO passwordUpdateDTO);
 }
