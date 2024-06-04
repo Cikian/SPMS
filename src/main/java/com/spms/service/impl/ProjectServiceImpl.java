@@ -126,6 +126,10 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
         lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
         BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+
+        if (dailyCost == null || dailyCost.equals(BigDecimal.ZERO)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请先为员工设置工时费用");
+        }
         long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
         BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
 
@@ -140,48 +144,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         projectResource.setEstimateCost(estimateCost);
         projectResourceMapper.insert(projectResource);
         // 发送通知
-        notificationService.addNotification(addProResourceDTO.getMemberId(), "您已被添加到项目：" + project.getProName(), "加入项目");
-        return Result.success();
-    }
-
-    @Override
-    @Transactional
-    public Result addDevice(AddProResourceDTO addProResourceDTO) {
-        Project project = projectMapper.selectById(addProResourceDTO.getProId());
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = loginUser.getUser().getUserId();
-        if (!userId.equals(project.getCreateBy())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
-        }
-
-        ProjectResource projectResource = new ProjectResource();
-        projectResource.setProjectId(addProResourceDTO.getProId());
-        projectResource.setResourceId(addProResourceDTO.getMemberId());
-        projectResource.setResourceType(ResourceType.DEVICE.getCode());
-        projectResource.setEstimateStartTime(addProResourceDTO.getEstimateStartTime());
-        projectResource.setEstimateEndTime(addProResourceDTO.getEstimateEndTime());
-        projectResource.setUseType(1);
-        projectResource.setActualCost(BigDecimal.ZERO);
-        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
-
-        long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
-        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
-        BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
-        projectResource.setEstimateCost(estimateCost);
-
-        if (projectResourceMapper.insert(projectResource) < 0) {
-            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
-        }
-
-        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.OCCUPIED.getCode())
-                .set(Device::getUpdateTime, LocalDateTime.now())
-                .set(Device::getUpdateBy, userId)
-                .eq(Device::getDevId, addProResourceDTO.getMemberId());
-        if (deviceMapper.update(deviceLambdaUpdateWrapper) < 0) {
-            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
-        }
+        notificationService.addNotification(addProResourceDTO.getMemberId(),
+                "您已被添加到项目：" + project.getProName(), "加入项目");
         return Result.success();
     }
 
@@ -204,6 +168,51 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         projectResource.setActualEndTime(deleteProResourceDTO.getActualEndTime());
         projectResource.setActualCost(actualCost);
         projectResourceMapper.updateById(projectResource);
+        return Result.success();
+    }
+
+    @Override
+    @Transactional
+    public Result addDevice(AddProResourceDTO addProResourceDTO) {
+        Project project = projectMapper.selectById(addProResourceDTO.getProId());
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (!userId.equals(project.getCreateBy())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
+        }
+
+        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
+        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+        if (dailyCost == null || dailyCost.equals(BigDecimal.ZERO)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请先为设备设置工时费用");
+        }
+
+        ProjectResource projectResource = new ProjectResource();
+        projectResource.setProjectId(addProResourceDTO.getProId());
+        projectResource.setResourceId(addProResourceDTO.getMemberId());
+        projectResource.setResourceType(ResourceType.DEVICE.getCode());
+        projectResource.setEstimateStartTime(addProResourceDTO.getEstimateStartTime());
+        projectResource.setEstimateEndTime(addProResourceDTO.getEstimateEndTime());
+        projectResource.setUseType(1);
+        projectResource.setActualCost(BigDecimal.ZERO);
+
+        long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
+        BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
+        projectResource.setEstimateCost(estimateCost);
+
+        if (projectResourceMapper.insert(projectResource) < 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+        }
+
+        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.OCCUPIED.getCode())
+                .set(Device::getUpdateTime, LocalDateTime.now())
+                .set(Device::getUpdateBy, userId)
+                .eq(Device::getDevId, addProResourceDTO.getMemberId());
+        if (deviceMapper.update(deviceLambdaUpdateWrapper) < 0) {
+            return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
+        }
         return Result.success();
     }
 

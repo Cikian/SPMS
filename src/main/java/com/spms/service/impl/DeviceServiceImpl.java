@@ -61,14 +61,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称不能为空");
         }
 
-        if (device.getType() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
-        }
-
-        if (device.getPurchaseCost() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备价格不能为空");
-        }
-
         LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
         deviceLambdaQueryWrapper.eq(Device::getDevName, device.getDevName())
                 .eq(Device::getDelFlag, NOT_DELETE);
@@ -90,8 +82,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         RatedTimeCost ratedTimeCost = new RatedTimeCost();
         ratedTimeCost.setResourceId(device.getDevId());
         ratedTimeCost.setResourceType(DEVICE.getCode());
-        ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
-        ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
@@ -169,11 +159,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(DictionaryData::getDictionaryDataId, device.getType())
-                .select(DictionaryData::getLabel);
+        lqw.eq(DictionaryData::getDictionaryDataId, device.getType());
         DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
 
         DeviceDTO deviceDTO = new DeviceDTO();
+        deviceDTO.setTypeId(dictionaryData.getDictionaryDataId());
         deviceDTO.setTypeName(dictionaryData.getLabel());
         BeanUtils.copyProperties(device, deviceDTO);
 

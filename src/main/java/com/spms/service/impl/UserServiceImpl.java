@@ -164,8 +164,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         RatedTimeCost ratedTimeCost = new RatedTimeCost();
         ratedTimeCost.setResourceId(user.getUserId());
         ratedTimeCost.setResourceType(EMPLOYEE.getCode());
-        ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
-        ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {

@@ -90,7 +90,8 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, project.getProId());
         List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
         //过滤出项目中的测试人员，只有项目的测试人员才能添加测试计划
-        List<ProjectResource> proAllMembers = projectResources.stream().filter(item -> Objects.equals(item.getResourceType(), ResourceType.EMPLOYEE.getCode())).toList();
+        List<ProjectResource> proAllMembers = projectResources.stream().
+                filter(item -> Objects.equals(item.getResourceType(), ResourceType.EMPLOYEE.getCode())).toList();
         List<ProjectResource> proAllTestMember = proAllMembers.stream().filter(item -> {
             Long memberId = item.getResourceId();
             LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -118,7 +119,8 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         }
         //发送审核通知给项目创建人
         Boolean addSuccess = notificationService
-                .addNotification(project.getCreateBy(), testPlan.getPlanName() + "(" + project.getProName() + ")", "您有一条新的测试计划需要审核");
+                .addNotification(project.getCreateBy(),
+                        testPlan.getPlanName() + "(" + project.getProName() + ")", "您有一条新的测试计划需要审核");
         if (!addSuccess) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
@@ -473,7 +475,6 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         if (testPlanId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
-
         TestPlan testPlan = this.getById(testPlanId);
         //判断当前用户是否是测试计划负责人
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -489,7 +490,8 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
         LambdaQueryWrapper<TestReport> reportLambdaQueryWrapper = new LambdaQueryWrapper<>();
         reportLambdaQueryWrapper.eq(TestReport::getTestPlanId, testPlanId);
         TestReport testReport = testReportMapper.selectOne(reportLambdaQueryWrapper);
-        if (testReport == null || testReport.getReviewStatus().equals(PENDING.getCode()) || testReport.getReviewStatus().equals(REJECT.getCode())) {
+        if (testReport == null || testReport.getReviewStatus().equals(PENDING.getCode())
+                || testReport.getReviewStatus().equals(REJECT.getCode())) {
             return Result.fail(ResultCode.FAIL.getCode(), "请检查测试报告是否上传，审核是否通过");
         }
         testPlan.setIsArchive(true);
