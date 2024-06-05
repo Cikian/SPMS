@@ -84,7 +84,7 @@ public class OssServiceImpl implements OssService {
 
     @Override
     public Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException {
-        // 判断是否有权限上传测试报告
+        // 判断是否有权限上传测试报告，只有测试计划负责人有权限上传
         TestPlan testPlan = testPlanMapper.selectById(testPlanId);
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();

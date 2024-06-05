@@ -3,6 +3,7 @@ package com.spms.controller;
 import com.spms.dto.Result;
 import com.spms.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +32,7 @@ public class NotificationController {
     }
 
     @GetMapping("/readNotification/{notificationId}")
+    @PreAuthorize("hasAuthority('notification:update') || hasRole('system_admin')")
     public Result readNotification(@PathVariable("notificationId") Long notificationId) {
         return notificationService.readNotification(notificationId);
     }

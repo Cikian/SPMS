@@ -4,6 +4,7 @@ import com.spms.dto.Result;
 import com.spms.service.OssService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +25,7 @@ public class CommonController {
     }
 
     @PostMapping("/upload/testReport")
+    @PreAuthorize("hasAuthority('testReport:add') ||  hasRole('system_admin')")
     public Result uploadFileTestReport(MultipartFile file, Long testPlanId, HttpServletRequest request) throws IOException {
         return ossService.uploadFileTestReport(file, testPlanId, request);
     }

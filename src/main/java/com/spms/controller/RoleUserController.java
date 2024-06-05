@@ -16,29 +16,15 @@ public class RoleUserController {
     private RoleUserService roleUserService;
 
     @PostMapping("/assignRole")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('sys:roleUser:assignRole') || hasRole('system_admin')")
     public Result assignRole(@RequestParam("userId") Long userId,
                              @RequestParam("roleIds") List<Long> roleIds) {
         return roleUserService.assignRole(userId, roleIds);
     }
 
-    //删除该角色所有用户角色关联信息
-    @PostMapping("/delete/{roleId}")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result delete(@PathVariable("roleId") Long roleId) {
-        return roleUserService.delete(roleId);
-    }
-
     @GetMapping("/queryUserHasRole/{userId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryUserHasRole(@PathVariable("userId") Long userId) {
         return roleUserService.queryUserHasRole(userId);
-    }
-
-    @GetMapping("/queryUserListByRoleId/{roleId}")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result queryUserListByRoleId(@PathVariable("roleId") Long roleId) {
-        return roleUserService.queryUserListByRoleId(roleId);
     }
 
 }

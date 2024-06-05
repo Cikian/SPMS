@@ -16,14 +16,13 @@ public class RoleMenuController {
     private RoleMenuService roleMenuService;
 
     @PostMapping("/assignPermissions")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('sys:roleMenu:assignPermissions') || hasRole('system_admin')")
     public Result assignMenu(@RequestParam("roleId") Long roleId,
                              @RequestParam("menuIds") List<Long> menuIds) {
         return roleMenuService.assignPermissions(roleId, menuIds);
     }
 
     @GetMapping("/queryRoleHasMenu/{roleId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryRoleHasMenu(@PathVariable("roleId") Long roleId) {
         return roleMenuService.queryRoleHasMenu(roleId);
     }

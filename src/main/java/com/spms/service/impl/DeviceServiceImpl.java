@@ -181,40 +181,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
-        if (device1.getStatus().equals(device.getStatus())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备状态未改变");
-        }
-
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        device.setUpdateBy(loginUser.getUser().getUserId());
-
-        boolean isSuccess = this.updateById(device);
-
-        if (!isSuccess) {
+        if (!this.updateById(device)) {
             return Result.fail(ResultCode.FAIL.getCode(), "更新失败");
         }
         return Result.success("更新成功");
-    }
-
-    @Override
-    public Result releaseAllResource(Long proId) {
-        if (proId == null) {
-            return new Result(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, proId)
-                .eq(ProjectResource::getResourceType, DEVICE.getCode());
-        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
-
-        List<Long> proUseDeviceIds = projectResources.stream().map(ProjectResource::getResourceId).toList();
-        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.FREE.getCode())
-                .in(Device::getDevId, proUseDeviceIds);
-        if (!this.update(deviceLambdaUpdateWrapper)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "释放失败");
-        }
-        return Result.success("释放成功");
     }
 
     @Override

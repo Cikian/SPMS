@@ -128,10 +128,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getEmail, email)
-                .eq(User::getDelFlag, NOT_DELETE);
+        userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
+                .and(i -> i.eq(User::getEmail, email)
+                        .or()
+                        .eq(User::getNickName, user.getNickName()));
+
         if (this.count(userLambdaQueryWrapper) > 0) {
-            return Result.fail(ResultCode.FAIL.getCode(), "邮箱已存在");
+            return Result.fail(ResultCode.FAIL.getCode(), "邮箱或姓名已存在");
         }
 
         String password = RandomStringGenerator.generateNumber(8);
@@ -379,22 +382,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User currentUser = loginUser.getUser();
 
-        if (Objects.equals(user.getNickName(), currentUser.getNickName()) && Objects.equals(user.getGender(), currentUser.getGender())) {
-            return Result.success("信息未发生修改");
-        }
-
-        if (!nickNameCheck(user.getNickName())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "昵称格式错误，请重新输入");
-        }
-
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.eq(User::getUserId, currentUser.getUserId())
-                .set(User::getNickName, user.getNickName())
                 .set(User::getGender, user.getGender());
         this.update(userLambdaUpdateWrapper);
 
         currentUser.setGender(user.getGender());
-        currentUser.setNickName(user.getNickName());
 
         redisTemplate.opsForValue().set(USER_LOGIN + currentUser.getUserId(), JSONObject.toJSONString(loginUser), USER_LOGIN_TTL, TimeUnit.MINUTES);
         return Result.success("修改信息成功");

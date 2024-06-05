@@ -21,7 +21,6 @@ public class DictionaryTypeController {
     }
 
     @PostMapping("/list")
-    @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody DictionaryType dictionaryType,
                        @RequestParam(defaultValue = "1") Integer page,
                        @RequestParam(defaultValue = "10") Integer size) {
@@ -29,7 +28,6 @@ public class DictionaryTypeController {
     }
 
     @GetMapping("/queryById/{dictionaryTypeId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryById(@PathVariable("dictionaryTypeId") Long dictionaryTypeId) {
         return dictionaryTypeService.queryById(dictionaryTypeId);
     }

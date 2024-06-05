@@ -53,14 +53,14 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 response.setHeader("newToken", newToken);
             }
         } catch (Exception e) {
-            WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录！")));
+            WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录")));
             return;
         }
 
 //        解析成功，从redis中获取用户信息
         LoginUser loginUser = JSONObject.parseObject(redisTemplate.opsForValue().get(USER_LOGIN + userId), LoginUser.class);
         if (ObjectUtils.isNull(loginUser)) {
-            WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录！")));
+            WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(UNAUTHORIZED.getCode(), "用户认证失败，请重新登录")));
             return;
         }
 

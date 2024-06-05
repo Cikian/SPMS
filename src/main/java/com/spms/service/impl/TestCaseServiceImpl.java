@@ -207,6 +207,7 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
         return Result.success(resultMap);
     }
 
+    //判断是否有权限操作，只有测试计划的负责人才有权限操作
     private boolean noPermission(TestCase testCase) {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();

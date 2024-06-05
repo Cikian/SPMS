@@ -10,6 +10,4 @@ public interface RatedTimeCostService{
     Result list(RatedTimeCostDTO ratedTimeCost, Integer page, Integer size);
 
     Result queryById(Long ratedTimeCostId);
-
-    Result delete(Long[] ids);
 }

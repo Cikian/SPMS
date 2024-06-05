@@ -24,6 +24,7 @@ public class ProjectController {
     private ProjectService proService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('project:add') || hasRole('system_admin')")
     public Result addProject(@RequestBody AddProjectDTO addProjectDTO) {
         System.out.println(addProjectDTO);
         boolean b = proService.addPro(addProjectDTO);
@@ -34,16 +35,55 @@ public class ProjectController {
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('project:update') || hasRole('system_admin')")
     public Result updateProject(@RequestBody AddProjectDTO addProjectDTO) {
         proService.deleteByProId(addProjectDTO.getProId());
         return addProject(addProjectDTO);
     }
 
     @DeleteMapping
+    @PreAuthorize("hasAuthority('project:delete') || hasRole('system_admin')")
     public Result deleteProject(@RequestParam("id")  Long proId) {
         boolean b = proService.deleteByProId(proId);
         Integer code = b ? ErrorCode.DELETE_SUCCESS : ErrorCode.DELETE_FAIL;
         String msg = b ? "撤回成功" : "撤回失败，请确认项目状态";
+        return new Result(code, msg, null);
+    }
+
+    //添加项目中的成员
+    @PostMapping("/addMember")
+    @PreAuthorize("hasAuthority('project:add:member') || hasRole('system_admin')")
+    public Result addMember(@RequestBody AddProResourceDTO addProResourceDTO) {
+        return proService.addMember(addProResourceDTO);
+    }
+
+    //添加项目中的设备
+    @PostMapping("/addDevice")
+    @PreAuthorize("hasAuthority('project:add:device') || hasRole('system_admin')")
+    public Result addDevice(@RequestBody AddProResourceDTO addProResourceDTO) {
+        return proService.addDevice(addProResourceDTO);
+    }
+
+    //移除项目中的成员
+    @PostMapping("/deleteMember")
+    @PreAuthorize("hasAuthority('project:delete:member') || hasRole('system_admin')")
+    public Result deleteMember(@RequestBody DeleteProResourceDTO deleteProResourceDTO) {
+        return proService.deleteMember(deleteProResourceDTO);
+    }
+
+    //移除项目中的设备
+    @PostMapping("/deleteDevice")
+    @PreAuthorize("hasAuthority('project:delete:device') || hasRole('system_admin')")
+    public Result deleteDevice(@RequestBody DeleteProResourceDTO deleteProResourceDTO) {
+        return proService.deleteDevice(deleteProResourceDTO);
+    }
+
+    @PutMapping("/changeStatus/{proId}/{status}")
+    @PreAuthorize("hasAuthority('project:update:status') || hasRole('system_admin')")
+    public Result changeStatus(@PathVariable("proId") Long proId, @PathVariable("status") Integer status) {
+        boolean b = proService.changeStatus(proId, status);
+        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
+        String msg = b ? "更新成功" : "更新失败";
         return new Result(code, msg, null);
     }
 
@@ -88,34 +128,6 @@ public class ProjectController {
         Integer code = proById != null ? ErrorCode.GET_SUCCESS : ErrorCode.GET_FAIL;
         String msg = proById != null ? "获取成功" : "获取失败";
         return new Result(code, msg, proById);
-    }
-
-    @PostMapping("/addMember")
-    public Result addMember(@RequestBody AddProResourceDTO addProResourceDTO) {
-        return proService.addMember(addProResourceDTO);
-    }
-
-    @PostMapping("/addDevice")
-    public Result addDevice(@RequestBody AddProResourceDTO addProResourceDTO) {
-        return proService.addDevice(addProResourceDTO);
-    }
-
-    @PostMapping("/deleteMember")
-    public Result deleteMember(@RequestBody DeleteProResourceDTO deleteProResourceDTO) {
-        return proService.deleteMember(deleteProResourceDTO);
-    }
-
-    @PostMapping("/deleteDevice")
-    public Result deleteDevice(@RequestBody DeleteProResourceDTO deleteProResourceDTO) {
-        return proService.deleteDevice(deleteProResourceDTO);
-    }
-
-    @PutMapping("/changeStatus/{proId}/{status}")
-    public Result changeStatus(@PathVariable("proId") Long proId, @PathVariable("status") Integer status) {
-        boolean b = proService.changeStatus(proId, status);
-        Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
-        String msg = b ? "更新成功" : "更新失败";
-        return new Result(code, msg, null);
     }
 
     @GetMapping("/judgeIsProHeader")

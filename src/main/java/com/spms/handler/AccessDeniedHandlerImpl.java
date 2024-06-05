@@ -20,6 +20,6 @@ import static com.spms.enums.ResultCode.FORBIDDEN;
 public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(FORBIDDEN.getCode(), "您的权限不足，不能访问！")));
+        WebUtils.customResponse(response, JSONObject.toJSONString(Result.fail(FORBIDDEN.getCode(), "无权访问")));
     }
 }

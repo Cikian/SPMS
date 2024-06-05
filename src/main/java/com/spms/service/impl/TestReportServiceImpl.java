@@ -61,7 +61,7 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
         Long userId = loginUser.getUser().getUserId();
 
         if (!testPlan.getHead().equals(userId)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "无权限删除");
+            return Result.fail(ResultCode.FAIL.getCode(), "无权操作");
         }
 
         testReport.setDelFlag(DELETE);
@@ -82,7 +82,7 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
         Long userId = loginUser.getUser().getUserId();
 
         if (!testPlan.getCreateBy().equals(userId)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "无权限修改");
+            return Result.fail(ResultCode.FAIL.getCode(), "无权操作");
         }
 
         LambdaUpdateWrapper<TestReport> testReportLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -91,9 +91,9 @@ public class TestReportServiceImpl extends ServiceImpl<TestReportMapper, TestRep
         this.update(testReportLambdaUpdateWrapper);
 
         if (status == 1) {
-            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您的测试报告已审核通过！");
+            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您的测试报告已通过审核");
         } else if (status == 2) {
-            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您的测试报告未通过审核,请修改后重新上传！");
+            notificationService.addNotification(testPlan.getHead(), testPlan.getPlanName(), "您的测试报告未通过审核,请修改后重新上传");
         }
 
         return Result.success("修改成功");

@@ -39,11 +39,13 @@ public class UserController {
     }
 
     @PostMapping("/add")
+    @PreAuthorize("hasAuthority('sys:user:add') || hasRole('system_admin')")
     public Result add(@RequestBody User user) {
         return userService.add(user);
     }
 
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('sys:user:delete') || hasRole('system_admin')")
     public Result delete(@RequestBody Long[] ids) {
         return userService.delete(ids);
     }
@@ -61,6 +63,7 @@ public class UserController {
     }
 
     @PostMapping("/updateStatus")
+    @PreAuthorize("hasAuthority('sys:user:update:status') || hasRole('system_admin')")
     public Result updateStatus(@RequestBody UserDTO userDTO) {
         return userService.updateStatus(userDTO);
     }
@@ -86,6 +89,7 @@ public class UserController {
     }
 
     @PostMapping("/updateUserBaseInfo")
+    @PreAuthorize("hasAuthority('sys:user:update:info') || hasRole('system_admin')")
     public Result updateUserBaseInfo(@RequestBody User user) {
         return userService.updateUserBaseInfo(user);
     }

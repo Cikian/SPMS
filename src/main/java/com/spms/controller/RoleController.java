@@ -16,40 +16,38 @@ public class RoleController {
     @Autowired
     private RoleService roleService;
 
-    @GetMapping("/list")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result list(@RequestParam(value = "page", defaultValue = "1") Integer page,
-                       @RequestParam(value = "size", defaultValue = "10") Integer size) {
-        return roleService.list(page, size);
-    }
-
     @PostMapping("/add")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('sys:role:add') || hasRole('system_admin')")
     public Result add(@RequestBody Role role) {
         return roleService.add(role);
     }
 
     @PostMapping("/delete")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('sys:role:delete') || hasRole('system_admin')")
     public Result delete(@RequestBody Long[] ids) {
         return roleService.delete(ids);
     }
 
-    @GetMapping("/queryById/{roleId}")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result queryById(@PathVariable("roleId") Long roleId) {
-        return roleService.queryById(roleId);
-    }
-
     @PostMapping("/updateStatus")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('sys:role:update:status') || hasRole('system_admin')")
     public Result updateStatus(@RequestBody Role role) {
         return roleService.updateStatus(role);
     }
 
     @PostMapping("/updateRoleInfo")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('sys:role:update:info') || hasRole('system_admin')")
     public Result updateRoleInfo(@RequestBody Role role) {
         return roleService.updateRoleInfo(role);
+    }
+
+    @GetMapping("/list")
+    public Result list(@RequestParam(value = "page", defaultValue = "1") Integer page,
+                       @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        return roleService.list(page, size);
+    }
+
+    @GetMapping("/queryById/{roleId}")
+    public Result queryById(@PathVariable("roleId") Long roleId) {
+        return roleService.queryById(roleId);
     }
 }
