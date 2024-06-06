@@ -32,7 +32,6 @@ public class NotificationController {
     }
 
     @GetMapping("/readNotification/{notificationId}")
-    @PreAuthorize("hasAuthority('notification:update') || hasRole('system_admin')")
     public Result readNotification(@PathVariable("notificationId") Long notificationId) {
         return notificationService.readNotification(notificationId);
     }

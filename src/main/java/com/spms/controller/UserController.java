@@ -89,7 +89,6 @@ public class UserController {
     }
 
     @PostMapping("/updateUserBaseInfo")
-    @PreAuthorize("hasAuthority('sys:user:update:info') || hasRole('system_admin')")
     public Result updateUserBaseInfo(@RequestBody User user) {
         return userService.updateUserBaseInfo(user);
     }
