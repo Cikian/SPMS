@@ -145,7 +145,7 @@ public class TestPlanServiceImpl extends ServiceImpl<TestPlanMapper, TestPlan> i
                 .eq(TestPlan::getDelFlag, NOT_DELETE)
                 .eq(TestPlan::getReviewStatus, PASS.getCode())
                 .orderBy(true, false, TestPlan::getCreateTime)
-                .select(TestPlan::getTestPlanId, TestPlan::getDemandId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime);
+                .select(TestPlan::getTestPlanId, TestPlan::getDemandId, TestPlan::getPlanName, TestPlan::getProgress, TestPlan::getHead, TestPlan::getStartTime, TestPlan::getEndTime,TestPlan::getIsArchive);
         this.page(testPlanPage, queryWrapper);
 
         if (testPlanPage.getRecords().isEmpty()) {
