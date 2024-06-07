@@ -1,5 +1,6 @@
 package com.spms.entity;
 
+import com.alibaba.excel.annotation.ExcelProperty;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class User {
     //    用户名
     private String userName;
 
+    @ExcelProperty(value = "姓名")
     //    用户昵称
     private String nickName;
 
@@ -24,6 +26,7 @@ public class User {
     //    账号状态
     private Boolean status;
 
+    @ExcelProperty(value = "邮箱")
     //    邮箱
     private String email;
 

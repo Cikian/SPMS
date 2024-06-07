@@ -3,11 +3,14 @@
 
 <mapper namespace="com.spms.mapper.DemandMapper">
     <select id="countByProId" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM demand WHERE pro_id = #{proId} AND demand_status != -1
+        SELECT COUNT(*) FROM demand WHERE pro_id = #{proId} AND demand_status != -1 AND demand_status != -2 AND demand_status != -3
     </select>
 
     <select id="countByProIdWhereIsComplete" resultType="java.lang.Integer">
         SELECT COUNT(*) FROM demand WHERE pro_id = #{proId} AND demand_status = 2
     </select>
+    <select id="countAllByProId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM demand WHERE pro_id = #{proId}
+    </select>
 
-    </mapper>
+</mapper>

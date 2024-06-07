@@ -41,7 +41,10 @@ public class Demand {
 
     @TableField(exist = false)
     private List<Demand> children;  // 子需求
-
+    @TableField(exist = false)
+    private List<Long> dependences;  // 依赖需求id
+    @TableField(exist = false)
+    private List<Demand> dependenceDemands;  // 依赖需求
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
     @TableField(fill = FieldFill.INSERT)
