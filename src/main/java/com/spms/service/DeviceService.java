@@ -16,7 +16,5 @@ public interface DeviceService {
 
     Result updateStatus(Device device);
 
-    Result releaseAllResource(Long proId);
-
     Result queryCanAddToProjectDevice(Long proId);
 }

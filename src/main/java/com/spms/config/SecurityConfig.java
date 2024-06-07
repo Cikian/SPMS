@@ -47,8 +47,10 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeRequests(authorizeRequests ->
-                        authorizeRequests.requestMatchers(new AntPathRequestMatcher("/user/login")).permitAll()
-                                .anyRequest().authenticated()
+                        authorizeRequests
+                                .requestMatchers("/user/login", "/user/sendEmailCode", "/user/verifyEmail", "/user/retrievePassword").permitAll()
+                                .anyRequest()
+                                .authenticated()
                 );
 
         http.exceptionHandling(exceptionHandling -> exceptionHandling

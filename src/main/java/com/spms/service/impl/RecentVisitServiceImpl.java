@@ -42,6 +42,7 @@ public class RecentVisitServiceImpl implements RecentVisitService {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
         String itemId = id + ":" + type;
+        // 如果之前添加过则删除
         if (redisTemplate.opsForZSet().rank(RECENT_VISIT_PRO + userId, itemId) != null) {
             redisTemplate.opsForZSet().remove(RECENT_VISIT_PRO + userId, itemId);
         }
@@ -49,11 +50,13 @@ public class RecentVisitServiceImpl implements RecentVisitService {
             redisTemplate.opsForZSet().remove(RECENT_VISIT_OTHER + userId, itemId);
         }
         double score = System.currentTimeMillis();
+        // 添加到redis
         if (RecentVisitType.PROJECT.getType().equals(type)) {
             redisTemplate.opsForZSet().add(RECENT_VISIT_PRO + userId, itemId, score);
         } else {
             redisTemplate.opsForZSet().add(RECENT_VISIT_OTHER + userId, itemId, score);
         }
+        // 删除超出范围的数据，项目不超过5条，其他不超过15条
         redisTemplate.opsForZSet().removeRange(RECENT_VISIT_PRO + userId, 0, -6);
         redisTemplate.opsForZSet().removeRange(RECENT_VISIT_OTHER + userId, 0, -16);
         return Result.success();

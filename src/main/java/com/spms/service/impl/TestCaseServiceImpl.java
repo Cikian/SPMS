@@ -207,6 +207,7 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
         return Result.success(resultMap);
     }
 
+    //判断是否有权限操作，只有测试计划的负责人才有权限操作
     private boolean noPermission(TestCase testCase) {
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = loginUser.getUser().getUserId();
@@ -218,28 +219,24 @@ public class TestCaseServiceImpl extends ServiceImpl<TestCaseMapper, TestCase> i
     }
 
     private Boolean updateProgress(Long testPlanId) {
+        //获取测试计划下的所有测试用例
         LambdaQueryWrapper<TestCase> testCaseLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        testCaseLambdaQueryWrapper.eq(TestCase::getTestPlanId, testPlanId)
-                .eq(TestCase::getDelFlag, NOT_DELETE);
+        testCaseLambdaQueryWrapper.eq(TestCase::getTestPlanId, testPlanId).eq(TestCase::getDelFlag, NOT_DELETE);
         List<TestCase> testCaseList = this.list(testCaseLambdaQueryWrapper);
+        //如果没有测试用例，进度为0
         if (testCaseList.isEmpty()){
             LambdaUpdateWrapper<TestPlan> testPlanLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-            testPlanLambdaUpdateWrapper.eq(TestPlan::getTestPlanId, testPlanId)
-                    .set(TestPlan::getProgress, 0);
+            testPlanLambdaUpdateWrapper.eq(TestPlan::getTestPlanId, testPlanId).set(TestPlan::getProgress, 0);
             return testPlanMapper.update(testPlanLambdaUpdateWrapper) > 0;
         }
-        float progress;
-        int total = testCaseList.size();
         int finish = 0;
         for (TestCase testCase : testCaseList) {
             if (testCase.getStatus()) {
                 finish++;
             }
         }
-        progress = (float) finish / total * 100;
         LambdaUpdateWrapper<TestPlan> testPlanLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        testPlanLambdaUpdateWrapper.eq(TestPlan::getTestPlanId, testPlanId)
-                .set(TestPlan::getProgress, progress);
+        testPlanLambdaUpdateWrapper.eq(TestPlan::getTestPlanId, testPlanId).set(TestPlan::getProgress, (float) finish / testCaseList.size() * 100);
         return testPlanMapper.update(testPlanLambdaUpdateWrapper) > 0;
     }
 }

@@ -17,19 +17,30 @@ public class DeviceController {
     private DeviceService deviceService;
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('device:add') || hasRole('system_admin')")
     public Result add(@RequestBody Device device) {
         return deviceService.add(device);
     }
 
     @PostMapping("/delete")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('device:delete') || hasRole('system_admin')")
     public Result delete(@RequestBody Long[] ids) {
         return deviceService.delete(ids);
     }
 
+    @PostMapping("/updateStatus")
+    @PreAuthorize("hasAuthority('device:update:status') || hasRole('system_admin')")
+    public Result updateStatus(@RequestBody Device device) {
+        return deviceService.updateStatus(device);
+    }
+
+    @PostMapping("/updateInfo")
+    @PreAuthorize("hasAuthority('device:update:info') || hasRole('system_admin')")
+    public Result updateInfo(@RequestBody Device device) {
+        return deviceService.updateInfo(device);
+    }
+
     @PostMapping("/list")
-    @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody Device device,
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
@@ -37,29 +48,11 @@ public class DeviceController {
     }
 
     @GetMapping("/queryById/{deviceId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryById(@PathVariable("deviceId") Long deviceId) {
         return deviceService.queryById(deviceId);
     }
 
-    @PostMapping("/updateStatus")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result updateStatus(@RequestBody Device device) {
-        return deviceService.updateStatus(device);
-    }
-
-    @PostMapping("/updateInfo")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result updateInfo(@RequestBody Device device) {
-        return deviceService.updateInfo(device);
-    }
-
-    @PostMapping("/releaseAllResource/{proId}")
-    @PreAuthorize("hasRole('system_admin')")
-    public Result releaseAllResource(@PathVariable("proId") Long proId) {
-        return deviceService.releaseAllResource(proId);
-    }
-
+    //查询可以添加到项目的设备
     @GetMapping("/queryCanAddToProjectDevice/{proId}")
     public Result queryCanAddToProjectDevice(@PathVariable("proId") Long proId) {
         return deviceService.queryCanAddToProjectDevice(proId);

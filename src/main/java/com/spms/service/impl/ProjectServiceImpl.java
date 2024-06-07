@@ -122,6 +122,17 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         if (!userId.equals(project.getCreateBy())) {
             return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
         }
+        // 计算员工预计成本
+        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
+        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+
+        if (dailyCost == null || dailyCost.equals(BigDecimal.ZERO)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请先为员工设置工时费用");
+        }
+        long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
+        BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
+
         ProjectResource projectResource = new ProjectResource();
         projectResource.setProjectId(addProResourceDTO.getProId());
         projectResource.setResourceId(addProResourceDTO.getMemberId());
@@ -130,16 +141,33 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         projectResource.setEstimateEndTime(addProResourceDTO.getEstimateEndTime());
         projectResource.setUseType(1);
         projectResource.setActualCost(BigDecimal.ZERO);
-        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
-
-        long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
-        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
-        BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
         projectResource.setEstimateCost(estimateCost);
         projectResourceMapper.insert(projectResource);
+        // 发送通知
+        notificationService.addNotification(addProResourceDTO.getMemberId(),
+                "您已被添加到项目：" + project.getProName(), "加入项目");
+        return Result.success();
+    }
 
-        notificationService.addNotification(addProResourceDTO.getMemberId(), "您已被添加到项目：" + project.getProName(), "加入项目");
+    @Override
+    public Result deleteMember(DeleteProResourceDTO deleteProResourceDTO) {
+        ProjectResource projectResource = projectResourceMapper.selectById(deleteProResourceDTO.getId());
+        Project project = projectMapper.selectById(projectResource.getProjectId());
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        if (!userId.equals(project.getCreateBy())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
+        }
+        // 计算实际成本
+        long days = Duration.between(deleteProResourceDTO.getActualStartTime(), deleteProResourceDTO.getActualEndTime()).toDays();
+        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(RatedTimeCost::getResourceId, projectResource.getResourceId());
+        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+        BigDecimal actualCost = BigDecimal.valueOf(days).multiply(dailyCost);
+        projectResource.setActualStartTime(deleteProResourceDTO.getActualStartTime());
+        projectResource.setActualEndTime(deleteProResourceDTO.getActualEndTime());
+        projectResource.setActualCost(actualCost);
+        projectResourceMapper.updateById(projectResource);
         return Result.success();
     }
 
@@ -153,6 +181,13 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
         }
 
+        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
+        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
+        if (dailyCost == null || dailyCost.equals(BigDecimal.ZERO)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "请先为设备设置工时费用");
+        }
+
         ProjectResource projectResource = new ProjectResource();
         projectResource.setProjectId(addProResourceDTO.getProId());
         projectResource.setResourceId(addProResourceDTO.getMemberId());
@@ -161,11 +196,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         projectResource.setEstimateEndTime(addProResourceDTO.getEstimateEndTime());
         projectResource.setUseType(1);
         projectResource.setActualCost(BigDecimal.ZERO);
-        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(RatedTimeCost::getResourceId, addProResourceDTO.getMemberId());
 
         long days = Duration.between(addProResourceDTO.getEstimateStartTime(), addProResourceDTO.getEstimateEndTime()).toDays();
-        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
         BigDecimal estimateCost = BigDecimal.valueOf(days).multiply(dailyCost);
         projectResource.setEstimateCost(estimateCost);
 
@@ -181,31 +213,6 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         if (deviceMapper.update(deviceLambdaUpdateWrapper) < 0) {
             return Result.fail(ResultCode.FAIL.getCode(), "添加失败");
         }
-        return Result.success();
-    }
-
-    @Override
-    public Result deleteMember(DeleteProResourceDTO deleteProResourceDTO) {
-        ProjectResource projectResource = projectResourceMapper.selectById(deleteProResourceDTO.getId());
-
-        Project project = projectMapper.selectById(projectResource.getProjectId());
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = loginUser.getUser().getUserId();
-        if (!userId.equals(project.getCreateBy())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "您的权限不足");
-        }
-
-        // 计算实际成本
-        long days = Duration.between(deleteProResourceDTO.getActualStartTime(), deleteProResourceDTO.getActualEndTime()).toDays();
-        LambdaQueryWrapper<RatedTimeCost> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(RatedTimeCost::getResourceId, projectResource.getResourceId());
-        BigDecimal dailyCost = ratedTimeCostMapper.selectOne(lqw).getDailyCost();
-        BigDecimal actualCost = BigDecimal.valueOf(days).multiply(dailyCost);
-
-        projectResource.setActualStartTime(deleteProResourceDTO.getActualStartTime());
-        projectResource.setActualEndTime(deleteProResourceDTO.getActualEndTime());
-        projectResource.setActualCost(actualCost);
-        projectResourceMapper.updateById(projectResource);
         return Result.success();
     }
 

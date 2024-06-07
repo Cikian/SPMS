@@ -76,6 +76,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result login(User user) {
+        String key = USER_LOGIN_FAIL + user.getUserName();
+        String value = redisTemplate.opsForValue().get(key);
+        if (value != null && Integer.parseInt(value) >= 5) {
+            return Result.fail(ResultCode.FAIL.getCode(), "账号已被锁定，请10分钟后再试");
+        }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
         Authentication authenticate = authentication.authenticate(authenticationToken);
 
@@ -87,7 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String userId = loginUser.getUser().getUserId().toString();
 
         if (Boolean.TRUE.equals(redisTemplate.hasKey(USER_LOGIN + userId))) {
-            return Result.fail(ResultCode.FAIL.getCode(), "该账号已在其他地方登录");
+            return Result.fail(ResultCode.FAIL.getCode(), "该账号已在其它地方登录");
         }
 
         String jwt = JwtUtils.createJWT(userId);
@@ -123,10 +128,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getEmail, email)
-                .eq(User::getDelFlag, NOT_DELETE);
+        userLambdaQueryWrapper.eq(User::getDelFlag, NOT_DELETE)
+                .and(i -> i.eq(User::getEmail, email)
+                        .or()
+                        .eq(User::getNickName, user.getNickName()));
+
         if (this.count(userLambdaQueryWrapper) > 0) {
-            return Result.fail(ResultCode.FAIL.getCode(), "邮箱已存在");
+            return Result.fail(ResultCode.FAIL.getCode(), "邮箱或姓名已存在");
         }
 
         String password = RandomStringGenerator.generateNumber(8);
@@ -159,8 +167,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         RatedTimeCost ratedTimeCost = new RatedTimeCost();
         ratedTimeCost.setResourceId(user.getUserId());
         ratedTimeCost.setResourceType(EMPLOYEE.getCode());
-        ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
-        ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
@@ -179,7 +185,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         Boolean sent = redisTemplate.hasKey(EMAIL_CODE + email);
         if (Boolean.TRUE.equals(sent)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "验证码已发送，请勿重复发送");
+            return Result.fail(ResultCode.FAIL.getCode(), "验证码已发送，请勿重复获取");
         }
 
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -208,10 +214,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String code = redisTemplate.opsForValue().get(EMAIL_CODE + emailVerifyDTO.getEmail());
         if (StrUtil.isEmpty(code)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "无效验证码");
+            return Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
         }
         boolean isSuccess = StrUtil.equals(code, emailVerifyDTO.getCode());
-        return isSuccess ? Result.success("验证通过") : Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
+        return isSuccess ? Result.success() : Result.fail(ResultCode.FAIL.getCode(), "验证码错误");
     }
 
     @Override
@@ -221,13 +227,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
         }
 
-        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
-        }
-
         boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
         if (!passwordCheck) {
-            return Result.fail(ResultCode.FAIL.getCode(), "密码格式错误");
+            return Result.fail(ResultCode.FAIL.getCode(), "密码必须包含大小写字母、数字、特殊字符，且长度不少于12位");
+        }
+
+        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
         }
 
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -376,22 +382,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User currentUser = loginUser.getUser();
 
-        if (Objects.equals(user.getNickName(), currentUser.getNickName()) && Objects.equals(user.getGender(), currentUser.getGender())) {
-            return Result.success("信息未发生修改");
-        }
-
-        if (!nickNameCheck(user.getNickName())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "昵称格式错误，请重新输入");
-        }
-
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.eq(User::getUserId, currentUser.getUserId())
-                .set(User::getNickName, user.getNickName())
                 .set(User::getGender, user.getGender());
         this.update(userLambdaUpdateWrapper);
 
         currentUser.setGender(user.getGender());
-        currentUser.setNickName(user.getNickName());
 
         redisTemplate.opsForValue().set(USER_LOGIN + currentUser.getUserId(), JSONObject.toJSONString(loginUser), USER_LOGIN_TTL, TimeUnit.MINUTES);
         return Result.success("修改信息成功");
@@ -477,9 +473,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             //获取用户的所有权限
             List<String> menuList = menuMapper.selectUserHasPermission(projectMember);
             menuList = menuList.stream().distinct().toList();
-            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.toString().contains("test")){
+            if (type.equals(ProjectMemberType.TESTER.getCode()) && menuList.toString().contains("test")) {
                 queryUserById(users, projectMember);
-            } else if (type.equals(ProjectMemberType.DEVELOPER.getCode()) && menuList.contains("dev")){
+            } else if (type.equals(ProjectMemberType.DEVELOPER.getCode()) && menuList.contains("dev")) {
                 queryUserById(users, projectMember);
             }
         }
@@ -536,6 +532,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return Result.success(list);
+    }
+
+    @Override
+    @Transactional
+    public Result retrievePassword(PasswordUpdateDTO passwordUpdateDTO) {
+        if (StrUtil.isEmpty(passwordUpdateDTO.getNewPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
+        }
+
+        boolean passwordCheck = RegexUtils.passwordCheck(passwordUpdateDTO.getNewPassword());
+        if (!passwordCheck) {
+            return Result.fail(ResultCode.FAIL.getCode(), "密码必须包含大小写字母、数字、特殊字符，且长度不少于12位");
+        }
+
+        if (!StrUtil.equals(passwordUpdateDTO.getNewPassword(), passwordUpdateDTO.getConfirmPassword())) {
+            return Result.fail(ResultCode.FAIL.getCode(), "两次密码输入不一致");
+        }
+
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.set(User::getPassword, bCryptPasswordEncoder.encode(passwordUpdateDTO.getNewPassword()))
+                .eq(User::getEmail, passwordUpdateDTO.getEmail());
+        if (!this.update(userLambdaUpdateWrapper)) {
+            return Result.fail(ResultCode.FAIL.getCode(), "修改失败");
+        }
+
+        sendMailMessageService.sendEmail(javaMailSender, passwordUpdateDTO.getEmail(), "SPMS密码重置", "【SPMS】您的密码已重置成功，请妥善保管");
+        redisTemplate.delete(EMAIL_CODE + passwordUpdateDTO.getEmail());
+        return Result.success("修改成功");
     }
 
 }

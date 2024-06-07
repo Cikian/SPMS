@@ -16,13 +16,12 @@ public class RatedTimeCostController {
     private RatedTimeCostService ratedTimeCostService;
 
     @PostMapping("/updateCost")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('ratedTimeCost:update') || hasRole('system_admin')")
     public Result updateCost(@RequestBody RatedTimeCost ratedTimeCost) {
         return ratedTimeCostService.updateCost(ratedTimeCost);
     }
 
     @PostMapping("/list")
-    @PreAuthorize("hasRole('system_admin')")
     public Result list(@RequestBody RatedTimeCostDTO ratedTimeCost,
                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
@@ -30,7 +29,6 @@ public class RatedTimeCostController {
     }
 
     @GetMapping("/queryById/{ratedTimeCostId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryById(@PathVariable("ratedTimeCostId") Long ratedTimeCostId) {
         return ratedTimeCostService.queryById(ratedTimeCostId);
     }

@@ -4,6 +4,7 @@ import com.spms.dto.Result;
 import com.spms.entity.QualityTarget;
 import com.spms.service.QualityTargetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,8 +15,21 @@ public class QualityTargetController {
     private QualityTargetService qualityTargetService;
 
     @PostMapping("/add")
+    @PreAuthorize("hasAuthority('qualityTarget:add') || hasRole('system_admin')")
     public Result add(@RequestBody QualityTarget qualityTarget) {
         return qualityTargetService.add(qualityTarget);
+    }
+
+    @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('qualityTarget:delete') || hasRole('system_admin')")
+    public Result delete(@RequestBody Long[] ids) {
+        return qualityTargetService.delete(ids);
+    }
+
+    @PostMapping("/update")
+    @PreAuthorize("hasAuthority('qualityTarget:update') || hasRole('system_admin')")
+    public Result update(@RequestBody QualityTarget qualityTarget) {
+        return qualityTargetService.update(qualityTarget);
     }
 
     @PostMapping("/list")
@@ -25,18 +39,8 @@ public class QualityTargetController {
         return qualityTargetService.list(qualityTarget, page, size);
     }
 
-    @PostMapping("/delete")
-    public Result delete(@RequestBody Long[] ids) {
-        return qualityTargetService.delete(ids);
-    }
-
     @GetMapping("/queryById/{id}")
     public Result queryById(@PathVariable("id") Long id) {
         return qualityTargetService.queryById(id);
-    }
-
-    @PostMapping("/update")
-    public Result update(@RequestBody QualityTarget qualityTarget) {
-        return qualityTargetService.update(qualityTarget);
     }
 }

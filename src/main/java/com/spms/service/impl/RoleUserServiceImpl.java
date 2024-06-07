@@ -73,19 +73,6 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
     }
 
     @Override
-    public Result delete(Long roleId) {
-        if (roleId == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        LambdaUpdateWrapper<RoleUser> deleteWrapper = new LambdaUpdateWrapper<>();
-        deleteWrapper.eq(RoleUser::getRoleId, roleId)
-                .set(RoleUser::getDelFlag, DELETE);
-        this.update(deleteWrapper);
-        return Result.success("删除成功");
-    }
-
-    @Override
     public Result queryUserHasRole(Long userId) {
         if (userId == null) {
             return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
@@ -105,32 +92,6 @@ public class RoleUserServiceImpl extends ServiceImpl<RoleUserMapper, RoleUser> i
         }).toList();
 
         return Result.success(roleDTOList);
-    }
-
-    @Override
-    public Result queryUserListByRoleId(Long roleId) {
-        if (roleId == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        LambdaQueryWrapper<RoleUser> roleUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        roleUserLambdaQueryWrapper.eq(RoleUser::getRoleId, roleId)
-                .eq(RoleUser::getDelFlag, NOT_DELETE);
-        List<RoleUser> roleUsers = this.list(roleUserLambdaQueryWrapper);
-
-        if (roleUsers == null || roleUsers.isEmpty()) {
-            return Result.fail(ResultCode.FAIL.getCode(), "暂无数据");
-        }
-
-        List<UserDTO> userDTOList = roleUsers.stream().map(roleUser -> {
-            Long userId = roleUser.getUserId();
-            User user = userMapper.selectById(userId);
-            UserDTO userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-            return userDTO;
-        }).toList();
-
-        return Result.success(userDTOList);
     }
 
 }

@@ -61,14 +61,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备名称不能为空");
         }
 
-        if (device.getType() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备类型不能为空");
-        }
-
-        if (device.getPurchaseCost() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备价格不能为空");
-        }
-
         LambdaQueryWrapper<Device> deviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
         deviceLambdaQueryWrapper.eq(Device::getDevName, device.getDevName())
                 .eq(Device::getDelFlag, NOT_DELETE);
@@ -90,8 +82,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         RatedTimeCost ratedTimeCost = new RatedTimeCost();
         ratedTimeCost.setResourceId(device.getDevId());
         ratedTimeCost.setResourceType(DEVICE.getCode());
-        ratedTimeCost.setDailyCost(BigDecimal.valueOf(0));
-        ratedTimeCost.setMonthlyCost(BigDecimal.valueOf(0));
         ratedTimeCost.setDelFlag(NOT_DELETE);
 
         if (ratedTimeCostMapper.insert(ratedTimeCost) <= 0) {
@@ -169,11 +159,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
 
         LambdaQueryWrapper<DictionaryData> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(DictionaryData::getDictionaryDataId, device.getType())
-                .select(DictionaryData::getLabel);
+        lqw.eq(DictionaryData::getDictionaryDataId, device.getType());
         DictionaryData dictionaryData = dictionaryDataMapper.selectOne(lqw);
 
         DeviceDTO deviceDTO = new DeviceDTO();
+        deviceDTO.setTypeId(dictionaryData.getDictionaryDataId());
         deviceDTO.setTypeName(dictionaryData.getLabel());
         BeanUtils.copyProperties(device, deviceDTO);
 
@@ -191,40 +181,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             return Result.fail(ResultCode.FAIL.getCode(), "设备不存在");
         }
 
-        if (device1.getStatus().equals(device.getStatus())) {
-            return Result.fail(ResultCode.FAIL.getCode(), "设备状态未改变");
-        }
-
-        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        device.setUpdateBy(loginUser.getUser().getUserId());
-
-        boolean isSuccess = this.updateById(device);
-
-        if (!isSuccess) {
+        if (!this.updateById(device)) {
             return Result.fail(ResultCode.FAIL.getCode(), "更新失败");
         }
         return Result.success("更新成功");
-    }
-
-    @Override
-    public Result releaseAllResource(Long proId) {
-        if (proId == null) {
-            return new Result(ResultCode.FAIL.getCode(), "参数错误");
-        }
-
-        LambdaQueryWrapper<ProjectResource> projectResourceLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        projectResourceLambdaQueryWrapper.eq(ProjectResource::getProjectId, proId)
-                .eq(ProjectResource::getResourceType, DEVICE.getCode());
-        List<ProjectResource> projectResources = projectResourceMapper.selectList(projectResourceLambdaQueryWrapper);
-
-        List<Long> proUseDeviceIds = projectResources.stream().map(ProjectResource::getResourceId).toList();
-        LambdaUpdateWrapper<Device> deviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        deviceLambdaUpdateWrapper.set(Device::getDeviceUsage, DeviceUsage.FREE.getCode())
-                .in(Device::getDevId, proUseDeviceIds);
-        if (!this.update(deviceLambdaUpdateWrapper)) {
-            return Result.fail(ResultCode.FAIL.getCode(), "释放失败");
-        }
-        return Result.success("释放成功");
     }
 
     @Override

@@ -52,13 +52,7 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
             return Result.fail(ResultCode.FAIL.getCode(), "请输入日费用");
         }
 
-        if (ratedTimeCost.getMonthlyCost() == null) {
-            return Result.fail(ResultCode.FAIL.getCode(), "请输入月费用");
-        }
-
-        boolean isSuccess = this.updateById(ratedTimeCost);
-
-        if (!isSuccess) {
+        if (!this.updateById(ratedTimeCost)) {
             return Result.fail(ResultCode.FAIL.getCode(), "配置失败");
         }
         return Result.success("配置成功");
@@ -132,12 +126,6 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
         }
 
         return Result.success(ConvertDTOAndGetResourceName(ratedTimeCost));
-    }
-
-
-    @Override
-    public Result delete(Long[] ids) {
-        return null;
     }
 
     private RatedTimeCostDTO ConvertDTOAndGetResourceName(RatedTimeCost ratedTimeCost) {

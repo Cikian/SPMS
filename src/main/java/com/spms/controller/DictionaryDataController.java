@@ -15,19 +15,18 @@ public class DictionaryDataController {
     private DictionaryDataService dictionaryDataService;
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('dictionaryData:add') || hasRole('system_admin')")
     public Result add(@RequestBody DictionaryData dictionaryData) {
         return dictionaryDataService.add(dictionaryData);
     }
 
     @GetMapping("/delete/{dictionaryDataId}")
-    @PreAuthorize("hasRole('system_admin')")
+    @PreAuthorize("hasAuthority('dictionaryData:delete') || hasRole('system_admin')")
     public Result delete(@PathVariable("dictionaryDataId") Long dictionaryDataId) {
         return dictionaryDataService.delete(dictionaryDataId);
     }
 
     @GetMapping("/queryByTypeId/{dictionaryTypeId}")
-    @PreAuthorize("hasRole('system_admin')")
     public Result queryByTypeId(@PathVariable("dictionaryTypeId") Long dictionaryTypeId) {
         return dictionaryDataService.queryByTypeId(dictionaryTypeId);
     }

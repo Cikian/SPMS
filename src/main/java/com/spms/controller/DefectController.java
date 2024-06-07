@@ -6,6 +6,7 @@ import com.spms.entity.Demand;
 import com.spms.enums.ErrorCode;
 import com.spms.service.DefectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,6 +52,7 @@ public class DefectController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('defect:add') ||  hasRole('system_admin')")
     public Result addDemand(@RequestBody Defect demand) {
         Boolean b = defectService.addDefect(demand);
         Integer code = b ? ErrorCode.ADD_SUCCESS : ErrorCode.ADD_FAIL;
@@ -59,6 +61,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeStatus/{demandId}/{status}")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeStatus(@PathVariable("demandId") Long demandId, @PathVariable("status") Integer status) {
         Boolean b = defectService.changeStatus(demandId, status);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -67,6 +70,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeHeadId/{demandId}/{headId}")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeHeadId(@PathVariable("demandId") Long demandId, @PathVariable("headId") Long headId) {
         Boolean b = defectService.changeHeadId(demandId, headId);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -75,6 +79,7 @@ public class DefectController {
     }
 
     @PutMapping("/changePriority/{demandId}/{priority}")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changePriority(@PathVariable("demandId") Long demandId, @PathVariable("priority") Integer priority) {
         Boolean b = defectService.changePriority(demandId, priority);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -83,6 +88,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeSeverity/{demandId}/{severity}")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeSeverity(@PathVariable("demandId") Long demandId, @PathVariable("severity") Integer severity) {
         Boolean b = defectService.changeSeverity(demandId, severity);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -91,6 +97,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeProbability/{demandId}/{probability}")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeProbability(@PathVariable("demandId") Long demandId, @PathVariable("probability") Integer robability) {
         Boolean b = defectService.changeProbability(demandId, robability);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -99,6 +106,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeType/{demandId}/{type}")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeType(@PathVariable("demandId") Long demandId, @PathVariable("type") Long type) {
         Boolean b = defectService.changeType(demandId, type);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -106,8 +114,8 @@ public class DefectController {
         return new Result(code, msg, null);
     }
 
-
     @PutMapping("/changeDesc")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeDesc(@RequestBody Demand demand) {
         Boolean b = defectService.changeDesc(demand.getDemandId(), demand.getDemandDesc());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -116,6 +124,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeStartTime")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeStartTime(@RequestBody Demand demand) {
         Boolean b = defectService.changeStartTime(demand.getDemandId(), demand.getStartTime());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -124,6 +133,7 @@ public class DefectController {
     }
 
     @PutMapping("/changeEndTime")
+    @PreAuthorize("hasAuthority('defect:update') ||  hasRole('system_admin')")
     public Result changeEndTime(@RequestBody Demand demand) {
         Boolean b = defectService.changeEndTime(demand.getDemandId(), demand.getEndTime());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;

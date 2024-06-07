@@ -19,7 +19,7 @@ public class BackupController {
     @GetMapping("/getBackupFileList")
     @PreAuthorize("hasRole('system_admin')")
     public Result getBackupFileList(){
-        return backupService.getBackupFileList();
+        return backupService.getFullBackupFileList();
     }
 
     @PostMapping("/restore")
