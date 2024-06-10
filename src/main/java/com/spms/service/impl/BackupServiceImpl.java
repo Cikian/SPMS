@@ -33,6 +33,11 @@ public class BackupServiceImpl implements BackupService {
     public void performInitialBackup() throws IOException {
         //初始化备份文件路径
         String initBackupFilePath = dirPath + "/init_backup";
+        //备份文件夹不存在则创建
+        File filePath = new File(initBackupFilePath);
+        if (!filePath.exists()) {
+            filePath.mkdirs();
+        }
         //如果有过初始备份文件，则不再备份
         File initFile = new File(initBackupFilePath);
         if (initFile.exists() && initFile.isDirectory()) {
@@ -40,11 +45,6 @@ public class BackupServiceImpl implements BackupService {
             if (files != null && files.length > 0) {
                 return;
             }
-        }
-        //备份文件夹不存在则创建
-        File filePath = new File(initBackupFilePath);
-        if (!filePath.exists()) {
-            filePath.mkdirs();
         }
         String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         String initBackupFile = initBackupFilePath + "/init_backup_" + timestamp + ".sql";

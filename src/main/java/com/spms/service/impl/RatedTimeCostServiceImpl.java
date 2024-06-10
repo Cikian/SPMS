@@ -139,7 +139,7 @@ public class RatedTimeCostServiceImpl extends ServiceImpl<RatedTimeCostMapper, R
         if (Objects.equals(resourceType, DEVICE.getCode())) {
             resourceName = deviceMapper.selectById(resourceId).getDevName();
         } else if (Objects.equals(resourceType, EMPLOYEE.getCode())) {
-            resourceName = userMapper.selectById(resourceId).getUserName();
+            resourceName = userMapper.selectById(resourceId).getNickName();
         }
         ratedTimeCostDTO.setResourceName(resourceName);
 

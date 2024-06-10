@@ -24,6 +24,6 @@ public class SpmsApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-//        backupService.performInitialBackup();
+        backupService.performInitialBackup();
     }
 }
