@@ -2,12 +2,12 @@ package com.spms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.spms.dto.Result;
 import com.spms.entity.Demand;
+import com.spms.entity.DemandDependence;
 import com.spms.entity.Project;
 import com.spms.entity.ProjectResource;
 import com.spms.enums.ResourceType;
-import com.spms.enums.ResultCode;
+import com.spms.mapper.DemandDependenceMapper;
 import com.spms.mapper.DemandMapper;
 import com.spms.mapper.ProjectMapper;
 import com.spms.mapper.ProjectResourceMapper;
@@ -46,7 +46,12 @@ public class DemandServiceImpl implements DemandService {
     private NotificationService notificationService;
     @Autowired
     private ProjectResourceMapper projectResourceMapper;
+    @Autowired
+    private DemandDependenceServiceImpl demandDependenceService;
+    @Autowired
+    private DemandDependenceMapper demandDependenceMapper;
 
+    @Transactional
     @Override
     public Boolean addDemand(Demand demand) {
 
@@ -58,7 +63,7 @@ public class DemandServiceImpl implements DemandService {
             demand.setLevel(fatherDemand.getLevel() + 1);
         }
         // 查询该项目一共有多少个需求，编号加1
-        Integer demandCount = demandMapper.countByProId(proId);
+        Integer demandCount = demandMapper.countAllByProId(proId);
         demand.setDemandNo(demandCount + 1);
 
         Long projectId = demand.getProId();
@@ -68,6 +73,9 @@ public class DemandServiceImpl implements DemandService {
         }
 
         int i = demandMapper.insert(demand);
+
+        Long demandId = demand.getDemandId();
+
         String activeContent = "";
         if (demand.getWorkItemType() == 0) {
             activeContent = "史诗";
@@ -79,7 +87,12 @@ public class DemandServiceImpl implements DemandService {
             activeContent = "任务";
         }
 
-        demandActiveService.addActive("创建", activeContent, demand.getDemandId(), "", "");
+        demandActiveService.addActive("创建", activeContent, demandId, "", "");
+
+        List<Long> dependences = demand.getDependences();
+        if (dependences != null && !dependences.isEmpty()) {
+            demandDependenceService.add(demandId, dependences);
+        }
 
         return i > 0;
     }
@@ -92,9 +105,14 @@ public class DemandServiceImpl implements DemandService {
         lqw.ne(Demand::getDemandStatus, -3);
         List<Demand> allDemands = demandMapper.selectList(lqw);
 
+
+        for (Demand demandDD : allDemands) {
+            checkDependenceByDemand(demandDD);
+        }
+
         List<Demand> demandsByLevel = processDemands(allDemands);
         Map<String, List<Demand>> result = new HashMap<>();
-        result.put("allDemands", demandMapper.selectList(lqw));
+        result.put("allDemands", allDemands);
         result.put("demandsByLevel", demandsByLevel);
         return result;
     }
@@ -321,6 +339,42 @@ public class DemandServiceImpl implements DemandService {
     }
 
     @Override
+    public List<Demand> getDependenceDemands(Long demandId) {
+        Demand waitFindDemand = demandMapper.selectById(demandId);
+        LambdaQueryWrapper<DemandDependence> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(DemandDependence::getDependence, waitFindDemand.getDemandId());
+        lqw.select(DemandDependence::getBeDependenceOn);
+        List<DemandDependence> dependences = demandDependenceMapper.selectList(lqw);
+        List<Demand> dependenceDemands = new ArrayList<>();
+        if (!dependences.isEmpty()) {
+            boolean b = true;
+            for (DemandDependence dependence : dependences) {
+                LambdaQueryWrapper<Demand> lqw1 = new LambdaQueryWrapper<>();
+                lqw1.eq(Demand::getDemandId, dependence.getBeDependenceOn());
+                Demand dependenceDemand = demandMapper.selectOne(lqw1);
+                dependenceDemands.add(dependenceDemand);
+                if (dependenceDemand.getDemandStatus() != 2) {
+                    b = false;
+                }
+            }
+            if (!b) {
+                LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+                luw.eq(Demand::getDemandId, waitFindDemand.getDemandId());
+                luw.set(Demand::getDemandStatus, -9);
+                int update = demandMapper.update(null, luw);
+            }
+
+            if (b && waitFindDemand.getDemandStatus() == -9) {
+                LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+                luw.eq(Demand::getDemandId, waitFindDemand.getDemandId());
+                luw.set(Demand::getDemandStatus, 0);
+                int update = demandMapper.update(null, luw);
+            }
+        }
+        return dependenceDemands;
+    }
+
+    @Override
     public Map<String, Integer> getDemandCounts(Long proId) {
         Integer all = demandMapper.countByProId(proId);
         Integer completed = demandMapper.countByProIdWhereIsComplete(proId);
@@ -429,7 +483,6 @@ public class DemandServiceImpl implements DemandService {
         findParent(level1Demands, level2Demands);
         findParent(level0Demands, level1Demands);
         return level0Demands;
-
     }
 
     private void findParent(List<Demand> fatherDemands, List<Demand> childDemands) {
@@ -458,6 +511,36 @@ public class DemandServiceImpl implements DemandService {
             demand.setChildren(childrenSChildren);
         }
         return demand;
+    }
+
+    void checkDependenceByDemand(Demand waitFinddemand) {
+        LambdaQueryWrapper<DemandDependence> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(DemandDependence::getDependence, waitFinddemand.getDemandId());
+        lqw.select(DemandDependence::getBeDependenceOn);
+        List<DemandDependence> dependences = demandDependenceMapper.selectList(lqw);
+        if (!dependences.isEmpty()) {
+            boolean b = true;
+            for (DemandDependence dependence : dependences) {
+                LambdaQueryWrapper<Demand> lqw1 = new LambdaQueryWrapper<>();
+                lqw1.eq(Demand::getDemandId, dependence.getBeDependenceOn());
+                Demand dependenceDemand = demandMapper.selectOne(lqw1);
+                if (dependenceDemand.getDemandStatus() != 2) {
+                    b = false;
+                }
+            }
+            if (!b) {
+                LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+                luw.eq(Demand::getDemandId, waitFinddemand.getDemandId());
+                luw.set(Demand::getDemandStatus, -9);
+                demandMapper.update(null, luw);
+            }
+            if (b && waitFinddemand.getDemandStatus() == -9) {
+                LambdaUpdateWrapper<Demand> luw = new LambdaUpdateWrapper<>();
+                luw.eq(Demand::getDemandId, waitFinddemand.getDemandId());
+                luw.set(Demand::getDemandStatus, 0);
+                demandMapper.update(null, luw);
+            }
+        }
     }
 
     @Override

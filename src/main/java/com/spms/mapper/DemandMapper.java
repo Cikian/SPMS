@@ -11,6 +11,7 @@ import com.spms.entity.Demand;
  * @description: SPMS:
  */
 public interface DemandMapper extends BaseMapper<Demand> {
+    Integer countAllByProId(Long proId);
     Integer countByProId(Long proId);
     Integer countByProIdWhereIsComplete(Long proId);
 }

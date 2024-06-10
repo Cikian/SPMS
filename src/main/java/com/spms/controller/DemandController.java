@@ -201,6 +201,14 @@ public class DemandController {
         return new Result(code, msg, demands);
     }
 
+    @GetMapping("/dependence/{demandId}")
+    public Result getDependenceDemands(@PathVariable("demandId") Long demandId) {
+        List<Demand> demands = demandService.getDependenceDemands(demandId);
+        Integer code = demands.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
+        String msg = demands.isEmpty() ? "无数据" : "获取成功";
+        return new Result(code, msg, demands);
+    }
+
     @GetMapping("/counts/{proId}")
     public Result getDemandCounts(@PathVariable("proId") Long proId) {
         Map<String, Integer> count = demandService.getDemandCounts(proId);
