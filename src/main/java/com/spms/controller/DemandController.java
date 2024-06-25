@@ -4,11 +4,17 @@ import com.spms.dto.Result;
 import com.spms.entity.Demand;
 import com.spms.entity.Project;
 import com.spms.enums.ErrorCode;
+import com.spms.mapper.DemandMapper;
+import com.spms.security.LoginUser;
 import com.spms.service.DemandService;
+import com.spms.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +24,10 @@ public class DemandController {
 
     @Autowired
     private DemandService demandService;
+    @Autowired
+    private ProjectService projectService;
+    @Autowired
+    private DemandMapper demandMapper;
 
     @PostMapping
     @PreAuthorize("hasAuthority('demand:add') || hasRole('system_admin')")
@@ -46,7 +56,16 @@ public class DemandController {
     public Result changeStatus(@PathVariable("demandId") Long demandId, @PathVariable("status") Integer status) {
         boolean r = demandService.isProjectMember(null, demandId);
         if (!r) {
-            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该工作项的负责人，无权限操作");
+        }
+
+        Long proIdByDemandId = demandService.getProIdByDemandId(demandId);
+        boolean isDemandHeader = demandService.isDemandHeader(demandId);
+        if (!isDemandHeader) {
+            Boolean isProHeader = projectService.judgeIsProHeader(proIdByDemandId);
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的负责人，无权限操作");
+            }
         }
 
         Boolean b = demandService.changeStatus(demandId, status);
@@ -63,6 +82,12 @@ public class DemandController {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
         }
 
+        Long proIdByDemandId = demandService.getProIdByDemandId(demandId);
+        Boolean isProHeader = projectService.judgeIsProHeader(proIdByDemandId);
+        if (!isProHeader) {
+            return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的负责人，无权限操作");
+        }
+
         Boolean b = demandService.changeHeadId(demandId, headId);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -75,6 +100,15 @@ public class DemandController {
         boolean r = demandService.isProjectMember(null, demandId);
         if (!r) {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
+        Long proIdByDemandId = demandService.getProIdByDemandId(demandId);
+        boolean isDemandHeader = demandService.isDemandHeader(demandId);
+        if (!isDemandHeader) {
+            Boolean isProHeader = projectService.judgeIsProHeader(proIdByDemandId);
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您不是该工作项的负责人，无权限操作");
+            }
         }
 
         Boolean b = demandService.changePriority(demandId, priority);
@@ -91,6 +125,15 @@ public class DemandController {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
         }
 
+        Long proIdByDemandId = demandService.getProIdByDemandId(demandId);
+        boolean isDemandHeader = demandService.isDemandHeader(demandId);
+        if (!isDemandHeader) {
+            Boolean isProHeader = projectService.judgeIsProHeader(proIdByDemandId);
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您不是该工作项的负责人，无权限操作");
+            }
+        }
+
         Boolean b = demandService.changeType(demandId, type);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -105,6 +148,15 @@ public class DemandController {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
         }
 
+        Long proIdByDemandId = demandService.getProIdByDemandId(demandId);
+        boolean isDemandHeader = demandService.isDemandHeader(demandId);
+        if (!isDemandHeader) {
+            Boolean isProHeader = projectService.judgeIsProHeader(proIdByDemandId);
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您不是该工作项的负责人，无权限操作");
+            }
+        }
+
         Boolean b = demandService.changeSource(demandId, source);
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
         String msg = b ? "更新成功" : "更新失败";
@@ -114,9 +166,22 @@ public class DemandController {
     @PutMapping("/changeDesc")
     @PreAuthorize("hasAuthority('demand:update') || hasRole('system_admin')")
     public Result changeDesc(@RequestBody Demand demand) {
+        System.out.println("项目+++");
+        System.out.println(demand);
         boolean r = demandService.isProjectMember(null, demand.getDemandId());
         if (!r) {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        Demand demandById = demandService.getDemandById(demand.getDemandId());
+
+        if (!userId.equals(demand.getHeadId()) && !userId.equals(demandById.getCreateBy())) {
+            Boolean isProHeader = projectService.judgeIsProHeader(demandById.getProId());
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您无权限操作");
+            }
         }
 
         Boolean b = demandService.changeDesc(demand.getDemandId(), demand.getDemandDesc());
@@ -132,6 +197,53 @@ public class DemandController {
         if (!r) {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
         }
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        Demand demandById = demandService.getDemandById(demand.getDemandId());
+        if (!userId.equals(demand.getHeadId()) && !userId.equals(demandById.getCreateBy())) {
+            Boolean isProHeader = projectService.judgeIsProHeader(demandById.getProId());
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您无权限操作");
+            }
+        }
+
+        LocalDateTime ldt = demand.getStartTime();
+        long timestamp = ldt.toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        long now = LocalDateTime.now().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        if (timestamp < now) {
+            return Result.fail(ErrorCode.ADD_FAIL, "开始时间不能早于当前时间");
+        }
+
+        Demand fatherDemand = demandService.getFatherDemand(demand.getDemandId());
+        Project proByDemandId = projectService.getProByDemandId(demand.getDemandId());
+        long proStartTime = proByDemandId.getExpectedStartTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        long proEndTime = proByDemandId.getExpectedEndTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        if (timestamp < proStartTime || timestamp > proEndTime) {
+            return Result.fail(ErrorCode.ADD_FAIL, "开始时间必须在项目预计时间：" + proByDemandId.getExpectedStartTime()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    + "到" +
+                    proByDemandId.getExpectedEndTime()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    + "范围内");
+        }
+
+        if (fatherDemand != null && fatherDemand.getStartTime() != null && fatherDemand.getEndTime() != null) {
+            long fatherStartTime = fatherDemand.getStartTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+            long fatherEndTime = fatherDemand.getEndTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+            if (timestamp < fatherStartTime || timestamp > fatherEndTime) {
+                return Result.fail(ErrorCode.ADD_FAIL, "开始时间必须在父工作项预计时间：" + fatherDemand.getStartTime()
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        + "到" +
+                        fatherDemand.getEndTime()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        + "范围内");
+
+            }
+        }
+
+        if (demandById.getEndTime() != null && timestamp > demandById.getEndTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli()){
+            return Result.fail(ErrorCode.ADD_FAIL, "开始时间必须在结束时间之前");
+        }
 
         Boolean b = demandService.changeStartTime(demand.getDemandId(), demand.getStartTime());
         Integer code = b ? ErrorCode.UPDATE_SUCCESS : ErrorCode.UPDATE_FAIL;
@@ -145,6 +257,54 @@ public class DemandController {
         boolean r = demandService.isProjectMember(null, demand.getDemandId());
         if (!r) {
             return Result.fail(ErrorCode.ADD_FAIL, "您不是该项目的成员，无权限操作");
+        }
+
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        Demand demandById = demandService.getDemandById(demand.getDemandId());
+        if (!userId.equals(demand.getHeadId()) && !userId.equals(demandById.getCreateBy())) {
+            Boolean isProHeader = projectService.judgeIsProHeader(demandById.getProId());
+            if (!isProHeader) {
+                return Result.fail(ErrorCode.ADD_FAIL, "您无权限操作");
+            }
+        }
+
+        LocalDateTime ldt = demand.getEndTime();
+        long timestamp = ldt.toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        long now = LocalDateTime.now().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        if (timestamp < now) {
+            return Result.fail(ErrorCode.ADD_FAIL, "开始时间不能早于当前时间");
+        }
+
+        Demand fatherDemand = demandService.getFatherDemand(demand.getDemandId());
+        Project proByDemandId = projectService.getProByDemandId(demand.getDemandId());
+        long proStartTime = proByDemandId.getExpectedStartTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        long proEndTime = proByDemandId.getExpectedEndTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+        if (timestamp < proStartTime || timestamp > proEndTime) {
+            return Result.fail(ErrorCode.ADD_FAIL, "开始时间必须在项目预计时间：" + proByDemandId.getExpectedStartTime()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    + "到" +
+                    proByDemandId.getExpectedEndTime()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    + "范围内");
+        }
+
+        if (fatherDemand != null && fatherDemand.getStartTime() != null && fatherDemand.getEndTime() != null) {
+            long fatherStartTime = fatherDemand.getStartTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+            long fatherEndTime = fatherDemand.getEndTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli();
+            if (timestamp < fatherStartTime || timestamp > fatherEndTime) {
+                return Result.fail(ErrorCode.ADD_FAIL, "开始时间必须在父工作项预计时间：" + fatherDemand.getStartTime()
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        + "到" +
+                        fatherDemand.getEndTime()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        + "范围内");
+
+            }
+        }
+
+        if (demandById.getStartTime() != null && timestamp < demandById.getStartTime().toInstant(java.time.ZoneOffset.of("+8")).toEpochMilli()){
+            return Result.fail(ErrorCode.ADD_FAIL, "结束时间必须在开始时间之后");
         }
 
         Boolean b = demandService.changeEndTime(demand.getDemandId(), demand.getEndTime());
@@ -181,7 +341,7 @@ public class DemandController {
     public Result getDemandByHeadId(@PathVariable("proId") Long proId) {
         List<Demand> allDemandsByHeaderId = demandService.getAllDemandsByHeaderId(proId);
         Integer code = allDemandsByHeaderId.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
-        String msg = allDemandsByHeaderId.isEmpty()? "无数据" : "获取成功";
+        String msg = allDemandsByHeaderId.isEmpty() ? "无数据" : "获取成功";
         return new Result(code, msg, allDemandsByHeaderId);
     }
 
@@ -189,7 +349,7 @@ public class DemandController {
     public Result getDemandByCreateId(@PathVariable("proId") Long proId) {
         List<Demand> allDemandsByHeaderId = demandService.getAllDemandsByCreatedId(proId);
         Integer code = allDemandsByHeaderId.isEmpty() ? ErrorCode.GET_FAIL : ErrorCode.GET_SUCCESS;
-        String msg = allDemandsByHeaderId.isEmpty()? "无数据" : "获取成功";
+        String msg = allDemandsByHeaderId.isEmpty() ? "无数据" : "获取成功";
         return new Result(code, msg, allDemandsByHeaderId);
     }
 
@@ -238,4 +398,13 @@ public class DemandController {
         String msg = demands.isEmpty() ? "无数据" : "获取成功";
         return new Result(code, msg, demands);
     }
+
+    // @PutMapping("/changeTime")
+    // public Result changeTime(@RequestBody Object map, @RequestParam("demandId") Long demandId) {
+    //     System.out.println(("================="));
+    //     System.out.println("map: " + map);
+    //     System.out.println("demandId: " + demandId);
+    //
+    //     return Result.success(null);
+    // }
 }

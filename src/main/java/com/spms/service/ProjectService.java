@@ -4,6 +4,7 @@ import com.spms.dto.*;
 import com.spms.entity.Project;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Title: ProjectService
@@ -46,5 +47,12 @@ public interface ProjectService {
     Boolean deleteByProId(Long id);
 
     Boolean judgeIsProHeader(Long proId);
+
+    List<List> getGantt(Long proId);
+
+    Map<String, String> getTime(Long proId);
+
+    Project getProByDemandId(Long demandId);
+
 
 }

@@ -26,6 +26,10 @@ public class ProjectController {
     @PostMapping
     @PreAuthorize("hasAuthority('project:add') || hasRole('system_admin')")
     public Result addProject(@RequestBody AddProjectDTO addProjectDTO) {
+        // 判断getExpectedStartTime是否为空
+        if (addProjectDTO.getExpectedStartTime() == null ||addProjectDTO.getExpectedEndTime() == null ) {
+            return new Result(ErrorCode.ADD_FAIL, "项目时间不可为空", null);
+        }
         System.out.println(addProjectDTO);
         boolean b = proService.addPro(addProjectDTO);
         Integer code = b ? ErrorCode.ADD_SUCCESS : ErrorCode.ADD_FAIL;
@@ -37,6 +41,17 @@ public class ProjectController {
     @PutMapping
     @PreAuthorize("hasAuthority('project:update') || hasRole('system_admin')")
     public Result updateProject(@RequestBody AddProjectDTO addProjectDTO) {
+        ProjectDTO proById = proService.getProById(addProjectDTO.getProId());
+        if (proById == null) {
+            return new Result(ErrorCode.ADD_FAIL, "项目状态异常，请刷新后重试", null);
+        }
+        if (proById.getProStatus() != -1){
+            return new Result(ErrorCode.ADD_FAIL, "项目审批流程已结束，不可修改", null);
+        }
+        // 判断getExpectedStartTime是否为空
+        if (addProjectDTO.getExpectedStartTime() == null ||addProjectDTO.getExpectedEndTime() == null ) {
+            return new Result(ErrorCode.ADD_FAIL, "项目时间不可为空", null);
+        }
         proService.deleteByProId(addProjectDTO.getProId());
         return addProject(addProjectDTO);
     }
@@ -133,5 +148,15 @@ public class ProjectController {
     @GetMapping("/judgeIsProHeader")
     public Result judgeIsProHeader(@RequestParam("proId") Long proId) {
         return Result.success(proService.judgeIsProHeader(proId));
+    }
+
+    @GetMapping("/gantt")
+    public Result getGantt(@RequestParam("proId") Long proId) {
+        return Result.success(proService.getGantt(proId));
+    }
+
+    @GetMapping("/getProTime")
+    public Result getProTime(@RequestParam("proId") Long proId) {
+        return Result.success(proService.getTime(proId));
     }
 }

@@ -67,4 +67,11 @@ public interface DemandService {
     Boolean deleteDemand(Long demandId);
 
     boolean isProjectMember(Long proId, Long demandId);
+
+    boolean isDemandHeader(Long demandId);
+
+    Long getProIdByDemandId(Long demandId);
+
+    Demand getFatherDemand(Long demandId);
+
 }

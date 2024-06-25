@@ -461,7 +461,8 @@ public class DemandServiceImpl implements DemandService {
         return i > 0;
     }
 
-    private List<Demand> processDemands(List<Demand> demands) {
+
+    public List<Demand> processDemands(List<Demand> demands) {
         // 分离出demands中元素的不同level的元素
 
         List<Demand> level0Demands = new ArrayList<>();
@@ -485,7 +486,7 @@ public class DemandServiceImpl implements DemandService {
         return level0Demands;
     }
 
-    private void findParent(List<Demand> fatherDemands, List<Demand> childDemands) {
+    public void findParent(List<Demand> fatherDemands, List<Demand> childDemands) {
         for (Demand fatherDemand : fatherDemands) {
             Long fatherId = fatherDemand.getDemandId();
             List<Demand> children = new ArrayList<>();
@@ -567,5 +568,39 @@ public class DemandServiceImpl implements DemandService {
             Long proIdByDemand = demand.getProId();
             return isProjectMember(proIdByDemand, null);
         }
+    }
+
+    @Override
+    public boolean isDemandHeader(Long demandId) {
+        if (demandId == null) {
+            return false;
+        }
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = loginUser.getUser().getUserId();
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getDemandId, demandId);
+        Demand demand = demandMapper.selectOne(lqw);
+        if (demand.getHeadId() != null) {
+            return Objects.equals(demand.getHeadId(), userId);
+        }
+        return false;
+    }
+
+    @Override
+    public Long getProIdByDemandId(Long demandId) {
+        LambdaQueryWrapper<Demand> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Demand::getDemandId, demandId);
+        Demand demand = demandMapper.selectOne(lqw);
+        return demand.getProId();
+    }
+
+
+    @Override
+    public Demand getFatherDemand(Long demandId) {
+        Demand demand = demandMapper.selectById(demandId);
+        if (demand.getLevel() != 0){
+            return demandMapper.selectById(demand.getFatherDemandId());
+        }
+        return null;
     }
 }
